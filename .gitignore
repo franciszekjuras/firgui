@@ -1,0 +1,7 @@
+moc*
+firgui
+*~
+debug/
+firgui.pro.user
+*.o
+Makefile
