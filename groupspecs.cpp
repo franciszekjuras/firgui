@@ -41,9 +41,9 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
 void GroupSpecs::calculateKernel(){
     EqRippleFirKer ker;
     ker.setSampFreq(1.);
-    ker.setRank(100.);
-    std::vector<double> freqs {.1,.2};
-    std::vector<double> gains {.0,1.,.3};
+    ker.setRank(1000);
+    std::vector<double> freqs, gains;
+
     if(!textToDoubles(freqsLineEdit->text().toStdString(),freqs) ||
         !textToDoubles(gainsLineEdit->text().toStdString(),gains)){
         qDebug()<<"Parsing failed";
@@ -58,9 +58,9 @@ void GroupSpecs::calculateKernel(){
         return;
     }
     this->crrKer = ker.getKernel();
-    std::vector<double> trns(ker.transmission(100));
-    for(auto v : trns)
-        qDebug()<<v;
+//    std::vector<double> trns(ker.transmission(100));
+//    for(auto v : trns)
+//        qDebug()<<v;
     emit kernelChanged(ker);
 }
 

@@ -2,6 +2,7 @@
 #define PLOT_H
 
 #include <QVector>
+#include <QString>
 #include "qcustomplot.h"
 #include "firker.h"
 
@@ -11,13 +12,24 @@ class KerPlot : public QCustomPlot{
 public:
     KerPlot(QWidget* parent = 0);
     //~Plot();
-    void setKernel(const FirKer& kernel);
 protected:
-    QCPRange maxXRange;
-    QCPRange maxYRange;
+    QCPRange xRange;
+    double maxGain;
+    QString plotType;
+    int plotPoints;
+
+    QVector<double> transmission;
+    QVector<double> transmissionBode;
+    QVector<double> freqs;
+
+    void amplitudePlot();
+    void bodePlot();
+    void setFreq(double freq);
 
 public slots:
     void checkXBounds(const QCPRange& newRange, const QCPRange& oldRange);
+    void setKernel(const FirKer& kernel);
+    void setPlotType(const QString& plotType);
 
 };
 

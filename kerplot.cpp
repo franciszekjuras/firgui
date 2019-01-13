@@ -1,18 +1,101 @@
 #include <QVector>
+#include <QString>
 #include "kerplot.h"
 
 KerPlot::KerPlot(QWidget* parent):
     QCustomPlot(parent)
 {
+    //this->setOpenGl(true);
 
+    this->axisRect()->setRangeDrag(Qt::Horizontal);
+    this->axisRect()->setRangeZoom(Qt::Horizontal);
+    connect(this->xAxis, SIGNAL(rangeChanged(const QCPRange&, const QCPRange&)),
+            this, SLOT(checkXBounds(const QCPRange&, const QCPRange&)));
+    this->setEnabled(false);
+
+
+    this->addGraph();
+    this->graph(0)->setPen(QPen(Qt::blue));
+    this->xAxis->setLabel(tr("Frequency, kHz"));
+    this->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    //default values
+    setFreq(1.);
+    maxGain = 1.;
+    plotPoints = 10000;
 }
 
 void KerPlot::setKernel(const FirKer &kernel){
+    std::vector<double> trns = kernel.transmission(plotPoints);
+    transmission = QVector<double>::fromStdVector(trns);
+    transmissionBode = QVector<double>::fromStdVector(FirKer::toBode(trns));
 
+    double max;
+    for(auto v : trns)
+        if(v > max) max = v;
+    this->maxGain = max;
+
+
+    setFreq(kernel.getSampFreq());
+    setPlotType(plotType);
+}
+
+void KerPlot::amplitudePlot(){
+    this->yAxis->setLabel(tr("Amplitude"));
+    this->graph(0)->setData(freqs,transmission,true);
+    qDebug() << maxGain;
+    this->yAxis->setRange(QCPRange(0.,(maxGain*1.02)));
+    this->setEnabled(true);
+    this->replot();
+}
+
+void KerPlot::bodePlot(){
+    this->yAxis->setLabel(tr("Attenuation, dB"));
+    this->graph(0)->setData(freqs,transmissionBode,true);
+
+    this->yAxis->setRange(QCPRange(-80., 5.));
+
+    this->setEnabled(true);
+    this->replot();
 }
 
 void KerPlot::checkXBounds(const QCPRange& newRange, const QCPRange& oldRange){
+    if(newRange.lower < this->xRange.lower || newRange.upper > this->xRange.upper){
+        if(newRange.size() == oldRange.size())
+            this->xAxis->setRange(oldRange);
+        else if(newRange.size() > this->xRange.size()){
+            this->xAxis->setRange(this->xRange);
+        }
+        else if(newRange.lower < this->xRange.lower){
+            this->xAxis->setRange(xRange.lower, xRange.lower + newRange.size());
+        }
+        else{
+            this->xAxis->setRange(xRange.upper - newRange.size(), xRange.upper);
+        }
+    }
+}
 
+void KerPlot::setFreq(double freq){
+    this->xRange = QCPRange(0., freq/2.);
+    this->xAxis->setRange(xRange);
+
+    size_t l = this->transmission.size();
+    qDebug() << l;
+    this->freqs.resize(l);
+    const double div = static_cast<double>(l-1);
+    for(int i = 0; i < l; ++i){
+        this->freqs[i] = static_cast<double>(i) * freq / div / 2.;
+    }
+}
+
+
+void KerPlot::setPlotType(const QString& plotType){
+    this->plotType = plotType;
+    if(plotType == tr("Bode Plot")){
+        bodePlot();
+    }
+    else if(plotType == tr("Amplitude Plot")){
+        amplitudePlot();
+    }
 }
 
 //DataPlot::DataPlot(QWidget* parent):

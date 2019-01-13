@@ -12,7 +12,15 @@ Window::Window(QWidget *parent)
     QHBoxLayout* mainHBox = new QHBoxLayout;
 
     //--- left side
+
+
     QVBoxLayout* lVBox = new QVBoxLayout;
+
+    GroupSpecs* groupSpecs = new GroupSpecs;
+    groupSpecs->setSizePolicy(QSizePolicy::Maximum,QSizePolicy::Fixed);
+    lVBox->addWidget(groupSpecs);
+
+    lVBox->addItem(new QSpacerItem(0,0,QSizePolicy::Preferred, QSizePolicy::Expanding));
 
     GroupSsh* groupSsh = new GroupSsh;
     groupSsh->setSizePolicy(QSizePolicy::Maximum,QSizePolicy::Fixed);
@@ -24,7 +32,7 @@ Window::Window(QWidget *parent)
     GroupConfig* groupConfig = new GroupConfig;
     groupConfig->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Fixed);
     lVBox->addWidget(groupConfig);
-    lVBox->addItem(new QSpacerItem(0,0,QSizePolicy::Preferred, QSizePolicy::Expanding));
+
 
     mainHBox->addLayout(lVBox);
 
@@ -32,9 +40,9 @@ Window::Window(QWidget *parent)
     //--- right side
     QVBoxLayout* rVBox = new QVBoxLayout;
 
-    GroupSpecs* groupSpecs = new GroupSpecs;
-    groupSpecs->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
-    rVBox->addWidget(groupSpecs);
+    QComboBox* plotTypeCombo = new QComboBox;
+    plotTypeCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    rVBox->addWidget(plotTypeCombo);
 
     KerPlot* kerPlot = new KerPlot;
     kerPlot->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
@@ -46,8 +54,17 @@ Window::Window(QWidget *parent)
 
     setLayout(mainHBox);
 
+    //---> Functionality <---//
+    connect(groupSpecs, &GroupSpecs::kernelChanged, kerPlot, &KerPlot::setKernel);
 
-   // resize(480, 320);
+    plotTypeCombo->addItem(tr("Amplitude Plot"));
+    plotTypeCombo->addItem(tr("Bode Plot"));
+
+    connect(plotTypeCombo, &QComboBox::currentTextChanged, kerPlot, &KerPlot::setPlotType);
+    plotTypeCombo->setCurrentIndex(-1);plotTypeCombo->setCurrentIndex(0);
+
+
+    resize(1024, 500);
 
     setWindowTitle(tr("FIR controller"));
 }

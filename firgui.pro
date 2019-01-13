@@ -7,6 +7,7 @@ TARGET = firgui
 INCLUDEPATH += .
 CONFIG += c++14
 LIBS += -lssh
+DEFINES += QCUSTOMPLOT_USE_OPENGL
 QT += widgets core printsupport
 
 # Input
