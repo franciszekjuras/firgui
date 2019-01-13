@@ -3,6 +3,7 @@
 #include "window.h"
 #include "groupssh.h"
 #include "groupconfig.h"
+#include "groupspecs.h"
 #include "kerplot.h"
 
 Window::Window(QWidget *parent)
@@ -12,14 +13,16 @@ Window::Window(QWidget *parent)
 
     //--- left side
     QVBoxLayout* lVBox = new QVBoxLayout;
+
     GroupSsh* groupSsh = new GroupSsh;
+    groupSsh->setSizePolicy(QSizePolicy::Maximum,QSizePolicy::Fixed);
     lVBox->addWidget(groupSsh);
 
 //    QFrame* line = new QFrame(); line->setFrameShape(QFrame::HLine); line->setFrameShadow(QFrame::Sunken);
 //    lVBox->addWidget(line);
 
     GroupConfig* groupConfig = new GroupConfig;
-    //groupConfig->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Preferred);
+    groupConfig->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Fixed);
     lVBox->addWidget(groupConfig);
     lVBox->addItem(new QSpacerItem(0,0,QSizePolicy::Preferred, QSizePolicy::Expanding));
 
@@ -29,12 +32,13 @@ Window::Window(QWidget *parent)
     //--- right side
     QVBoxLayout* rVBox = new QVBoxLayout;
 
-    QTextBrowser* textBrowser2 = new QTextBrowser;
-    textBrowser2->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Preferred);
-    rVBox->addWidget(textBrowser2);
+    GroupSpecs* groupSpecs = new GroupSpecs;
+    groupSpecs->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
+    rVBox->addWidget(groupSpecs);
 
     KerPlot* kerPlot = new KerPlot;
-    kerPlot->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+    kerPlot->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
+    kerPlot->setMinimumSize(300, 200);
     rVBox->addWidget(kerPlot);
 
     mainHBox->addLayout(rVBox);

@@ -7,7 +7,7 @@ KerPlot::KerPlot(QWidget* parent):
 
 }
 
-void KerPlot::setKernel(const FirKernel& kernel){
+void KerPlot::setKernel(const FirKer &kernel){
 
 }
 

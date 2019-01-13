@@ -12,7 +12,7 @@ public:
     explicit GroupConfig(QWidget *parent = 0);
 
 private:
-    QComboBox* bitCombo;
+    //QComboBox* bitCombo;
 
 signals:
 

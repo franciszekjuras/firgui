@@ -3,7 +3,7 @@
 
 #include <QVector>
 #include "qcustomplot.h"
-#include "firkernel.h"
+#include "firker.h"
 
 class KerPlot : public QCustomPlot{
     Q_OBJECT
@@ -11,7 +11,7 @@ class KerPlot : public QCustomPlot{
 public:
     KerPlot(QWidget* parent = 0);
     //~Plot();
-    void setKernel(const FirKernel& kernel);
+    void setKernel(const FirKer& kernel);
 protected:
     QCPRange maxXRange;
     QCPRange maxYRange;

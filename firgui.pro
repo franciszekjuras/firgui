@@ -14,17 +14,17 @@ HEADERS += \
     window.h \
     groupssh.h \
     ssh.h \
-    qssh.h \
     qcustomplot.h \
-    firkernel.h \
+    firker.h \
     kerplot.h \
-    groupconfig.h
+    groupconfig.h \
+    groupspecs.h
 SOURCES += main.cpp \
     window.cpp \
     groupssh.cpp \
     ssh.cpp \
-    qssh.cpp \
     qcustomplot.cpp \
-    firkernel.cpp \
+    firker.cpp \
     kerplot.cpp \
-    groupconfig.cpp
+    groupconfig.cpp \
+    groupspecs.cpp

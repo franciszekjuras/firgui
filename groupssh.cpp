@@ -5,7 +5,7 @@
 
 GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
 {
-    setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
     /*>>>Layouts<<<*/
 
@@ -18,6 +18,7 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
     QLabel* idLabel = new QLabel(tr("ID"));
     idLabel->setToolTip(tr("Last 6 symbols of Red Pitaya MAC adrress (see WLAN connector)"));
     QLineEdit* idLineEdit = new QLineEdit;
+    //idLineEdit->setMaximumWidth(90);
     QPushButton* connectButton = new QPushButton(tr("Connect"));
 
     idHBox->addWidget(idLabel);
