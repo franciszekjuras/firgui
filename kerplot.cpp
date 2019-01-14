@@ -1,5 +1,6 @@
 #include <QVector>
 #include <QString>
+#include <cmath>
 #include "kerplot.h"
 
 KerPlot::KerPlot(QWidget* parent):
@@ -33,6 +34,7 @@ void KerPlot::setKernel(const FirKer &kernel){
     for(auto v : trns)
         if(v > max) max = v;
     this->maxGain = max;
+    this->maxGaindB = 20 * std::log10(max);
 
 
     setFreq(kernel.getSampFreq());
@@ -52,7 +54,7 @@ void KerPlot::bodePlot(){
     this->yAxis->setLabel(tr("Attenuation, dB"));
     this->graph(0)->setData(freqs,transmissionBode,true);
 
-    this->yAxis->setRange(QCPRange(-80., 5.));
+    this->yAxis->setRange(QCPRange(-80., maxGaindB+1));
 
     this->setEnabled(true);
     this->replot();

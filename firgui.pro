@@ -19,7 +19,8 @@ HEADERS += \
     firker.h \
     kerplot.h \
     groupconfig.h \
-    groupspecs.h
+    groupspecs.h \
+    bitstreamspecs.h
 SOURCES += main.cpp \
     window.cpp \
     groupssh.cpp \
@@ -28,4 +29,5 @@ SOURCES += main.cpp \
     firker.cpp \
     kerplot.cpp \
     groupconfig.cpp \
-    groupspecs.cpp
+    groupspecs.cpp \
+    bitstreamspecs.cpp

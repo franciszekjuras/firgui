@@ -15,6 +15,7 @@ public:
 protected:
     QCPRange xRange;
     double maxGain;
+    double maxGaindB;
     QString plotType;
     int plotPoints;
 
