@@ -35,13 +35,17 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
     //---> Functionality <---//
 
     connect(calcButton, &QPushButton::released, this, &GroupSpecs::calculateKernel);
+    connect(this, &GroupSpecs::enableCalcButton, calcButton,  &QPushButton::setEnabled);
+    connect(this, &GroupSpecs::enableCalcButton, this, &GroupSpecs::setCalcEn);
+    connect(this, &GroupSpecs::enableSetButton, setButton,  &QPushButton::setEnabled);
+    enableCalcButton(false); enableSetButton(false);
 
 }
 
 void GroupSpecs::calculateKernel(){
     EqRippleFirKer ker;
-    ker.setSampFreq(1.);
-    ker.setRank(1000);
+    ker.setSampFreq(kerSampFreq);
+    ker.setRank(kerRank);
     std::vector<double> freqs, gains;
 
     if(!textToDoubles(freqsLineEdit->text().toStdString(),freqs) ||
@@ -75,4 +79,28 @@ bool GroupSpecs::textToDoubles(const std::string& str, std::vector<double>& v){
         return false;
     }
     return true;
+}
+
+void GroupSpecs::bitstreamChanged(QMap<QString, int> specs){
+    if(!(specs.contains("t") && specs.contains("d") && specs.contains("s"))){
+        reqClearPlot();
+        enableCalcButton(false); enableSetButton(false);
+    }
+    int newKerRank = specs["t"]*specs["d"];
+    double newKerSampFreq = fpgaSampFreq / static_cast<double>(specs["t"]);
+    if(newKerRank == kerRank && newKerSampFreq == kerSampFreq)
+        return;
+    kerRank = newKerRank; kerSampFreq = newKerSampFreq;
+    reqClearPlot();
+    //calculateKernel();
+    enableCalcButton(true);
+}
+
+void GroupSpecs::bitstreamLoaded(){
+    if(calcEn)
+        enableSetButton(true);
+}
+
+void GroupSpecs::setFpgaSampFreq(double freq){
+    fpgaSampFreq = freq;
 }

@@ -13,17 +13,20 @@ Window::Window(QWidget *parent)
 
     //--- left side
 
+    QWidget* lWid = new QWidget;
+    lWid->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
+     lWid->setMaximumWidth(400);
 
     QVBoxLayout* lVBox = new QVBoxLayout;
 
     GroupSpecs* groupSpecs = new GroupSpecs;
-    groupSpecs->setSizePolicy(QSizePolicy::Maximum,QSizePolicy::Fixed);
+    groupSpecs->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Fixed);
     lVBox->addWidget(groupSpecs);
 
     lVBox->addItem(new QSpacerItem(0,0,QSizePolicy::Preferred, QSizePolicy::Expanding));
 
     GroupSsh* groupSsh = new GroupSsh;
-    groupSsh->setSizePolicy(QSizePolicy::Maximum,QSizePolicy::Fixed);
+    groupSsh->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Fixed);
     lVBox->addWidget(groupSsh);
 
 //    QFrame* line = new QFrame(); line->setFrameShape(QFrame::HLine); line->setFrameShadow(QFrame::Sunken);
@@ -33,8 +36,8 @@ Window::Window(QWidget *parent)
     groupConfig->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Fixed);
     lVBox->addWidget(groupConfig);
 
-
-    mainHBox->addLayout(lVBox);
+    lWid->setLayout(lVBox);
+    mainHBox->addWidget(lWid);
 
 
     //--- right side
@@ -56,12 +59,17 @@ Window::Window(QWidget *parent)
 
     //---> Functionality <---//
     connect(groupSpecs, &GroupSpecs::kernelChanged, kerPlot, &KerPlot::setKernel);
+    connect(groupSpecs, &GroupSpecs::reqClearPlot, kerPlot, &KerPlot::clearPlot);
 
     plotTypeCombo->addItem(tr("Amplitude Plot"));
     plotTypeCombo->addItem(tr("Bode Plot"));
 
     connect(plotTypeCombo, &QComboBox::currentTextChanged, kerPlot, &KerPlot::setPlotType);
     plotTypeCombo->setCurrentIndex(-1);plotTypeCombo->setCurrentIndex(0);
+
+    connect(groupConfig, &GroupConfig::bitstreamSelected, groupSpecs, &GroupSpecs::bitstreamChanged);
+    connect(groupConfig, &GroupConfig::fpgaSampFreqChanged, groupSpecs, &GroupSpecs::setFpgaSampFreq);
+    groupConfig->init();
 
 
     resize(1024, 500);

@@ -2,6 +2,10 @@
 #define GROUPCONFIG_H
 
 #include <QGroupBox>
+#include <QString>
+#include <QMap>
+#include "groupconfig.h"
+#include "bitstreamspecs.h"
 
 class QComboBox;
 
@@ -11,10 +15,18 @@ class GroupConfig : public QGroupBox
 public:
     explicit GroupConfig(QWidget *parent = 0);
 
+    void init();
+
 private:
-    //QComboBox* bitCombo;
+    QComboBox* bitCombo;
+    double fpgaSampFreq;
+    QMap<QString, BitstreamSpecs> bitMap;
+
+    void bitComboChanged(QString str);
 
 signals:
+    void bitstreamSelected(QMap<QString, int> specs);
+    void fpgaSampFreqChanged(double freq);
 
 public slots:
 };

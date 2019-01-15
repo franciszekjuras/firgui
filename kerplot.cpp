@@ -22,11 +22,12 @@ KerPlot::KerPlot(QWidget* parent):
     //default values
     setFreq(1.);
     maxGain = 1.;
-    plotPoints = 10000;
+    plotPoints = 20000;
 }
 
 void KerPlot::setKernel(const FirKer &kernel){
     std::vector<double> trns = kernel.transmission(plotPoints);
+
     transmission = QVector<double>::fromStdVector(trns);
     transmissionBode = QVector<double>::fromStdVector(FirKer::toBode(trns));
 
@@ -36,15 +37,25 @@ void KerPlot::setKernel(const FirKer &kernel){
     this->maxGain = max;
     this->maxGaindB = 20 * std::log10(max);
 
-
     setFreq(kernel.getSampFreq());
     setPlotType(plotType);
+}
+
+void KerPlot::clearPlot(){
+    transmission = QVector<double>();
+    transmissionBode = QVector<double>();
+    setFreq(1.);
+
+    this->maxGain = 1.;
+    this->maxGaindB = 0.;
+
+    setPlotType(plotType);
+    //this->setEnabled(false);
 }
 
 void KerPlot::amplitudePlot(){
     this->yAxis->setLabel(tr("Amplitude"));
     this->graph(0)->setData(freqs,transmission,true);
-    qDebug() << maxGain;
     this->yAxis->setRange(QCPRange(0.,(maxGain*1.02)));
     this->setEnabled(true);
     this->replot();
@@ -81,7 +92,7 @@ void KerPlot::setFreq(double freq){
     this->xAxis->setRange(xRange);
 
     size_t l = this->transmission.size();
-    qDebug() << l;
+
     this->freqs.resize(l);
     const double div = static_cast<double>(l-1);
     for(int i = 0; i < l; ++i){

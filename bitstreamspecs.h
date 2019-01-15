@@ -6,7 +6,6 @@
 #include <QFileInfo>
 #include <QMap>
 
-
 class BitstreamSpecs
 {
 public:
@@ -14,12 +13,12 @@ public:
     BitstreamSpecs(const QString& filePath);
     BitstreamSpecs(const QFileInfo& fileInfo);
 
-    bool isValid();
-    const QMap<QString, int>& getSpecs();
-    QString getFileName();
-    QString getFilePath();
-    const QString& getComment();
-    const QString& getVersion();
+    bool isValid() const;
+    const QMap<QString, int>& getSpecs() const;
+    QString getFileName() const;
+    QString getFilePath() const;
+    const QString& getComment() const;
+    const QString& getVersion() const;
 
 
 private:

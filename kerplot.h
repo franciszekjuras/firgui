@@ -31,6 +31,7 @@ public slots:
     void checkXBounds(const QCPRange& newRange, const QCPRange& oldRange);
     void setKernel(const FirKer& kernel);
     void setPlotType(const QString& plotType);
+    void clearPlot();
 
 };
 

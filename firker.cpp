@@ -104,11 +104,14 @@ bool EqRippleFirKer::calc(){
 	ker.resize(rank);
 	double accg = 0.; auto gcrr = gains.begin();
 	std::vector<std::pair<double,double>> spc;
+    auto normFreqs = freqs;
+    for(auto& f : normFreqs)
+        f /= sampFreq;
 
-	for(auto f : freqs){
+    for(auto f : normFreqs){
 		accg = *gcrr - *(++gcrr);
 		if(accg != 0.)
-			spc.push_back(std::make_pair((f/sampFreq), accg));
+            spc.push_back(std::make_pair((f), accg));
 	}
 
 	double t;
@@ -120,7 +123,7 @@ bool EqRippleFirKer::calc(){
 	else{
 		t = 1.;
 		double acc = 0; auto g = gains.begin();
-		for(auto f : freqs)
+        for(auto f : normFreqs)
 			acc += 2.*f*(*g - *(++g));
 		acc += *g;
 		ker[rank/2] = acc;

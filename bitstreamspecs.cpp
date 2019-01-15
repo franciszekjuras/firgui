@@ -40,12 +40,12 @@ void BitstreamSpecs::init(){
     valid = true;
 }
 
-bool BitstreamSpecs::isValid(){return valid;}
-const QMap<QString, int>& BitstreamSpecs::getSpecs(){return specs;}
-QString BitstreamSpecs::getFileName(){return fileInfo.fileName();}
-QString BitstreamSpecs::getFilePath(){return fileInfo.filePath();}
-const QString& BitstreamSpecs::getComment(){return comment;}
-const QString& BitstreamSpecs::getVersion(){return version;}
+bool BitstreamSpecs::isValid() const{return valid;}
+const QMap<QString, int>& BitstreamSpecs::getSpecs() const{return specs;}
+QString BitstreamSpecs::getFileName() const{return fileInfo.fileName();}
+QString BitstreamSpecs::getFilePath() const{return fileInfo.filePath();}
+const QString& BitstreamSpecs::getComment() const{return comment;}
+const QString& BitstreamSpecs::getVersion() const{return version;}
 
 QMap<QString, int> BitstreamSpecs::mapSpecs(const QString& str){
     QMap<QString, int> map;
