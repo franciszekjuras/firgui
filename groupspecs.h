@@ -9,6 +9,7 @@
 #include "firker.h"
 
 class QLineEdit;
+class QComboBox;
 
 class GroupSpecs : public QGroupBox
 {
@@ -19,6 +20,7 @@ public:
 private:
     QLineEdit* freqsLineEdit;
     QLineEdit* gainsLineEdit;
+    QComboBox* bandCombo;
     std::vector<double> crrKer;
     std::vector<double> crrSrcKer;
     double fpgaSampFreq;
@@ -36,6 +38,7 @@ private:
     void clearBandsCombo();
     void rebuild();
     void bandChanged(int band);
+    void unitChanged(QString unit);
 
 public slots:
     void calculateKernel();

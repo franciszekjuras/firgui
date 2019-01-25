@@ -13,12 +13,23 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
 
     //---> Specification form <---//
 
-    QFormLayout* specsForm = new QFormLayout;
+    QGridLayout* specsGrid = new QGridLayout;
     freqsLineEdit = new QLineEdit;
     gainsLineEdit = new QLineEdit;
-    specsForm->addRow(tr("Frequencies"), freqsLineEdit);
-    specsForm->addRow(tr("Gains"), gainsLineEdit);
-    vBox->addLayout(specsForm);
+    specsGrid->addWidget(new QLabel(tr("Frequencies")),0,0);
+    specsGrid->addWidget(freqsLineEdit, 0, 1);
+
+    QComboBox* unitCombo = new QComboBox;
+    unitCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    specsGrid->addWidget(unitCombo, 0, 2);
+
+    specsGrid->addWidget(new QLabel(tr("Gains")),1,0);
+    specsGrid->addWidget(gainsLineEdit, 1, 1);
+    vBox->addLayout(specsGrid);
+
+    bandCombo = new QComboBox;
+    specsGrid->addWidget(new QLabel(tr("Band")),2,0);
+    specsGrid->addWidget(bandCombo, 2, 1, 2, 2);
 
     //---> Buttons <---//
     QHBoxLayout* buttonsHBox = new QHBoxLayout;
@@ -47,6 +58,13 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
 
     connect(this, &GroupSpecs::resetPlot, [=](double f, int t, int b){srcKernelReady(false);kernelReady(false);});
 
+    connect(unitCombo, &QComboBox::currentTextChanged, this, &GroupSpecs::unitChanged);
+    unitCombo->addItem("KHz"); unitCombo->addItem("MHz");
+
+}
+
+void GroupSpecs::unitChanged(QString unit){
+    qDebug() << unit;
 }
 
 void GroupSpecs::calculateKernel(){
