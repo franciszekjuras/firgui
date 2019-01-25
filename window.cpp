@@ -43,9 +43,22 @@ Window::Window(QWidget *parent)
     //--- right side
     QVBoxLayout* rVBox = new QVBoxLayout;
 
+    QWidget* plCtrlWid = new QWidget;
+    plCtrlWid->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    QHBoxLayout* plCtrlHBox = new QHBoxLayout;
+    plCtrlWid->setLayout(plCtrlHBox);
+
     QComboBox* plotTypeCombo = new QComboBox;
     plotTypeCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    rVBox->addWidget(plotTypeCombo);
+    plCtrlHBox->addWidget(plotTypeCombo);
+
+    plCtrlHBox->addItem(new QSpacerItem(10,0,QSizePolicy::Fixed, QSizePolicy::Fixed));
+
+    QCheckBox* srcTransShowCheckBox = new QCheckBox("Show rate conversion transmission");
+    srcTransShowCheckBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    plCtrlHBox->addWidget(srcTransShowCheckBox);
+
+    rVBox->addWidget(plCtrlWid);
 
     KerPlot* kerPlot = new KerPlot;
     kerPlot->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
@@ -59,13 +72,18 @@ Window::Window(QWidget *parent)
 
     //---> Functionality <---//
     connect(groupSpecs, &GroupSpecs::kernelChanged, kerPlot, &KerPlot::setKernel);
-    connect(groupSpecs, &GroupSpecs::reqClearPlot, kerPlot, &KerPlot::clearPlot);
+    connect(groupSpecs, &GroupSpecs::kernelClear, kerPlot, &KerPlot::clearKernel);
+    connect(groupSpecs, &GroupSpecs::srcKernelChanged, kerPlot, &KerPlot::setSrcKernel);
+    connect(groupSpecs, &GroupSpecs::srcKernelClear, kerPlot, &KerPlot::clearSrcKernel);
+    connect(groupSpecs, &GroupSpecs::resetPlot, kerPlot, &KerPlot::resetPlot);
 
     plotTypeCombo->addItem(tr("Amplitude Plot"));
     plotTypeCombo->addItem(tr("Bode Plot"));
 
     connect(plotTypeCombo, &QComboBox::currentTextChanged, kerPlot, &KerPlot::setPlotType);
     plotTypeCombo->setCurrentIndex(-1);plotTypeCombo->setCurrentIndex(0);
+    connect(srcTransShowCheckBox, &QCheckBox::toggled, kerPlot, &KerPlot::toggleSrcTransPlot);
+    srcTransShowCheckBox->setChecked(true);
 
     connect(groupConfig, &GroupConfig::bitstreamSelected, groupSpecs, &GroupSpecs::bitstreamChanged);
     connect(groupConfig, &GroupConfig::fpgaSampFreqChanged, groupSpecs, &GroupSpecs::setFpgaSampFreq);

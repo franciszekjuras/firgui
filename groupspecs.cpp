@@ -36,16 +36,25 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
 
     connect(calcButton, &QPushButton::released, this, &GroupSpecs::calculateKernel);
     connect(this, &GroupSpecs::enableCalcButton, calcButton,  &QPushButton::setEnabled);
-    connect(this, &GroupSpecs::enableCalcButton, this, &GroupSpecs::setCalcEn);
     connect(this, &GroupSpecs::enableSetButton, setButton,  &QPushButton::setEnabled);
     enableCalcButton(false); enableSetButton(false);
+
+    connect(this, &GroupSpecs::srcKernelClear, [=](){srcKernelReady(false);});
+    connect(this, &GroupSpecs::kernelClear, [=](){kernelReady(false);});
+
+    connect(this, &GroupSpecs::srcKernelChanged, [=](const FirKer& firker){srcKernelReady(true);});
+    connect(this, &GroupSpecs::kernelChanged, [=](const FirKer& firker){kernelReady(true);});
+
+    connect(this, &GroupSpecs::resetPlot, [=](double f, int t, int b){srcKernelReady(false);kernelReady(false);});
 
 }
 
 void GroupSpecs::calculateKernel(){
-    EqRippleFirKer ker;
+    //---> add various bands handling (assume band 0 for now)
+    LeastSqFirKer ker;
+    double kerSampFreq = fpgaSampFreq / static_cast<double>(t);
     ker.setSampFreq(kerSampFreq);
-    ker.setRank(kerRank);
+    ker.setRank(t * d);
     std::vector<double> freqs, gains;
 
     if(!textToDoubles(freqsLineEdit->text().toStdString(),freqs) ||
@@ -53,6 +62,7 @@ void GroupSpecs::calculateKernel(){
         qDebug()<<"Parsing failed";
         return;
     }
+    //---> add band shift and reversal
     if(!ker.setSpecs(freqs, gains)){
         qDebug()<<"Bad specs";
         return;
@@ -61,11 +71,104 @@ void GroupSpecs::calculateKernel(){
         qDebug()<<"Calculation failed";
         return;
     }
-    this->crrKer = ker.getKernel();
-//    std::vector<double> trns(ker.transmission(100));
-//    for(auto v : trns)
-//        qDebug()<<v;
+    crrKer = ker.getKernel();
     emit kernelChanged(ker);
+}
+
+void GroupSpecs::calcSrcKernel(){
+    //---> add various bands handling (assume band 0 for now)
+    // normalized frequency specification -- to avoid double conversion
+    int srcKerRank = t * s;
+    double cutoffFreq = .5 / static_cast<double>(t); // .5 -- Nyquist
+    double width = 4.11 / static_cast<double>(srcKerRank); // magic numbers for .1% rippling in passband
+    double stopBandWeight = 10.;                           // and -80 dB (.01%) attenuation in stopband
+    if(width > 0){
+        EqRippleFirKer ker;
+        ker.setSampFreq(1.);
+        ker.setRank(srcKerRank);
+
+        if(!ker.setSpecs({cutoffFreq - width, cutoffFreq},{1.,1.,0.,0.},{1.,stopBandWeight})){
+            qDebug() << "Wrong EqRipple Filter specs."; return;
+        }
+        if(!ker.calc()){
+            qDebug()<< "SRC kernel calculation failed."; return;
+        }
+        crrSrcKer = ker.getKernel();
+        ker.setSampFreq(fpgaSampFreq);
+        emit srcKernelChanged(ker);
+    }
+}
+
+
+
+void GroupSpecs::bitstreamChanged(QMap<QString, int> specs){
+    filterReady(false);
+
+    bool validT = (specs.contains("t") && specs["t"] > 0);
+    bool validD = (specs.contains("d") && specs["d"] > 0);
+    bool validS = (specs.contains("s") && specs["s"] > 0);
+
+    int tOld = t; t = validT ? specs["t"] : 0;
+    int dOld = d; d = validD ? specs["d"] : 0;
+    int sOld = s; s = validS ? specs["s"] : 0;
+
+    if(!validT){
+       clearBandsCombo(); enableCalcButton(false); resetPlot(fpgaSampFreq,1,0);return;
+    }
+
+    if(t != tOld){
+        rebuild(); //---> this will rebuild all kernels and plot
+    }
+    else{//---> if t hasn't changed -- test what must be updated
+        if(!validS)
+            srcKernelClear();
+        else if(s != sOld)
+            calcSrcKernel();
+
+        if(!validD || d!= dOld)
+            kernelClear();
+    }
+
+    enableCalcButton(validD);
+
+    //---> finished
+}
+
+void GroupSpecs::rebuild(){
+    bandChanged(0);
+    calcSrcKernel();
+}
+
+void GroupSpecs::bandChanged(int band){
+    if(band < 0) return;
+    resetPlot(fpgaSampFreq, t, band);
+}
+
+void GroupSpecs::bitstreamLoaded(QMap<QString, int> specs){
+    bitstreamChanged(specs);
+    if(isSrcKernelReady)
+    {};//send kernel -- if calculation failed, this will prevent loading filter
+    //v1: send calculated kernel
+    //v2: if ready send kernel
+    //    else set awaitingSRCKernel = true
+}
+
+void GroupSpecs::clearBandsCombo(){
+//---> nothing to do now
+}
+
+void GroupSpecs::filterReady(bool en){
+    isFilterReady = en;
+    enableSetButton(isFilterReady && isKernelReady);
+}
+
+void GroupSpecs::kernelReady(bool en){
+    isKernelReady = en;
+    enableSetButton(isFilterReady && isKernelReady);
+}
+
+void GroupSpecs::setFpgaSampFreq(double freq){
+    fpgaSampFreq = freq;
 }
 
 bool GroupSpecs::textToDoubles(const std::string& str, std::vector<double>& v){
@@ -79,28 +182,4 @@ bool GroupSpecs::textToDoubles(const std::string& str, std::vector<double>& v){
         return false;
     }
     return true;
-}
-
-void GroupSpecs::bitstreamChanged(QMap<QString, int> specs){
-    if(!(specs.contains("t") && specs.contains("d") && specs.contains("s"))){
-        reqClearPlot();
-        enableCalcButton(false); enableSetButton(false);
-    }
-    int newKerRank = specs["t"]*specs["d"];
-    double newKerSampFreq = fpgaSampFreq / static_cast<double>(specs["t"]);
-    if(newKerRank == kerRank && newKerSampFreq == kerSampFreq)
-        return;
-    kerRank = newKerRank; kerSampFreq = newKerSampFreq;
-    reqClearPlot();
-    //calculateKernel();
-    enableCalcButton(true);
-}
-
-void GroupSpecs::bitstreamLoaded(){
-    if(calcEn)
-        enableSetButton(true);
-}
-
-void GroupSpecs::setFpgaSampFreq(double freq){
-    fpgaSampFreq = freq;
 }

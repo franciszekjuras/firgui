@@ -6,6 +6,9 @@
 #include "qcustomplot.h"
 #include "firker.h"
 
+#define KER_PLOT_POINTS 10000
+#define SRCKER_PLOT_POINTS 10000
+
 class KerPlot : public QCustomPlot{
     Q_OBJECT
 
@@ -14,24 +17,40 @@ public:
     //~Plot();
 protected:
     QCPRange xRange;
-    double maxGain;
-    double maxGaindB;
+    double kerMaxGain;
+    double srcKerMaxGain;
     QString plotType;
     int plotPoints;
+    int srcPlotPoints;
+
+    //this values are for display only
+    bool inverseBand;
+    double lBandLimit;
+    double rBandLimit;
+    double nqFreq;
 
     QVector<double> transmission;
     QVector<double> transmissionBode;
+    QVector<double> srcTransmission;
+    QVector<double> srcTransmissionBode;
     QVector<double> freqs;
+    QVector<double> srcFreqs;
 
     void amplitudePlot();
     void bodePlot();
-    void setFreq(double freq);
+    void setFreqs(double freq, int t, int band);
+    void updateFreqs();
+    void updateSrcFreqs();
 
 public slots:
     void checkXBounds(const QCPRange& newRange, const QCPRange& oldRange);
     void setKernel(const FirKer& kernel);
+    void setSrcKernel(const FirKer& kernel);
     void setPlotType(const QString& plotType);
-    void clearPlot();
+    void resetPlot(double freq, int t, int band);
+    void clearKernel();
+    void clearSrcKernel();
+    void toggleSrcTransPlot(bool);
 
 };
 

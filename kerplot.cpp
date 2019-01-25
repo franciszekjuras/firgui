@@ -1,6 +1,8 @@
 #include <QVector>
 #include <QString>
 #include <cmath>
+#include <algorithm>
+#include <cassert>
 #include "kerplot.h"
 
 KerPlot::KerPlot(QWidget* parent):
@@ -17,12 +19,16 @@ KerPlot::KerPlot(QWidget* parent):
 
     this->addGraph();
     this->graph(0)->setPen(QPen(Qt::blue));
-    this->xAxis->setLabel(tr("Frequency, kHz"));
+    this->addGraph();
+    this->graph(1)->setPen(QPen(Qt::red));
+
     this->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     //default values
-    setFreq(1.);
-    maxGain = 1.;
-    plotPoints = 20000;
+    setFreqs(1., 1, 0);
+    kerMaxGain = 1.;
+    srcKerMaxGain = 1.;
+    plotPoints = 10000;
+    srcPlotPoints = 20000;
 }
 
 void KerPlot::setKernel(const FirKer &kernel){
@@ -31,40 +37,81 @@ void KerPlot::setKernel(const FirKer &kernel){
     transmission = QVector<double>::fromStdVector(trns);
     transmissionBode = QVector<double>::fromStdVector(FirKer::toBode(trns));
 
+    if(freqs.size()-1 != plotPoints)
+        updateFreqs();
+
     double max;
     for(auto v : trns)
         if(v > max) max = v;
-    this->maxGain = max;
-    this->maxGaindB = 20 * std::log10(max);
+    kerMaxGain = std::max(max,kerMaxGain);
 
-    setFreq(kernel.getSampFreq());
+    setPlotType(plotType); //this will replot
+}
+
+void KerPlot::setSrcKernel(const FirKer &kernel){
+    std::vector<double> trns = kernel.transmission(srcPlotPoints);
+
+    srcTransmission = QVector<double>::fromStdVector(trns);
+    srcTransmissionBode = QVector<double>::fromStdVector(FirKer::toBode(trns));
+
+    if(srcFreqs.size()-1 != srcPlotPoints)
+        updateSrcFreqs();
+
+    double max;
+    for(auto v : trns)
+        if(v > max) max = v;
+    srcKerMaxGain = std::max(max,srcKerMaxGain);
+
     setPlotType(plotType);
 }
 
-void KerPlot::clearPlot(){
-    transmission = QVector<double>();
-    transmissionBode = QVector<double>();
-    setFreq(1.);
+void KerPlot::clearKernel(){
+    transmission.clear();
+    transmissionBode.clear();
+    freqs.clear();
+    kerMaxGain = 1.;
+    setPlotType(plotType); //this will replot
+}
 
-    this->maxGain = 1.;
-    this->maxGaindB = 0.;
+void KerPlot::clearSrcKernel(){
+    srcTransmission.clear();
+    srcTransmissionBode.clear();
+    srcFreqs.clear();
+    srcKerMaxGain = 1.;
+    setPlotType(plotType); //this will replot
+}
 
-    setPlotType(plotType);
-    //this->setEnabled(false);
+void KerPlot::resetPlot(double freq, int t, int band){
+    setFreqs(freq, t, band);
+    clearKernel();
+    clearSrcKernel();
 }
 
 void KerPlot::amplitudePlot(){
     this->yAxis->setLabel(tr("Amplitude"));
+
+    assert(freqs.size() == transmission.size());
     this->graph(0)->setData(freqs,transmission,true);
+    assert(srcFreqs.size() == srcTransmission.size());
+    this->graph(1)->setData(srcFreqs,srcTransmission,true);
+
+    double maxGain = std::max(srcKerMaxGain, kerMaxGain);
     this->yAxis->setRange(QCPRange(0.,(maxGain*1.02)));
+
     this->setEnabled(true);
     this->replot();
 }
 
 void KerPlot::bodePlot(){
     this->yAxis->setLabel(tr("Attenuation, dB"));
+
+    assert(freqs.size() == transmissionBode.size());
     this->graph(0)->setData(freqs,transmissionBode,true);
 
+    assert(srcFreqs.size() == srcTransmissionBode.size());
+    this->graph(1)->setData(srcFreqs,srcTransmissionBode,true);
+
+    double maxGaindB = 20 * std::log10(std::max(srcKerMaxGain, kerMaxGain));
     this->yAxis->setRange(QCPRange(-80., maxGaindB+1));
 
     this->setEnabled(true);
@@ -87,19 +134,44 @@ void KerPlot::checkXBounds(const QCPRange& newRange, const QCPRange& oldRange){
     }
 }
 
-void KerPlot::setFreq(double freq){
-    this->xRange = QCPRange(0., freq/2.);
+void KerPlot::setFreqs(double freq, int t, int band){
+    nqFreq = freq/2.;
+    double dT = static_cast<double>(t);
+    double dBand = static_cast<double>(band);
+
+    lBandLimit = dBand*freq/2./dT;
+    rBandLimit = (dBand+1)*freq/2./dT;
+
+    if(rBandLimit/2. > 5000.){
+        rBandLimit /= 1000.; lBandLimit /= 1000.; nqFreq/=1000.;
+        this->xAxis->setLabel(tr("Frequency, MHz"));
+    }else
+        this->xAxis->setLabel(tr("Frequency, kHz"));
+
+    this->xRange = QCPRange(lBandLimit, rBandLimit);
     this->xAxis->setRange(xRange);
 
-    size_t l = this->transmission.size();
+}
 
+void KerPlot::updateFreqs(){
+    size_t l = plotPoints + 1;
     this->freqs.resize(l);
-    const double div = static_cast<double>(l-1);
+    double div = static_cast<double>(l - 1);
+    double step = (rBandLimit - lBandLimit)/div;
     for(int i = 0; i < l; ++i){
-        this->freqs[i] = static_cast<double>(i) * freq / div / 2.;
+        this->freqs[i] = lBandLimit + static_cast<double>(i) * step;
     }
 }
 
+void KerPlot::updateSrcFreqs(){
+    size_t l = srcPlotPoints + 1;
+    this->srcFreqs.resize(l);
+    double div = static_cast<double>(l - 1);
+    double step = nqFreq/div;
+    for(int i = 0; i < l; ++i){
+        this->srcFreqs[i] = static_cast<double>(i) * step;
+    }
+}
 
 void KerPlot::setPlotType(const QString& plotType){
     this->plotType = plotType;
@@ -109,6 +181,11 @@ void KerPlot::setPlotType(const QString& plotType){
     else if(plotType == tr("Amplitude Plot")){
         amplitudePlot();
     }
+}
+
+void KerPlot::toggleSrcTransPlot(bool toggle){
+    this->graph(1)->setVisible(toggle);
+    replot();
 }
 
 //DataPlot::DataPlot(QWidget* parent):

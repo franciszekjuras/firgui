@@ -20,25 +20,38 @@ private:
     QLineEdit* freqsLineEdit;
     QLineEdit* gainsLineEdit;
     std::vector<double> crrKer;
+    std::vector<double> crrSrcKer;
     double fpgaSampFreq;
-    double kerSampFreq;
-    int kerRank;
-    bool calcEn;
 
-    void setCalcEn(bool en){calcEn = en;}
+    int t, d, s;
+
+    bool isKernelReady;
+    bool isFilterReady;
+    bool isSrcKernelReady;
+
     static bool textToDoubles(const std::string& str, std::vector<double>& v);
+    void kernelReady(bool en);
+    void srcKernelReady(bool en){isSrcKernelReady = en;}
+    void calcSrcKernel();
+    void clearBandsCombo();
+    void rebuild();
+    void bandChanged(int band);
 
 public slots:
     void calculateKernel();
     void bitstreamChanged(QMap<QString, int> specs);
-    void bitstreamLoaded();
+    void bitstreamLoaded(QMap<QString, int> specs);
+    void filterReady(bool en);
     void setFpgaSampFreq(double freq);
 
 signals:
     void kernelChanged(const FirKer& ker);
+    void kernelClear();
+    void srcKernelChanged(const FirKer& ker);
+    void srcKernelClear();
     void enableCalcButton(bool en);
     void enableSetButton(bool en);
-    void reqClearPlot();
+    void resetPlot(double freq, int t, int band);
 
 
 };

@@ -6,7 +6,7 @@ TEMPLATE = app
 TARGET = firgui
 INCLUDEPATH += .
 CONFIG += c++14
-LIBS += -lssh
+LIBS += -lssh -lfirpm
 DEFINES += QCUSTOMPLOT_USE_OPENGL
 QT += widgets core printsupport
 
