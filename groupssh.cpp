@@ -1,6 +1,8 @@
 #include <QtWidgets>
+#include <string>
+#include <QString>
+#include <QDebug>
 #include "groupssh.h"
-
 
 
 GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
@@ -17,9 +19,12 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
 
     QLabel* idLabel = new QLabel(tr("ID"));
     idLabel->setToolTip(tr("Last 6 symbols of Red Pitaya MAC adrress (see WLAN connector)"));
-    QLineEdit* idLineEdit = new QLineEdit;
+    idLineEdit = new IMLineEdit;
+    idLineEdit->setToolTip(tr("Last 6 symbols of Red Pitaya MAC adrress (see WLAN connector)"));
+    idLineEdit->setInputMask("HHHHHH");
     //idLineEdit->setMaximumWidth(90);
     QPushButton* connectButton = new QPushButton(tr("Connect"));
+    connectButton->setEnabled(false);
 
     idHBox->addWidget(idLabel);
     idHBox->addWidget(idLineEdit);
@@ -59,4 +64,16 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
     //vBox->addWidget(responseTextBox);
     this->setLayout(vBox);
 
+    //---> Functionality <---//
+
+    connect(connectButton, &QPushButton::released, this, &GroupSsh::onConnect);
+    connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){connectButton->setEnabled((str.length() == 6));});
+//    connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){idLineEdit->setText(str);idLineEdit->setCursorPosition(str.length());});
+//    connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){qDebug() << str;});
+
+}
+
+void GroupSsh::onConnect(){
+    std::string rpMac = idLineEdit->text().toLower().toStdString();
+    qDebug() << QString::fromStdString(rpMac);
 }

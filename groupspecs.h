@@ -6,6 +6,7 @@
 #include <vector>
 #include <QMap>
 #include <QString>
+#include <QMap>
 #include "firker.h"
 
 class QLineEdit;
@@ -24,6 +25,8 @@ private:
     std::vector<double> crrKer;
     std::vector<double> crrSrcKer;
     double fpgaSampFreq;
+    double unitMult;
+    LeastSqFirKer::Window crrWnd;
 
     int t, d, s;
 
@@ -35,8 +38,8 @@ private:
     void kernelReady(bool en);
     void srcKernelReady(bool en){isSrcKernelReady = en;}
     void calcSrcKernel();
-    void clearBandsCombo();
     void rebuild();
+    void wndChanged(QString wndStr);
     void bandChanged(int band);
     void unitChanged(QString unit);
 

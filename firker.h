@@ -1,6 +1,8 @@
 #ifndef _FIRKER_H_
 #define _FIRKER_H_
 #include <vector>
+#include <map>
+#include <functional>
 
 class FirKer
 {
@@ -32,13 +34,23 @@ protected:
 class LeastSqFirKer : public FirKer
 {
 public:
+    enum class Window {
+        none,
+        hamming,
+        blackman
+    };
+
     LeastSqFirKer();
     bool setSpecs(const std::vector<double>& freqs, const std::vector<double>& gains);
+    void setWindow(Window wnd);
     bool calc();
 
 protected:
     std::vector<double> freqs;
     std::vector<double> gains;
+    Window wnd;
+    std::vector<double> kerNoWin;
+    std::map<Window, std::function<double(const double&)>> windows;
 
 };
 

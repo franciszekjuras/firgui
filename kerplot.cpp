@@ -27,12 +27,14 @@ KerPlot::KerPlot(QWidget* parent):
     setFreqs(1., 1, 0);
     kerMaxGain = 1.;
     srcKerMaxGain = 1.;
-    plotPoints = 10000;
+    plotPoints = 20000;
     srcPlotPoints = 20000;
 }
 
 void KerPlot::setKernel(const FirKer &kernel){
     std::vector<double> trns = kernel.transmission(plotPoints);
+    if(inverseBand)
+        std::reverse(trns.begin(), trns.end());
 
     transmission = QVector<double>::fromStdVector(trns);
     transmissionBode = QVector<double>::fromStdVector(FirKer::toBode(trns));
@@ -43,7 +45,7 @@ void KerPlot::setKernel(const FirKer &kernel){
     double max;
     for(auto v : trns)
         if(v > max) max = v;
-    kerMaxGain = std::max(max,kerMaxGain);
+    kerMaxGain = max;
 
     setPlotType(plotType); //this will replot
 }
@@ -60,7 +62,7 @@ void KerPlot::setSrcKernel(const FirKer &kernel){
     double max;
     for(auto v : trns)
         if(v > max) max = v;
-    srcKerMaxGain = std::max(max,srcKerMaxGain);
+    srcKerMaxGain = max;
 
     setPlotType(plotType);
 }
@@ -136,6 +138,7 @@ void KerPlot::checkXBounds(const QCPRange& newRange, const QCPRange& oldRange){
 
 void KerPlot::setFreqs(double freq, int t, int band){
     nqFreq = freq/2.;
+    inverseBand = ((band%2) == 1);
     double dT = static_cast<double>(t);
     double dBand = static_cast<double>(band);
 

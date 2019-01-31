@@ -2,6 +2,7 @@
 #include <utility>
 #include <cmath>
 #include <vector>
+#include <cmath>
 #include <firpm/pm.h>
 #include "firker.h"
 
@@ -80,6 +81,10 @@ std::vector<double> FirKer::toBode(const std::vector<double>& trns){
 
 LeastSqFirKer::LeastSqFirKer(){
     gains.push_back(1.);
+    wnd = Window::none;
+    windows[Window::none] = [](const double& x){return 1.;};
+    windows[Window::hamming] = [](const double& x){return (25./46. + 21./46.*std::cos(2*M_PI*x));};
+    windows[Window::blackman] = [](const double& x){return ((21. + 25.*std::cos(2.*M_PI*x) + 4.*std::cos(4*M_PI*x)) / 50.);};
 }
 
 
@@ -106,7 +111,7 @@ bool LeastSqFirKer::calc(){
         return false;
     //body
 
-    ker.resize(rank);
+    kerNoWin.resize(rank);
     double accg = 0.; auto gcrr = gains.begin();
     std::vector<std::pair<double,double>> spc;
     auto normFreqs = freqs;
@@ -131,7 +136,7 @@ bool LeastSqFirKer::calc(){
         for(auto f : normFreqs)
             acc += 2.*f*(*g - *(++g));
         acc += *g;
-        ker[rank/2] = acc;
+        kerNoWin[rank/2] = acc;
     }
 
     for(int k = ((rank - 1)/2)+1; k < rank; ++k){
@@ -140,16 +145,31 @@ bool LeastSqFirKer::calc(){
             acc += s.second*std::sin(2.*M_PI*s.first*t);
         acc /= M_PI * t;
         t += 1.;
-        ker[k] = acc;
+        kerNoWin[k] = acc;
     }
 
     for(int k = 0, j = rank - 1; k < rank/2;){
-        ker[k++] = ker[j--];
+        kerNoWin[k++] = kerNoWin[j--];
     }
 
 
     this->validate();
+    setWindow(wnd);
+
     return true;
+}
+
+void LeastSqFirKer::setWindow(Window wnd){
+    this->wnd = wnd;
+    std::function<double(const double&)> wndFunc = windows[wnd];
+    if(!isValid())
+        return;
+    size_t l = kerNoWin.size();
+    double w = static_cast<double>(l-1);
+    ker.resize(l);
+
+    for(int i = 0; i < l; ++i)
+        ker[i] = kerNoWin[i]*wndFunc(-.5 + (static_cast<double>(i)/w));
 }
 
 
