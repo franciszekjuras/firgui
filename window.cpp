@@ -7,7 +7,7 @@
 #include "kerplot.h"
 
 Window::Window(QWidget *parent)
-    : QWidget(parent)
+    : QMainWindow(parent)
 {
     QHBoxLayout* mainHBox = new QHBoxLayout;
 
@@ -23,18 +23,20 @@ Window::Window(QWidget *parent)
     groupSpecs->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Fixed);
     lVBox->addWidget(groupSpecs);
 
-    lVBox->addItem(new QSpacerItem(0,0,QSizePolicy::Preferred, QSizePolicy::Expanding));
+    GroupConfig* groupConfig = new GroupConfig;
+    groupConfig->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Fixed);
+    lVBox->addWidget(groupConfig);
 
     GroupSsh* groupSsh = new GroupSsh;
     groupSsh->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Fixed);
     lVBox->addWidget(groupSsh);
 
+    lVBox->addItem(new QSpacerItem(0,0,QSizePolicy::Preferred, QSizePolicy::Expanding));
+
+
 //    QFrame* line = new QFrame(); line->setFrameShape(QFrame::HLine); line->setFrameShadow(QFrame::Sunken);
 //    lVBox->addWidget(line);
 
-    GroupConfig* groupConfig = new GroupConfig;
-    groupConfig->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Fixed);
-    lVBox->addWidget(groupConfig);
 
     lWid->setLayout(lVBox);
     mainHBox->addWidget(lWid);
@@ -67,8 +69,9 @@ Window::Window(QWidget *parent)
 
     mainHBox->addLayout(rVBox);
 
-
-    setLayout(mainHBox);
+    QWidget *centralWidget = new QWidget();
+    centralWidget->setLayout(mainHBox);
+    setCentralWidget(centralWidget);
 
     //---> Functionality <---//
     connect(groupSpecs, &GroupSpecs::kernelChanged, kerPlot, &KerPlot::setKernel);

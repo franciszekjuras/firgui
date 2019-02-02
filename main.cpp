@@ -5,6 +5,7 @@
 
 int main(int argc, char *argv[])
 {
+    QApplication::setStyle("cleanlooks");
     QApplication app(argc, argv);
     Window window;
     //window.setStyleSheet("QGroupBox {border: 1px solid gray; border-radius: 9px; margin-top: 0.5em;}"

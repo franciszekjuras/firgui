@@ -20,7 +20,8 @@ HEADERS += \
     kerplot.h \
     groupconfig.h \
     groupspecs.h \
-    bitstreamspecs.h
+    bitstreamspecs.h \
+    waitingspinnerwidget.h
 SOURCES += main.cpp \
     window.cpp \
     groupssh.cpp \
@@ -30,4 +31,5 @@ SOURCES += main.cpp \
     kerplot.cpp \
     groupconfig.cpp \
     groupspecs.cpp \
-    bitstreamspecs.cpp
+    bitstreamspecs.cpp \
+    waitingspinnerwidget.cpp

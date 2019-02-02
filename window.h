@@ -3,8 +3,9 @@
 #define WINDOW_H
 
 #include <QWidget>
+#include <QMainWindow>
 
-class Window : public QWidget
+class Window : public QMainWindow
 {
     Q_OBJECT
 

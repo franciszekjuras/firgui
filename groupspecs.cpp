@@ -8,6 +8,7 @@
 #include <cassert>
 #include "groupspecs.h"
 #include "firker.h"
+#include "waitingspinnerwidget.h"
 
 GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),parent)
 {
@@ -42,6 +43,9 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
     //---> Buttons <---//
     QHBoxLayout* buttonsHBox = new QHBoxLayout;
     buttonsHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Fixed));
+
+    waitSpin = new WaitingSpinnerWidget(0, false, false);
+    buttonsHBox->addWidget(waitSpin);
     QPushButton* calcButton = new QPushButton(tr("Calculate"));
     buttonsHBox->addWidget(calcButton);
     QPushButton* setButton = new QPushButton(tr("Set"));
@@ -51,7 +55,19 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
 
     this->setLayout(vBox);
 
+
     //---> Functionality <---//
+    waitSpin->setRoundness(70.0);
+    waitSpin->setMinimumTrailOpacity(50.0);
+    waitSpin->setTrailFadePercentage(70.0);
+    waitSpin->setNumberOfLines(10);
+    waitSpin->setLineLength(6);
+    waitSpin->setLineWidth(3);
+    waitSpin->setInnerRadius(5);
+    waitSpin->setRevolutionsPerSecond(2);
+    waitSpin->setColor(QColor(0, 150, 136));
+    //waitSpin->setColor(QColor(137, 207, 240));
+
 
     unitMult = 1.;
 
@@ -77,6 +93,20 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
     wndCombo->addItems(windows);
 
     connect(bandCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GroupSpecs::bandChanged);
+
+    qRegisterMetaType<FirKer>("FirKer");
+    connect(&kerCalcThread, &KernelCalcThread::started, this, [=](){this->waitSpin->start();});
+    connect(&kerCalcThread, &KernelCalcThread::calcFinished, this, &GroupSpecs::kerCalcFinished);
+    connect(&kerCalcThread, &KernelCalcThread::calcFailed, this, &GroupSpecs::kerCalcFailed);
+    connect(&kerCalcThread, &KernelCalcThread::finished, this, [=](){this->calcRunning = false;this->waitSpin->stop();});
+    calcRunning = false;
+
+
+    connect(&srcKerCalcThread, &KernelCalcThread::started, this, [=](){this->waitSpin->start();});
+    connect(&srcKerCalcThread, &KernelCalcThread::calcFinished, this, &GroupSpecs::srcKerCalcFinished);
+    connect(&srcKerCalcThread, &KernelCalcThread::calcFailed, this, &GroupSpecs::srcKerCalcFailed);
+    connect(&srcKerCalcThread, &KernelCalcThread::finished, this,  [=](){this->srcCalcRunning = false;this->waitSpin->stop();});
+    srcCalcRunning = false;
 
 }
 
@@ -115,7 +145,8 @@ void GroupSpecs::unitChanged(QString unit){
 }
 
 void GroupSpecs::calculateKernel(){
-    //---> add various bands handling (assume band 0 for now)
+    if(calcRunning) return;
+
     LeastSqFirKer ker;
     double kerSampFreq = fpgaSampFreq / static_cast<double>(t);
     ker.setSampFreq(kerSampFreq);
@@ -127,16 +158,29 @@ void GroupSpecs::calculateKernel(){
         qDebug()<<"Parsing failed";
         return;
     }
-    //---> add band shift and reversal
+
+    //unit conversion
+    for(auto& v : freqs){
+        v *= unitMult;
+    }
+
     int band = bandCombo->currentIndex();
     double kerNqFreq = kerSampFreq / 2.;
+
+    qDebug()<<"Shift: ";
+    for(auto& v : freqs){
+        v -= (kerNqFreq*band); //shift
+        qDebug() << v;
+    }
+
     if((band%2) == 1){
+        qDebug()<<"Reversal: ";
         for(auto& v : freqs){
-            v -= (kerNqFreq*band); //shift
             v = kerNqFreq - v; //reversal
             qDebug() << v;
         }
         std::reverse(freqs.begin(),freqs.end());
+        std::reverse(gains.begin(),gains.end());
     }
 
     if(!ker.setSpecs(freqs, gains)){
@@ -144,15 +188,30 @@ void GroupSpecs::calculateKernel(){
         return;
     }
     ker.setWindow(crrWnd);
-    if(!ker.calc()){
-        qDebug()<<"Calculation failed";
-        return;
-    }
+    kerCalcThread.setKernel(ker);
+    calcRunning = true;
+    assert(!kerCalcThread.isRunning());
+    qDebug() << "Starting Calc Thread.";
+    kerCalcThread.start();
+}
+
+void GroupSpecs::kerCalcFinished(FirKer ker){
+    qDebug() << "Calculation finished.";
     crrKer = ker.getKernel();
     emit kernelChanged(ker);
 }
 
+void GroupSpecs::kerCalcFailed(){
+    qDebug()<<"Calculation failed.";
+}
+
 void GroupSpecs::calcSrcKernel(){
+
+    qDebug() << "Calc SRC Kernel.";
+
+    if(srcCalcRunning) {
+        qDebug() << "Calc SRC Kernel already running."; return;
+    }
     //---> add various bands handling (assume band 0 for now)
     // normalized frequency specification -- to avoid double conversion
     if(t == 1) return;
@@ -189,15 +248,32 @@ void GroupSpecs::calcSrcKernel(){
     if(!ker.setSpecs(freqs,gains,weights)){
         qDebug() << "Wrong EqRipple Filter specs."; return;
     }
-    if(!ker.calc()){
-        qDebug()<< "SRC kernel calculation failed."; return;
-    }
+
+    srcKerCalcThread.setKernel(ker);
+    srcCalcRunning = true;
+    assert(!srcKerCalcThread.isRunning());
+    qDebug() << "Starting Src Calc Thread.";
+    srcKerCalcThread.start();
+
+//    if(!ker.calc()){
+//        qDebug()<< "SRC kernel calculation failed."; return;
+//    }
+//    qDebug() << "SRC ker calc end.";
+//    crrSrcKer = ker.getKernel();
+//    ker.setSampFreq(fpgaSampFreq);
+//    emit srcKernelChanged(ker);
+}
+
+void GroupSpecs::srcKerCalcFinished(FirKer ker){
+    qDebug() << "Calculation finished.";
     crrSrcKer = ker.getKernel();
     ker.setSampFreq(fpgaSampFreq);
     emit srcKernelChanged(ker);
 }
 
-
+void GroupSpecs::srcKerCalcFailed(){
+    qDebug()<<"Calculation failed.";
+}
 
 void GroupSpecs::bitstreamChanged(QMap<QString, int> specs){
     filterReady(false);
@@ -243,7 +319,6 @@ void GroupSpecs::rebuild(){
         }
         bandCombo->addItem(QString::number(i * bandW) + " - " + QString::number((i+1) * bandW) + unit);
     }
-    calcSrcKernel();
 }
 
 void GroupSpecs::bandChanged(int band){
@@ -270,6 +345,10 @@ void GroupSpecs::filterReady(bool en){
 void GroupSpecs::kernelReady(bool en){
     isKernelReady = en;
     enableSetButton(isFilterReady && isKernelReady);
+}
+
+void GroupSpecs::srcKernelReady(bool en){
+    isSrcKernelReady = en;
 }
 
 void GroupSpecs::setFpgaSampFreq(double freq){

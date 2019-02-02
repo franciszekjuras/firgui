@@ -18,24 +18,17 @@ GroupConfig::GroupConfig(QWidget *parent) : QGroupBox(tr("Configuration"),parent
     vBox->addLayout(bitForm);
 
     QHBoxLayout* buttonHBox = new QHBoxLayout;
-    //buttonHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Preferred, QSizePolicy::Preferred));
+    buttonHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Preferred));
     QPushButton* loadButton = new QPushButton(tr("Load"));
-    loadButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    buttonHBox->addWidget(loadButton,0,Qt::AlignRight);
+    buttonHBox->addWidget(loadButton);
     vBox->addLayout(buttonHBox);
 
     this->setLayout(vBox);
 
     //---> Functionality <---//
 
-
-
-
-
-
-
-    for(auto it = bitMap.cbegin(); it != bitMap.cend(); ++it)
-        qDebug() << it.key() << " " << it.value().getFileName();
+//    for(auto it = bitMap.cbegin(); it != bitMap.cend(); ++it)
+//        qDebug() << it.key() << " " << it.value().getFileName();
 
 //    BitstreamSpecs bitspecs("fir3v11_t125d39s20fm21cm20.bin");
 //    qDebug() << "Valid:" << bitspecs.isValid();

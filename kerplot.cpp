@@ -18,9 +18,12 @@ KerPlot::KerPlot(QWidget* parent):
 
 
     this->addGraph();
-    this->graph(0)->setPen(QPen(Qt::blue));
+    this->graph(0)->setPen(QPen(QColor(57, 106, 177)));
     this->addGraph();
-    this->graph(1)->setPen(QPen(Qt::red));
+    this->graph(1)->setPen(QPen(QColor(218, 124, 48)));
+    //this->setNotAntialiasedElements(QCP::aeAll);
+    this->graph(0)->setAdaptiveSampling(false);
+    this->graph(1)->setAdaptiveSampling(false);
 
     this->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     //default values
@@ -28,7 +31,7 @@ KerPlot::KerPlot(QWidget* parent):
     kerMaxGain = 1.;
     srcKerMaxGain = 1.;
     plotPoints = 20000;
-    srcPlotPoints = 20000;
+    srcPlotPoints = 10000;
 }
 
 void KerPlot::setKernel(const FirKer &kernel){

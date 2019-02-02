@@ -91,8 +91,8 @@ LeastSqFirKer::LeastSqFirKer(){
 bool LeastSqFirKer::setSpecs(const std::vector<double>& freqs, const std::vector<double>& gains){
     if((freqs.size()+1) != gains.size())
         return false;
-    //check for duplicates!
-    if( freqs[0]<=0. || !std::is_sorted(freqs.begin(), freqs.end()) ||
+
+    if( (!freqs.empty() && freqs[0]<=0.) || !std::is_sorted(freqs.begin(), freqs.end()) ||
      (freqs.end() != std::adjacent_find(freqs.begin(), freqs.end())) ||
      !std::all_of(gains.begin(),gains.end(),[](double x) {return x>=0.;}))
         return false;
@@ -185,7 +185,7 @@ bool EqRippleFirKer::setSpecs(const std::vector<double>& freqs, const std::vecto
     if((freqs.size()+2) != gains.size() || (weights.size()*2) != gains.size() )
         return false;
 
-    if( freqs[0]<=0. || !std::is_sorted(freqs.begin(), freqs.end()) ||
+    if( (!freqs.empty() && freqs[0]<=0.) || !std::is_sorted(freqs.begin(), freqs.end()) ||
      (freqs.end() != std::adjacent_find(freqs.begin(), freqs.end())) ||
      !std::all_of(gains.begin(),gains.end(),[](double x) {return x>=0.;}) ||
      !std::all_of(weights.begin(),weights.end(),[](double x) {return x>0.;}) )
