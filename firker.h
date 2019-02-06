@@ -9,7 +9,7 @@ class FirKer
 public:
     FirKer();
 
-    virtual bool calc(){return false;}
+    virtual bool calc() = 0;
     bool isValid() const;
 
     //bool setFrequency();

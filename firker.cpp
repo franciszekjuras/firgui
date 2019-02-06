@@ -206,6 +206,9 @@ bool EqRippleFirKer::calc(){
         return false;
     //body
 
+    if((rank%2 == 0) && (gains.back() != 0))
+        rank--; //prevent firpm library from increasing filter rank
+
     ker.resize(rank);
     std::vector<double> normFreqs;
     normFreqs.resize(freqs.size()+2);

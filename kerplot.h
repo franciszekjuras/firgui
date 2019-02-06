@@ -3,6 +3,8 @@
 
 #include <QVector>
 #include <QString>
+#include <QFutureWatcher>
+#include <memory>
 #include "qcustomplot.h"
 #include "firker.h"
 
@@ -36,16 +38,21 @@ protected:
     QVector<double> freqs;
     QVector<double> srcFreqs;
 
+    QFutureWatcher<std::vector<double> > kerTransWatch;
+    bool plotClearedMeanwhile;
+
     void amplitudePlot();
     void bodePlot();
     void setFreqs(double freq, int t, int band);
     void updateFreqs();
     void updateSrcFreqs();
 
+    void cntSetKernel();
+
 public slots:
     void checkXBounds(const QCPRange& newRange, const QCPRange& oldRange);
-    void setKernel(const FirKer& kernel);
-    void setSrcKernel(const FirKer& kernel);
+    void setKernel(std::shared_ptr<const FirKer> kernel);
+    void setSrcKernel(std::shared_ptr<const FirKer> kernel);
     void setPlotType(const QString& plotType);
     void resetPlot(double freq, int t, int band);
     void clearKernel();

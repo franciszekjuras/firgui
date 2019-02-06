@@ -11,6 +11,8 @@
 #include <memory>
 #include "firker.h"
 
+Q_DECLARE_METATYPE(std::shared_ptr<FirKer>)
+
 class QLineEdit;
 class QComboBox;
 class WaitingSpinnerWidget;
@@ -18,24 +20,17 @@ class WaitingSpinnerWidget;
 class KernelCalcThread : public QThread{
     Q_OBJECT
 signals:
-    void calcFinished(FirKer ker);
-    void calcFailed();
-
+    void calcFinished(std::shared_ptr<FirKer> ker);
 private:
-    std::unique_ptr<FirKer> ker;
+    std::shared_ptr<FirKer> ker;
 public:
-    void setKernel(const EqRippleFirKer& ker){
-        this->ker = std::make_unique<EqRippleFirKer>(ker);
-    }
-    void setKernel(const LeastSqFirKer& ker){
-        this->ker = std::make_unique<LeastSqFirKer>(ker);
+    void setKernel(std::shared_ptr<FirKer> ker){
+        this->ker = ker;
     }
 private:
     void run() override {
-        if(ker->calc())
-            emit calcFinished(*ker);
-        else
-            emit calcFailed();
+        ker->calc();
+        emit calcFinished(ker);
     }
 };
 
@@ -58,20 +53,20 @@ private:
     LeastSqFirKer::Window crrWnd;
     KernelCalcThread kerCalcThread;
     KernelCalcThread srcKerCalcThread;
-    bool calcRunning;
-    bool srcCalcRunning;
 
     int t, d, s;
 
     bool isKernelReady;
     bool isFilterReady;
     bool isSrcKernelReady;
+    bool pendCalculateKernel;
+    bool pendCalcSrcKernel;
+    bool kerLocked;
+    bool srcKerLocked;
 
     static bool textToDoubles(const std::string& str, std::vector<double>& v);
-    void kerCalcFinished(FirKer ker);
-    void kerCalcFailed();
-    void srcKerCalcFinished(FirKer ker);
-    void srcKerCalcFailed();
+    void kerCalcFinished(std::shared_ptr<FirKer> ker);
+    void srcKerCalcFinished(std::shared_ptr<FirKer> ker);
     void kernelReady(bool en);
     void srcKernelReady(bool en);
     void calcSrcKernel();
@@ -88,9 +83,9 @@ public slots:
     void setFpgaSampFreq(double freq);
 
 signals:
-    void kernelChanged(const FirKer& ker);
+    void kernelChanged(std::shared_ptr<const FirKer> ker);
     void kernelClear();
-    void srcKernelChanged(const FirKer& ker);
+    void srcKernelChanged(std::shared_ptr<const FirKer> ker);
     void srcKernelClear();
     void enableCalcButton(bool en);
     void enableSetButton(bool en);

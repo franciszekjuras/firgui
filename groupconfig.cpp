@@ -3,6 +3,7 @@
 #include <QFileInfo>
 #include <QString>
 #include <QMap>
+#include <cassert>
 #include "groupconfig.h"
 #include "bitstreamspecs.h"
 
@@ -13,8 +14,11 @@ GroupConfig::GroupConfig(QWidget *parent) : QGroupBox(tr("Configuration"),parent
     QVBoxLayout* vBox = new QVBoxLayout;
 
     QFormLayout* bitForm = new QFormLayout;
-    bitCombo = new QComboBox;
-    bitForm->addRow(tr("Nyquist frequency"), bitCombo);
+    bitMainCombo = new QComboBox;
+    bitForm->addRow(tr("Nyquist frequency"), bitMainCombo);
+    bitSpecCombo = new QComboBox;
+    QString specComboName = tr("Filter Rank") + " | " + tr("SRC blocks");
+    bitForm->addRow(specComboName, bitSpecCombo);
     vBox->addLayout(bitForm);
 
     QHBoxLayout* buttonHBox = new QHBoxLayout;
@@ -65,24 +69,55 @@ void GroupConfig::init(){
 
     for(const auto& fI : binFiles){
         BitstreamSpecs bitSpec(fI);
-        if(bitSpec.isValid() && bitSpec.getSpecs().contains("t")){
-            double nyqFreq = fpgaSampFreq/2./ static_cast<double>(bitSpec.getSpecs().value("t"));
-            QString key;
-            if(nyqFreq >= 1000.) key = QString::number(nyqFreq/1000.,'g',4)+" MHz";
-            else key = QString::number(nyqFreq,'g',4)+" KHz";
-            bitMap[key] = bitSpec;
+        auto params = bitSpec.getSpecs();
+        if(bitSpec.isValid() && params.contains("t")){
+            double nyqFreq = fpgaSampFreq/2./ static_cast<double>(params["t"]);
+            QString key1;
+            if(nyqFreq >= 1000.) key1 = QString::number(nyqFreq/1000.,'g',4)+" MHz";
+            else key1 = QString::number(nyqFreq,'g',4)+" KHz";
+            QString key2;
+
+            if(params.contains("d"))
+                key2 += QString::number(params["d"]*params["t"]);
+            else
+                key2 += tr("unk.");
+
+            key2 += " | ";
+
+            if(params.contains("s"))
+                key2 += QString::number(params["s"]);
+            else
+                key2 += tr("unk.");
+
+            bitMap[key1][key2] = bitSpec;
         }
     }
 
-    connect(bitCombo, &QComboBox::currentTextChanged, this, &GroupConfig::bitComboChanged);
+    connect(bitMainCombo, &QComboBox::currentTextChanged, this, &GroupConfig::bitMainComboChanged);
+    connect(bitSpecCombo, &QComboBox::currentTextChanged, this, &GroupConfig::bitSpecComboChanged);
 
-    for(auto it = bitMap.cbegin(); it != bitMap.cend(); ++it)
-        bitCombo->addItem(it.key());
+    for(auto it = bitMap.cbegin(); it != bitMap.cend(); ++it){
+        qDebug()<<"it:"<<it.key();
+        bitMainCombo->addItem(it.key());
+    }
 }
 
-void GroupConfig::bitComboChanged(QString str){
-    if(!bitMap.contains(str)){
-        qDebug() << "Error: Unknown bitCombo string."; return;
-    }
-    emit bitstreamSelected(bitMap.value(str).getSpecs());
+void GroupConfig::bitMainComboChanged(QString mainStr){
+    assert(bitMap.contains(mainStr));
+    updateBitSpecCombo(mainStr);
+}
+
+void GroupConfig::updateBitSpecCombo(QString mainStr){
+    bitMainStr = mainStr;
+    bitSpecCombo->clear();
+    auto specMap = bitMap.value(mainStr);
+    for(auto it = specMap.cbegin(); it != specMap.cend(); ++it)
+        bitSpecCombo->addItem(it.key());
+}
+
+void GroupConfig::bitSpecComboChanged(QString specStr){
+    if(specStr.isEmpty()) return;
+    qDebug()<<"specStr:"<<specStr;
+    assert(bitMap.value(bitMainStr).contains(specStr));
+    emit bitstreamSelected(bitMap[bitMainStr][specStr].getSpecs());
 }

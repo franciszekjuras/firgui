@@ -18,11 +18,15 @@ public:
     void init();
 
 private:
-    QComboBox* bitCombo;
+    QComboBox* bitMainCombo;
+    QString bitMainStr;
+    QComboBox* bitSpecCombo;
     double fpgaSampFreq;
-    QMap<QString, BitstreamSpecs> bitMap;
+    QMap<QString, QMap<QString,BitstreamSpecs> > bitMap;
 
-    void bitComboChanged(QString str);
+    void bitMainComboChanged(QString mainStr);
+    void bitSpecComboChanged(QString specStr);
+    void updateBitSpecCombo(QString mainStr);
 
 signals:
     void bitstreamSelected(QMap<QString, int> specs);

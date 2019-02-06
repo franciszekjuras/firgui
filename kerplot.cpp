@@ -1,7 +1,11 @@
 #include <QVector>
 #include <QString>
+#include <QtConcurrent>
+#include <QFuture>
+#include <QFutureWatcher>
 #include <cmath>
 #include <algorithm>
+#include <memory>
 #include <cassert>
 #include "kerplot.h"
 
@@ -9,6 +13,8 @@ KerPlot::KerPlot(QWidget* parent):
     QCustomPlot(parent)
 {
     //this->setOpenGl(true);
+
+    connect(&kerTransWatch, &QFutureWatcher<std::vector<double>>::finished, this, &KerPlot::cntSetKernel);
 
     this->axisRect()->setRangeDrag(Qt::Horizontal);
     this->axisRect()->setRangeZoom(Qt::Horizontal);
@@ -34,8 +40,16 @@ KerPlot::KerPlot(QWidget* parent):
     srcPlotPoints = 10000;
 }
 
-void KerPlot::setKernel(const FirKer &kernel){
-    std::vector<double> trns = kernel.transmission(plotPoints);
+void KerPlot::setKernel(std::shared_ptr<const FirKer> kernel){
+    QFuture<std::vector<double> > fut = QtConcurrent::run([=](){return kernel->transmission(plotPoints);});
+    kerTransWatch.setFuture(fut);
+    plotClearedMeanwhile = false;
+}
+
+void KerPlot::cntSetKernel(){
+    if(plotClearedMeanwhile) return;
+    std::vector<double> trns = kerTransWatch.future().result();
+    //std::vector<double> trns = kernel->transmission(plotPoints);
     if(inverseBand)
         std::reverse(trns.begin(), trns.end());
 
@@ -53,8 +67,8 @@ void KerPlot::setKernel(const FirKer &kernel){
     setPlotType(plotType); //this will replot
 }
 
-void KerPlot::setSrcKernel(const FirKer &kernel){
-    std::vector<double> trns = kernel.transmission(srcPlotPoints);
+void KerPlot::setSrcKernel(std::shared_ptr<const FirKer> kernel){
+    std::vector<double> trns = kernel->transmission(srcPlotPoints);
 
     srcTransmission = QVector<double>::fromStdVector(trns);
     srcTransmissionBode = QVector<double>::fromStdVector(FirKer::toBode(trns));
@@ -71,6 +85,7 @@ void KerPlot::setSrcKernel(const FirKer &kernel){
 }
 
 void KerPlot::clearKernel(){
+    plotClearedMeanwhile = true;
     transmission.clear();
     transmissionBode.clear();
     freqs.clear();
@@ -117,7 +132,7 @@ void KerPlot::bodePlot(){
     this->graph(1)->setData(srcFreqs,srcTransmissionBode,true);
 
     double maxGaindB = 20 * std::log10(std::max(srcKerMaxGain, kerMaxGain));
-    this->yAxis->setRange(QCPRange(-80., maxGaindB+1));
+    this->yAxis->setRange(QCPRange(-100., maxGaindB+1));
 
     this->setEnabled(true);
     this->replot();

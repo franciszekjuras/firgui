@@ -6,6 +6,7 @@
 #include <sstream>
 #include <algorithm>
 #include <cassert>
+#include <memory>
 #include "groupspecs.h"
 #include "firker.h"
 #include "waitingspinnerwidget.h"
@@ -79,8 +80,8 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
     connect(this, &GroupSpecs::srcKernelClear, [=](){srcKernelReady(false);});
     connect(this, &GroupSpecs::kernelClear, [=](){kernelReady(false);});
 
-    connect(this, &GroupSpecs::srcKernelChanged, [=](const FirKer& firker){srcKernelReady(true);});
-    connect(this, &GroupSpecs::kernelChanged, [=](const FirKer& firker){kernelReady(true);});
+    connect(this, &GroupSpecs::srcKernelChanged, [=](std::shared_ptr<const FirKer> firker){srcKernelReady(true);});
+    connect(this, &GroupSpecs::kernelChanged, [=](std::shared_ptr<const FirKer> firker){kernelReady(true);});
 
     connect(this, &GroupSpecs::resetPlot, [=](double f, int t, int b){srcKernelReady(false);kernelReady(false);});
 
@@ -94,19 +95,16 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
 
     connect(bandCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GroupSpecs::bandChanged);
 
-    qRegisterMetaType<FirKer>("FirKer");
+    qRegisterMetaType< std::shared_ptr<FirKer> >("FirKer");
     connect(&kerCalcThread, &KernelCalcThread::started, this, [=](){this->waitSpin->start();});
     connect(&kerCalcThread, &KernelCalcThread::calcFinished, this, &GroupSpecs::kerCalcFinished);
-    connect(&kerCalcThread, &KernelCalcThread::calcFailed, this, &GroupSpecs::kerCalcFailed);
-    connect(&kerCalcThread, &KernelCalcThread::finished, this, [=](){this->calcRunning = false;this->waitSpin->stop();});
-    calcRunning = false;
-
 
     connect(&srcKerCalcThread, &KernelCalcThread::started, this, [=](){this->waitSpin->start();});
     connect(&srcKerCalcThread, &KernelCalcThread::calcFinished, this, &GroupSpecs::srcKerCalcFinished);
-    connect(&srcKerCalcThread, &KernelCalcThread::calcFailed, this, &GroupSpecs::srcKerCalcFailed);
-    connect(&srcKerCalcThread, &KernelCalcThread::finished, this,  [=](){this->srcCalcRunning = false;this->waitSpin->stop();});
-    srcCalcRunning = false;
+    pendCalcSrcKernel = false;
+    pendCalculateKernel = false;
+    kerLocked = false;
+    srcKerLocked = false;
 
 }
 
@@ -145,7 +143,9 @@ void GroupSpecs::unitChanged(QString unit){
 }
 
 void GroupSpecs::calculateKernel(){
-    if(calcRunning) return;
+    if(kerLocked){pendCalculateKernel = true; return;}
+    kerLocked = true;
+    pendCalculateKernel = false;
 
     LeastSqFirKer ker;
     double kerSampFreq = fpgaSampFreq / static_cast<double>(t);
@@ -188,31 +188,34 @@ void GroupSpecs::calculateKernel(){
         return;
     }
     ker.setWindow(crrWnd);
-    kerCalcThread.setKernel(ker);
-    calcRunning = true;
-    assert(!kerCalcThread.isRunning());
+    kerCalcThread.setKernel(std::make_shared<LeastSqFirKer>(ker));
+    kerCalcThread.wait();
     qDebug() << "Starting Calc Thread.";
     kerCalcThread.start();
 }
 
-void GroupSpecs::kerCalcFinished(FirKer ker){
-    qDebug() << "Calculation finished.";
-    crrKer = ker.getKernel();
-    emit kernelChanged(ker);
-}
+void GroupSpecs::kerCalcFinished(std::shared_ptr<FirKer> ker){
+    waitSpin->stop();
+    kerLocked = false;
+    if(pendCalculateKernel){calculateKernel();return;}
 
-void GroupSpecs::kerCalcFailed(){
-    qDebug()<<"Calculation failed.";
+    if(!ker->isValid()){qDebug()<<"Calculation failed.";return;}
+
+    qDebug() << "Calculation finished.";
+    crrKer = ker->getKernel();
+    emit kernelChanged(ker);
 }
 
 void GroupSpecs::calcSrcKernel(){
 
     qDebug() << "Calc SRC Kernel.";
 
-    if(srcCalcRunning) {
-        qDebug() << "Calc SRC Kernel already running."; return;
+    if(srcKerLocked) {
+        qDebug() << "Calc SRC Kernel already running.";
+        pendCalcSrcKernel = true; return;
     }
-    //---> add various bands handling (assume band 0 for now)
+    srcKerLocked = true;
+    pendCalcSrcKernel = false;
     // normalized frequency specification -- to avoid double conversion
     if(t == 1) return;
 
@@ -225,9 +228,9 @@ void GroupSpecs::calcSrcKernel(){
 
     if(band > 0){
         if(width > .5/dT/2.) return;
-
-        freqs.push_back(.5/dT*band); freqs.push_back(.5/dT*band + width);
-        gains.push_back(0); gains.push_back(0);
+        gains.push_back(0); //--> 0 frequency
+        freqs.push_back(.5/dT*band); gains.push_back(0);
+        freqs.push_back(.5/dT*band + width); //--> frequency depends on case
         weights.push_back(stopBandWeight);
     }
     else if(width > .5/dT) return;
@@ -249,30 +252,23 @@ void GroupSpecs::calcSrcKernel(){
         qDebug() << "Wrong EqRipple Filter specs."; return;
     }
 
-    srcKerCalcThread.setKernel(ker);
-    srcCalcRunning = true;
-    assert(!srcKerCalcThread.isRunning());
+    srcKerCalcThread.setKernel(std::make_shared<EqRippleFirKer>(ker));
+    srcKerCalcThread.wait();
     qDebug() << "Starting Src Calc Thread.";
     srcKerCalcThread.start();
-
-//    if(!ker.calc()){
-//        qDebug()<< "SRC kernel calculation failed."; return;
-//    }
-//    qDebug() << "SRC ker calc end.";
-//    crrSrcKer = ker.getKernel();
-//    ker.setSampFreq(fpgaSampFreq);
-//    emit srcKernelChanged(ker);
 }
 
-void GroupSpecs::srcKerCalcFinished(FirKer ker){
+void GroupSpecs::srcKerCalcFinished(std::shared_ptr<FirKer> ker){
+    waitSpin->stop();
+    srcKerLocked = false;
+    if(pendCalcSrcKernel){calcSrcKernel();return;}
+
+    if(!ker->isValid()){qDebug()<<"Calculation failed.";return;}
+
     qDebug() << "Calculation finished.";
-    crrSrcKer = ker.getKernel();
-    ker.setSampFreq(fpgaSampFreq);
+    crrSrcKer = ker->getKernel();
+    ker->setSampFreq(fpgaSampFreq);
     emit srcKernelChanged(ker);
-}
-
-void GroupSpecs::srcKerCalcFailed(){
-    qDebug()<<"Calculation failed.";
 }
 
 void GroupSpecs::bitstreamChanged(QMap<QString, int> specs){
@@ -313,7 +309,7 @@ void GroupSpecs::rebuild(){
     double bandW = fpgaSampFreq / t / 2.;
     QString unit(" kHz");
     for(double i = 0.; i < static_cast<double>(t); ++i){
-        if(i*bandW >= 1000.){
+        if((i+1)*bandW >= 1000.){
             bandW /= 1000.;
             unit = " MHz";
         }
