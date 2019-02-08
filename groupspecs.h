@@ -8,31 +8,33 @@
 #include <QString>
 #include <QMap>
 #include <QThread>
+#include <QFutureWatcher>
 #include <memory>
 #include "firker.h"
+#include "boolmapwatcher.h"
 
-Q_DECLARE_METATYPE(std::shared_ptr<FirKer>)
+//Q_DECLARE_METATYPE(std::shared_ptr<FirKer>)
 
 class QLineEdit;
 class QComboBox;
 class WaitingSpinnerWidget;
 
-class KernelCalcThread : public QThread{
-    Q_OBJECT
-signals:
-    void calcFinished(std::shared_ptr<FirKer> ker);
-private:
-    std::shared_ptr<FirKer> ker;
-public:
-    void setKernel(std::shared_ptr<FirKer> ker){
-        this->ker = ker;
-    }
-private:
-    void run() override {
-        ker->calc();
-        emit calcFinished(ker);
-    }
-};
+//class KernelCalcThread : public QThread{
+//    Q_OBJECT
+//signals:
+//    void calcFinished(std::shared_ptr<FirKer> ker);
+//private:
+//    std::shared_ptr<FirKer> ker;
+//public:
+//    void setKernel(std::shared_ptr<FirKer> ker){
+//        this->ker = ker;
+//    }
+//private:
+//    void run() override {
+//        ker->calc();
+//        emit calcFinished(ker);
+//    }
+//};
 
 class GroupSpecs : public QGroupBox
 {
@@ -51,8 +53,11 @@ private:
     double fpgaSampFreq;
     double unitMult;
     LeastSqFirKer::Window crrWnd;
-    KernelCalcThread kerCalcThread;
-    KernelCalcThread srcKerCalcThread;
+    //KernelCalcThread kerCalcThread;
+    //KernelCalcThread srcKerCalcThread;
+
+    QFutureWatcher<std::shared_ptr<FirKer> > kerCalcWatch;
+    QFutureWatcher<std::shared_ptr<FirKer> > srcKerCalcWatch;
 
     int t, d, s;
 
@@ -63,10 +68,11 @@ private:
     bool pendCalcSrcKernel;
     bool kerLocked;
     bool srcKerLocked;
+    BoolMapOr spinWatch;
 
     static bool textToDoubles(const std::string& str, std::vector<double>& v);
-    void kerCalcFinished(std::shared_ptr<FirKer> ker);
-    void srcKerCalcFinished(std::shared_ptr<FirKer> ker);
+    void kerCalcFinished();
+    void srcKerCalcFinished();
     void kernelReady(bool en);
     void srcKernelReady(bool en);
     void calcSrcKernel();

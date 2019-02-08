@@ -5,6 +5,7 @@
 #include "groupconfig.h"
 #include "groupspecs.h"
 #include "kerplot.h"
+#include "switch.h"
 
 Window::Window(QWidget *parent)
     : QMainWindow(parent)
@@ -56,7 +57,8 @@ Window::Window(QWidget *parent)
 
     plCtrlHBox->addItem(new QSpacerItem(10,0,QSizePolicy::Fixed, QSizePolicy::Fixed));
 
-    QCheckBox* srcTransShowCheckBox = new QCheckBox("Show rate conversion transmission");
+    Switch* srcTransShowCheckBox = new Switch("Rate conversion transmission");
+    //QCheckBox* srcTransShowCheckBox = new QCheckBox("Show rate conversion transmission");
     srcTransShowCheckBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     plCtrlHBox->addWidget(srcTransShowCheckBox);
 
@@ -85,8 +87,9 @@ Window::Window(QWidget *parent)
 
     connect(plotTypeCombo, &QComboBox::currentTextChanged, kerPlot, &KerPlot::setPlotType);
     plotTypeCombo->setCurrentIndex(-1);plotTypeCombo->setCurrentIndex(0);
-    connect(srcTransShowCheckBox, &QCheckBox::toggled, kerPlot, &KerPlot::toggleSrcTransPlot);
-    srcTransShowCheckBox->setChecked(true);
+    connect(srcTransShowCheckBox, &Switch::toggled, kerPlot, &KerPlot::toggleSrcTransPlot);
+
+    srcTransShowCheckBox->animateClick(0);
 
     connect(groupConfig, &GroupConfig::bitstreamSelected, groupSpecs, &GroupSpecs::bitstreamChanged);
     connect(groupConfig, &GroupConfig::fpgaSampFreqChanged, groupSpecs, &GroupSpecs::setFpgaSampFreq);
@@ -96,6 +99,9 @@ Window::Window(QWidget *parent)
     resize(1024, 500);
 
     setWindowTitle(tr("FIR controller"));
+
+
+
 }
 
 //QGroupBox *Window::createFirstExclusiveGroup()

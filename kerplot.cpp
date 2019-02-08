@@ -1,3 +1,4 @@
+#include "kerplot.h"
 #include <QVector>
 #include <QString>
 #include <QtConcurrent>
@@ -7,14 +8,38 @@
 #include <algorithm>
 #include <memory>
 #include <cassert>
-#include "kerplot.h"
+#include "waitingspinnerwidget.h"
+#include "boolmapwatcher.h"
+
 
 KerPlot::KerPlot(QWidget* parent):
     QCustomPlot(parent)
 {
     //this->setOpenGl(true);
 
+
+    waitSpin = new WaitingSpinnerWidget(this, true, true);
+
+    int sizeMult = 2;
+    waitSpin->setRoundness(70.0);
+    waitSpin->setMinimumTrailOpacity(50.0);
+    waitSpin->setTrailFadePercentage(70.0);
+    waitSpin->setNumberOfLines(10);
+    waitSpin->setLineLength(6 * sizeMult);
+    waitSpin->setLineWidth(3 * sizeMult);
+    waitSpin->setInnerRadius(5 * sizeMult);
+    waitSpin->setRevolutionsPerSecond(2);
+    waitSpin->setColor(QColor(0, 150, 136));
+
+    connect(&spinWatch, &BoolMapOr::valueChanged, [=](bool v){if(v)this->waitSpin->start(); else this->waitSpin->stop();});
+
+    connect(&kerTransWatch, &QFutureWatcher<std::vector<double>>::finished, this, [=](){spinWatch.disable("kerTrans");});
     connect(&kerTransWatch, &QFutureWatcher<std::vector<double>>::finished, this, &KerPlot::cntSetKernel);
+    connect(&kerTransWatch, &QFutureWatcher<std::vector<double>>::started, this, [=](){spinWatch.enable("kerTrans");});
+
+    connect(&srcKerTransWatch, &QFutureWatcher<std::vector<double>>::finished, this, [=](){spinWatch.disable("kerTrans");});
+    connect(&srcKerTransWatch, &QFutureWatcher<std::vector<double>>::finished, this, &KerPlot::cntSetSrcKernel);
+    connect(&srcKerTransWatch, &QFutureWatcher<std::vector<double>>::started, this, [=](){spinWatch.enable("kerTrans");});
 
     this->axisRect()->setRangeDrag(Qt::Horizontal);
     this->axisRect()->setRangeZoom(Qt::Horizontal);
@@ -36,7 +61,7 @@ KerPlot::KerPlot(QWidget* parent):
     setFreqs(1., 1, 0);
     kerMaxGain = 1.;
     srcKerMaxGain = 1.;
-    plotPoints = 20000;
+    plotPoints = 30000;
     srcPlotPoints = 10000;
 }
 
@@ -49,6 +74,7 @@ void KerPlot::setKernel(std::shared_ptr<const FirKer> kernel){
 void KerPlot::cntSetKernel(){
     if(plotClearedMeanwhile) return;
     std::vector<double> trns = kerTransWatch.future().result();
+    qDebug() << "trns.size():" <<trns.size();
     //std::vector<double> trns = kernel->transmission(plotPoints);
     if(inverseBand)
         std::reverse(trns.begin(), trns.end());
@@ -62,13 +88,26 @@ void KerPlot::cntSetKernel(){
     double max;
     for(auto v : trns)
         if(v > max) max = v;
+    qDebug() << "max gain:" << max;
+    if(max > 1000.){
+        for(auto v : trns)
+            qDebug() << v;
+    }
     kerMaxGain = max;
 
     setPlotType(plotType); //this will replot
 }
 
 void KerPlot::setSrcKernel(std::shared_ptr<const FirKer> kernel){
-    std::vector<double> trns = kernel->transmission(srcPlotPoints);
+    QFuture<std::vector<double> > fut = QtConcurrent::run([=](){return kernel->transmission(srcPlotPoints);});
+    srcKerTransWatch.setFuture(fut);
+    srcPlotClearedMeanwhile = false;
+}
+
+void KerPlot::cntSetSrcKernel(){
+
+    if(srcPlotClearedMeanwhile) return;
+    std::vector<double> trns = srcKerTransWatch.future().result();
 
     srcTransmission = QVector<double>::fromStdVector(trns);
     srcTransmissionBode = QVector<double>::fromStdVector(FirKer::toBode(trns));
@@ -94,6 +133,7 @@ void KerPlot::clearKernel(){
 }
 
 void KerPlot::clearSrcKernel(){
+    srcPlotClearedMeanwhile = true;
     srcTransmission.clear();
     srcTransmissionBode.clear();
     srcFreqs.clear();

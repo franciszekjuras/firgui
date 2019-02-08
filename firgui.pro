@@ -21,7 +21,10 @@ HEADERS += \
     groupconfig.h \
     groupspecs.h \
     bitstreamspecs.h \
-    waitingspinnerwidget.h
+    waitingspinnerwidget.h \
+    boolmapwatcher.h \
+    style.h \
+    switch.h
 SOURCES += main.cpp \
     window.cpp \
     groupssh.cpp \
@@ -32,4 +35,6 @@ SOURCES += main.cpp \
     groupconfig.cpp \
     groupspecs.cpp \
     bitstreamspecs.cpp \
-    waitingspinnerwidget.cpp
+    waitingspinnerwidget.cpp \
+    boolmapwatcher.cpp \
+    switch.cpp

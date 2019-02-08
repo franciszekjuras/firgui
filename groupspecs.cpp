@@ -2,6 +2,9 @@
 #include <QDebug>
 #include <QString>
 #include <QStringList>
+#include <QtConcurrent>
+#include <QFutureWatcher>
+#include <QFuture>
 #include <string>
 #include <sstream>
 #include <algorithm>
@@ -95,12 +98,19 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
 
     connect(bandCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GroupSpecs::bandChanged);
 
-    qRegisterMetaType< std::shared_ptr<FirKer> >("FirKer");
-    connect(&kerCalcThread, &KernelCalcThread::started, this, [=](){this->waitSpin->start();});
-    connect(&kerCalcThread, &KernelCalcThread::calcFinished, this, &GroupSpecs::kerCalcFinished);
 
-    connect(&srcKerCalcThread, &KernelCalcThread::started, this, [=](){this->waitSpin->start();});
-    connect(&srcKerCalcThread, &KernelCalcThread::calcFinished, this, &GroupSpecs::srcKerCalcFinished);
+    connect(&spinWatch, &BoolMapOr::valueChanged, [=](bool v){if(v)this->waitSpin->start(); else this->waitSpin->stop();});
+
+    //qRegisterMetaType< std::shared_ptr<FirKer> >("FirKer");
+//    connect(&kerCalcThread, &KernelCalcThread::started, this, [=](){this->waitSpin->start();});
+//    connect(&kerCalcThread, &KernelCalcThread::calcFinished, this, &GroupSpecs::kerCalcFinished);
+    connect(&kerCalcWatch, &QFutureWatcher<std::shared_ptr<FirKer>>::started, this, [=](){spinWatch.enable("kerCalc");});
+    connect(&kerCalcWatch, &QFutureWatcher<std::shared_ptr<FirKer>>::finished, this, &GroupSpecs::kerCalcFinished);
+
+//    connect(&srcKerCalcThread, &KernelCalcThread::started, this, [=](){this->waitSpin->start();});
+//    connect(&srcKerCalcThread, &KernelCalcThread::calcFinished, this, &GroupSpecs::srcKerCalcFinished);
+    connect(&srcKerCalcWatch, &QFutureWatcher<std::shared_ptr<FirKer>>::started, this, [=](){spinWatch.enable("srcKerCalc");});
+    connect(&srcKerCalcWatch, &QFutureWatcher<std::shared_ptr<FirKer>>::finished, this, &GroupSpecs::srcKerCalcFinished);
     pendCalcSrcKernel = false;
     pendCalculateKernel = false;
     kerLocked = false;
@@ -143,8 +153,7 @@ void GroupSpecs::unitChanged(QString unit){
 }
 
 void GroupSpecs::calculateKernel(){
-    if(kerLocked){pendCalculateKernel = true; return;}
-    kerLocked = true;
+    if(kerCalcWatch.isRunning()){pendCalculateKernel = true; return;}
     pendCalculateKernel = false;
 
     LeastSqFirKer ker;
@@ -188,16 +197,27 @@ void GroupSpecs::calculateKernel(){
         return;
     }
     ker.setWindow(crrWnd);
-    kerCalcThread.setKernel(std::make_shared<LeastSqFirKer>(ker));
-    kerCalcThread.wait();
+
+
     qDebug() << "Starting Calc Thread.";
-    kerCalcThread.start();
+    //kerLocked = true;
+    std::shared_ptr<FirKer> ker_shared = std::make_shared<LeastSqFirKer>(ker);
+    QFuture<std::shared_ptr<FirKer>> fut = QtConcurrent::run([=](){ker_shared->calc(); return ker_shared;});
+    kerCalcWatch.setFuture(fut);
+
+//    kerCalcThread.setKernel(std::make_shared<LeastSqFirKer>(ker));
+//    kerCalcThread.wait();
+//    qDebug() << "Starting Calc Thread.";
+//    kerLocked = true;
+//    kerCalcThread.start();
 }
 
-void GroupSpecs::kerCalcFinished(std::shared_ptr<FirKer> ker){
-    waitSpin->stop();
-    kerLocked = false;
+void GroupSpecs::kerCalcFinished(){
+    spinWatch.disable("kerCalc");
+    //kerLocked = false;
     if(pendCalculateKernel){calculateKernel();return;}
+
+    std::shared_ptr<FirKer> ker = kerCalcWatch.future().result();
 
     if(!ker->isValid()){qDebug()<<"Calculation failed.";return;}
 
@@ -210,11 +230,10 @@ void GroupSpecs::calcSrcKernel(){
 
     qDebug() << "Calc SRC Kernel.";
 
-    if(srcKerLocked) {
+    if(srcKerCalcWatch.isRunning()) {
         qDebug() << "Calc SRC Kernel already running.";
         pendCalcSrcKernel = true; return;
     }
-    srcKerLocked = true;
     pendCalcSrcKernel = false;
     // normalized frequency specification -- to avoid double conversion
     if(t == 1) return;
@@ -252,17 +271,26 @@ void GroupSpecs::calcSrcKernel(){
         qDebug() << "Wrong EqRipple Filter specs."; return;
     }
 
-    srcKerCalcThread.setKernel(std::make_shared<EqRippleFirKer>(ker));
-    srcKerCalcThread.wait();
+
     qDebug() << "Starting Src Calc Thread.";
-    srcKerCalcThread.start();
+   // srcKerLocked = true;
+    std::shared_ptr<FirKer> ker_shared = std::make_shared<EqRippleFirKer>(ker);
+    QFuture<std::shared_ptr<FirKer>> fut = QtConcurrent::run([=](){ker_shared->calc(); return ker_shared;});
+    srcKerCalcWatch.setFuture(fut);
+
+//    srcKerCalcThread.setKernel(std::make_shared<EqRippleFirKer>(ker));
+//    srcKerCalcThread.wait();
+//    qDebug() << "Starting Src Calc Thread.";
+//    srcKerCalcThread.start();
 }
 
-void GroupSpecs::srcKerCalcFinished(std::shared_ptr<FirKer> ker){
-    waitSpin->stop();
-    srcKerLocked = false;
+void GroupSpecs::srcKerCalcFinished(){
+    spinWatch.disable("srcKerCalc");
+   // srcKerLocked = false;
     if(pendCalcSrcKernel){calcSrcKernel();return;}
 
+
+    std::shared_ptr<FirKer> ker = srcKerCalcWatch.future().result();
     if(!ker->isValid()){qDebug()<<"Calculation failed.";return;}
 
     qDebug() << "Calculation finished.";

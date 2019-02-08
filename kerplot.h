@@ -7,6 +7,8 @@
 #include <memory>
 #include "qcustomplot.h"
 #include "firker.h"
+#include "waitingspinnerwidget.h"
+#include "boolmapwatcher.h"
 
 #define KER_PLOT_POINTS 10000
 #define SRCKER_PLOT_POINTS 10000
@@ -39,7 +41,11 @@ protected:
     QVector<double> srcFreqs;
 
     QFutureWatcher<std::vector<double> > kerTransWatch;
+    QFutureWatcher<std::vector<double> > srcKerTransWatch;
     bool plotClearedMeanwhile;
+    bool srcPlotClearedMeanwhile;
+    WaitingSpinnerWidget* waitSpin;    
+    BoolMapOr spinWatch;
 
     void amplitudePlot();
     void bodePlot();
@@ -48,6 +54,7 @@ protected:
     void updateSrcFreqs();
 
     void cntSetKernel();
+    void cntSetSrcKernel();
 
 public slots:
     void checkXBounds(const QCPRange& newRange, const QCPRange& oldRange);
