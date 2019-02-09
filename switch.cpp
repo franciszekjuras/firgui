@@ -17,8 +17,8 @@
 #include "switch.h"
 
 #define CORNER_RADIUS 10.0
-#define THUMB_RADIUS 8.
-#define SHADOW_ELEVATION 2.0
+#define THUMB_RADIUS 12.
+#define SHADOW_ELEVATION 1.0
 
 Animator::Animator(QObject* target, QObject* parent) : QVariantAnimation(parent) {
     setTargetObject(target);

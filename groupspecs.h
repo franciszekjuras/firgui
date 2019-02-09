@@ -80,6 +80,7 @@ private:
     void wndChanged(QString wndStr);
     void bandChanged(int band);
     void unitChanged(QString unit);
+    void showHelp();
 
 public slots:
     void calculateKernel();

@@ -42,9 +42,9 @@ namespace Style {
 
     struct Switch {
         Switch() :
-            height{ 30 },
+            height{ 28 },
             font{ QFont("Roboto medium", 13) },
-            indicatorMargin{ QMargins(4, 4, 4, 3) },
+            indicatorMargin{ QMargins(6, 4, 10, 3) },
             thumbOnBrush{ cyan500 },
             thumbOnOpacity{ 1 },
             trackOnBrush{ cyan500 },

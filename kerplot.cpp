@@ -15,7 +15,8 @@
 KerPlot::KerPlot(QWidget* parent):
     QCustomPlot(parent)
 {
-    //this->setOpenGl(true);
+    this->setOpenGl(true);
+    setNotAntialiasedElement(QCP::aeAxes);
 
 
     waitSpin = new WaitingSpinnerWidget(this, true, true);
@@ -49,9 +50,13 @@ KerPlot::KerPlot(QWidget* parent):
 
 
     this->addGraph();
-    this->graph(0)->setPen(QPen(QColor(57, 106, 177)));
-    this->addGraph();
-    this->graph(1)->setPen(QPen(QColor(218, 124, 48)));
+    auto pen = QPen(QColor(218, 124, 48));
+    pen.setWidthF(2.);
+    this->graph(0)->setPen(pen);
+    this->addGraph();    
+    pen = QPen(QColor(57, 106, 177));
+    pen.setWidthF(2.);
+    this->graph(1)->setPen(pen);
     //this->setNotAntialiasedElements(QCP::aeAll);
     this->graph(0)->setAdaptiveSampling(false);
     this->graph(1)->setAdaptiveSampling(false);
@@ -63,6 +68,14 @@ KerPlot::KerPlot(QWidget* parent):
     srcKerMaxGain = 1.;
     plotPoints = 30000;
     srcPlotPoints = 10000;
+
+
+//    QCPTextElement *title = new QCPTextElement(this);
+//    title->setText("Plot Title Example");
+//    title->setFont(QFont("sans", 12, QFont::Bold));
+    // then we add it to the main plot layout:
+//    this->plotLayout()->insertRow(0); // insert an empty row above the axis rect
+//    this->plotLayout()->addElement(0, 0, title); // place the title in the empty cell we've just created
 }
 
 void KerPlot::setKernel(std::shared_ptr<const FirKer> kernel){
@@ -151,9 +164,9 @@ void KerPlot::amplitudePlot(){
     this->yAxis->setLabel(tr("Amplitude"));
 
     assert(freqs.size() == transmission.size());
-    this->graph(0)->setData(freqs,transmission,true);
+    this->graph(1)->setData(freqs,transmission,true);
     assert(srcFreqs.size() == srcTransmission.size());
-    this->graph(1)->setData(srcFreqs,srcTransmission,true);
+    this->graph(0)->setData(srcFreqs,srcTransmission,true);
 
     double maxGain = std::max(srcKerMaxGain, kerMaxGain);
     this->yAxis->setRange(QCPRange(0.,(maxGain*1.02)));
@@ -166,10 +179,10 @@ void KerPlot::bodePlot(){
     this->yAxis->setLabel(tr("Attenuation, dB"));
 
     assert(freqs.size() == transmissionBode.size());
-    this->graph(0)->setData(freqs,transmissionBode,true);
+    this->graph(1)->setData(freqs,transmissionBode,true);
 
     assert(srcFreqs.size() == srcTransmissionBode.size());
-    this->graph(1)->setData(srcFreqs,srcTransmissionBode,true);
+    this->graph(0)->setData(srcFreqs,srcTransmissionBode,true);
 
     double maxGaindB = 20 * std::log10(std::max(srcKerMaxGain, kerMaxGain));
     this->yAxis->setRange(QCPRange(-100., maxGaindB+1));
@@ -244,9 +257,19 @@ void KerPlot::setPlotType(const QString& plotType){
     }
 }
 
-void KerPlot::toggleSrcTransPlot(bool toggle){
+void KerPlot::toggleFirTransPlot(bool toggle){
     this->graph(1)->setVisible(toggle);
     replot();
+}
+
+void KerPlot::toggleSrcTransPlot(bool toggle){
+    this->graph(0)->setVisible(toggle);
+    replot();
+}
+
+QSize KerPlot::sizeHint() const{
+    QSize sh = QCustomPlot::sizeHint();
+    return QSize(sh.width()+480, sh.height()+320);
 }
 
 //DataPlot::DataPlot(QWidget* parent):

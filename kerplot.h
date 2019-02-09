@@ -19,6 +19,8 @@ class KerPlot : public QCustomPlot{
 public:
     KerPlot(QWidget* parent = 0);
     //~Plot();
+
+    QSize sizeHint() const;
 protected:
     QCPRange xRange;
     double kerMaxGain;
@@ -65,6 +67,7 @@ public slots:
     void clearKernel();
     void clearSrcKernel();
     void toggleSrcTransPlot(bool);
+    void toggleFirTransPlot(bool);
 
 };
 

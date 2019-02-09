@@ -13,6 +13,8 @@ public:
     Window(QWidget *parent = 0);
 
 private:
+    void setTooltipsVisible(bool v);
+    bool eventFilter(QObject* obj, QEvent* event);
 };
 
 #endif

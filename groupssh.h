@@ -4,6 +4,7 @@
 #include <QGroupBox>
 #include <QLineEdit>
 #include <QTimer>
+#include "switch.h"
 #include "ssh.h"
 
 class IMLineEdit : public QLineEdit{
@@ -23,9 +24,12 @@ public:
     explicit GroupSsh(QWidget *parent = 0);
 
 private:
+    bool enableAdvState;
+    Switch* advButton;
     Ssh ssh;
     IMLineEdit* idLineEdit;
 
+    void toggleEnableAdv();
     void onConnect();
 
 signals:

@@ -15,8 +15,10 @@ GroupConfig::GroupConfig(QWidget *parent) : QGroupBox(tr("Configuration"),parent
 
     QFormLayout* bitForm = new QFormLayout;
     bitMainCombo = new QComboBox;
-    bitForm->addRow(tr("Nyquist frequency"), bitMainCombo);
+    bitMainCombo->setToolTip("Roll-off decreases qudratically with working band width.");
+    bitForm->addRow(tr("Working band width"), bitMainCombo);
     bitSpecCombo = new QComboBox;
+    bitSpecCombo->setToolTip(tr("Higher number of SRC blocks gives sharper rate conversion transmission on cost of reduced filter rank."));
     QString specComboName = tr("Filter Rank") + " | " + tr("SRC blocks");
     bitForm->addRow(specComboName, bitSpecCombo);
     vBox->addLayout(bitForm);

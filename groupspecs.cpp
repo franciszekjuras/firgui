@@ -25,10 +25,13 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
     QGridLayout* specsGrid = new QGridLayout;
     freqsLineEdit = new QLineEdit;
     gainsLineEdit = new QLineEdit;
+    freqsLineEdit->setToolTip(tr("Space separated corner frequencies (in band range)."));
+    gainsLineEdit->setToolTip(tr("Space separated gains (1 for passband, 0 for stopband)."));
     specsGrid->addWidget(new QLabel(tr("Frequencies")),0,0);
     specsGrid->addWidget(freqsLineEdit, 0, 1);
 
     QComboBox* unitCombo = new QComboBox;
+    unitCombo->setFocusPolicy(Qt::ClickFocus);
     unitCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     specsGrid->addWidget(unitCombo, 0, 2);
 
@@ -37,15 +40,24 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
     vBox->addLayout(specsGrid);
 
     QComboBox* wndCombo = new QComboBox;
+    wndCombo->setToolTip("Different windows give various roll-off/rippling tradeoffs.");
     specsGrid->addWidget(new QLabel(tr("Window")),2,0);
     specsGrid->addWidget(wndCombo, 2, 1);
 
     bandCombo = new QComboBox;
-    specsGrid->addWidget(new QLabel(tr("Band")),3,0);
+    specsGrid->addWidget(new QLabel(tr("Working Band")),3,0);
     specsGrid->addWidget(bandCombo, 3, 1);
 
     //---> Buttons <---//
     QHBoxLayout* buttonsHBox = new QHBoxLayout;
+
+
+    QPushButton* helpButton = new QPushButton(tr("Help"));
+    helpButton->setFocusPolicy(Qt::ClickFocus);
+    QFontMetrics fm = helpButton->fontMetrics();
+    helpButton->setMaximumWidth(fm.width(tr("Help"))+20);
+    buttonsHBox->addWidget(helpButton);
+
     buttonsHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Fixed));
 
     waitSpin = new WaitingSpinnerWidget(0, false, false);
@@ -75,6 +87,8 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
 
     unitMult = 1.;
 
+    connect(helpButton, &QPushButton::released, this, &GroupSpecs::showHelp);
+
     connect(calcButton, &QPushButton::released, this, &GroupSpecs::calculateKernel);
     connect(this, &GroupSpecs::enableCalcButton, calcButton,  &QPushButton::setEnabled);
     connect(this, &GroupSpecs::enableSetButton, setButton,  &QPushButton::setEnabled);
@@ -95,6 +109,7 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
     QStringList windows;
     windows << tr("None") << tr("Hamming") << tr("Blackman");
     wndCombo->addItems(windows);
+    wndCombo->setCurrentText(tr("Blackman"));
 
     connect(bandCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GroupSpecs::bandChanged);
 
@@ -118,6 +133,10 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
 
 }
 
+void GroupSpecs::showHelp(){
+    QMessageBox::information(this, tr("FIR Controller -- Help"), tr("    Filter is described by specifing gains to subsequent frequency ranges in the given band (which is configurable). Outside of this band gain is always zero (nothing is passed).\nCorner frequencies should be given omitting boundary frequencies with gains matching successive ranges.\n\n    For example: with filter band from 0 to 500 kHz, filter passing signal from 0 to 200 kHz, stopping everything from 200 to 400 kHz and passing with amplitude divided by 2 from 400 to 500 kHz, can be set by giving:\n\nFrequencies: 200 400\nGains: 1 0 0.5\n\n    Note however, that overall filtering result is affected by rate conversion transmission (shown on plot) and signal may not be passed on band boundaries.\n\n    For further details read tooltips, which can be displayed by hovering the cursor over an object."),tr("Close"));
+}
+
 void GroupSpecs::wndChanged(QString wndStr){
     if(wndStr == tr("None"))
         crrWnd = LeastSqFirKer::Window::none;
@@ -126,7 +145,7 @@ void GroupSpecs::wndChanged(QString wndStr){
     else if(wndStr == tr("Blackman"))
         crrWnd = LeastSqFirKer::Window::blackman;
     else
-        assert(false);
+        assert(wndStr.isEmpty());
 }
 
 void GroupSpecs::unitChanged(QString unit){
@@ -194,6 +213,8 @@ void GroupSpecs::calculateKernel(){
 
     if(!ker.setSpecs(freqs, gains)){
         qDebug()<<"Bad specs";
+        int uc = QMessageBox::information(this, tr("FIR Controller -- Incorrect Specification"),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
+        if(uc == 0)showHelp();
         return;
     }
     ker.setWindow(crrWnd);
@@ -219,7 +240,11 @@ void GroupSpecs::kerCalcFinished(){
 
     std::shared_ptr<FirKer> ker = kerCalcWatch.future().result();
 
-    if(!ker->isValid()){qDebug()<<"Calculation failed.";return;}
+    if(!ker->isValid()){
+        qDebug()<<"Calculation failed.";
+        int uc = QMessageBox::information(this, tr("FIR Controller -- Incorrect Specification"),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
+        if(uc == 0)showHelp();
+        return;}
 
     qDebug() << "Calculation finished.";
     crrKer = ker->getKernel();
