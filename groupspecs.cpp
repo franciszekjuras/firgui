@@ -109,7 +109,7 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
     QStringList windows;
     windows << tr("None") << tr("Hamming") << tr("Blackman");
     wndCombo->addItems(windows);
-    wndCombo->setCurrentText(tr("Blackman"));
+    wndCombo->setCurrentText(tr("Hamming"));
 
     connect(bandCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GroupSpecs::bandChanged);
 

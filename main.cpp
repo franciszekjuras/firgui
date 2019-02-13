@@ -2,12 +2,23 @@
 #include <QStyle>
 #include <QDesktopWidget>
 #include <QDebug>
+#include <QFile>
 #include "window.h"
 
 int main(int argc, char *argv[])
 {
-    QApplication::setStyle("cleanlooks");
     QApplication app(argc, argv);
+    QFile f(":qdarkstyle/style.qss");
+    if (!f.exists())
+    {
+        printf("Unable to set stylesheet, file not found\n");
+    }
+    else
+    {
+        f.open(QFile::ReadOnly | QFile::Text);
+        QTextStream ts(&f);
+       // qApp->setStyleSheet(ts.readAll());
+    }
     Window window;
     //window.setStyleSheet("QGroupBox {border: 1px solid gray; border-radius: 9px; margin-top: 0.5em;}"
      //                    "QGroupBox::title {subcontrol-origin: margin; left: 10px; padding: 0 3px 0 3px;}");

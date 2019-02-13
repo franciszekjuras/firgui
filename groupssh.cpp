@@ -24,7 +24,7 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
     idLineEdit = new IMLineEdit;
     idLineEdit->setToolTip(tr("Last 6 symbols of Red Pitaya MAC adrress (see WLAN connector)"));
     idLineEdit->setInputMask("HHHHHH");
-    idLineEdit->setFixedWidth(this->fontMetrics().width("HHHHHH") + 20);
+    idLineEdit->setFixedWidth(this->fontMetrics().width("HHHHHH") + 10);
     //idLineEdit->setMaximumWidth(90);
     QPushButton* connectButton = new QPushButton(tr("Connect"));
     connectButton->setEnabled(false);

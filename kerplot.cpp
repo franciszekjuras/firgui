@@ -15,9 +15,12 @@
 KerPlot::KerPlot(QWidget* parent):
     QCustomPlot(parent)
 {
-    this->setOpenGl(true);
-    setNotAntialiasedElement(QCP::aeAxes);
+    //this->setOpenGl(true);
+    //setNotAntialiasedElement(QCP::aeAxes);
+    //setNotAntialiasedElement(QCP::aeGrid);
 
+//    this->yAxis->setLabelColor(QColor(76,76,76));
+//    this->xAxis->setLabelColor(QColor(76,76,76));
 
     waitSpin = new WaitingSpinnerWidget(this, true, true);
 
@@ -50,16 +53,16 @@ KerPlot::KerPlot(QWidget* parent):
 
 
     this->addGraph();
-    auto pen = QPen(QColor(218, 124, 48));
+    auto pen = QPen(QColor(249, 124, 14));
     pen.setWidthF(2.);
     this->graph(0)->setPen(pen);
     this->addGraph();    
-    pen = QPen(QColor(57, 106, 177));
+    pen = QPen(QColor(31, 119, 179));
     pen.setWidthF(2.);
     this->graph(1)->setPen(pen);
     //this->setNotAntialiasedElements(QCP::aeAll);
-    this->graph(0)->setAdaptiveSampling(false);
-    this->graph(1)->setAdaptiveSampling(false);
+//    this->graph(0)->setAdaptiveSampling(false);
+//    this->graph(1)->setAdaptiveSampling(false);
 
     this->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     //default values
@@ -68,6 +71,40 @@ KerPlot::KerPlot(QWidget* parent):
     srcKerMaxGain = 1.;
     plotPoints = 30000;
     srcPlotPoints = 10000;
+
+    this->xAxis->setBasePen(QPen(Qt::white, 1));
+    this->yAxis->setBasePen(QPen(Qt::white, 1));
+    this->xAxis->setTickPen(QPen(Qt::white, 1));
+    this->yAxis->setTickPen(QPen(Qt::white, 1));
+    this->xAxis->setSubTickPen(QPen(Qt::white, 1));
+    this->yAxis->setSubTickPen(QPen(Qt::white, 1));
+    this->xAxis->setTickLabelColor(Qt::white);
+    this->yAxis->setTickLabelColor(Qt::white);
+    this->xAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
+    this->yAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
+    this->xAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
+    this->yAxis->grid()->setSubGridPen(QPen(QColor(80, 80, 80), 1, Qt::DotLine));
+    //this->xAxis->grid()->setSubGridVisible(true);
+    //this->yAxis->grid()->setSubGridVisible(true);
+    this->xAxis->grid()->setZeroLinePen(Qt::NoPen);
+    this->yAxis->grid()->setZeroLinePen(Qt::NoPen);
+    this->xAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
+    this->yAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
+
+    this->xAxis->setLabelColor(Qt::white);
+    this->yAxis->setLabelColor(Qt::white);
+    this->setBackground(QColor(35, 45, 55));
+//    QLinearGradient plotGradient;
+//    plotGradient.setStart(0, 0);
+//    plotGradient.setFinalStop(0, 350);
+//    plotGradient.setColorAt(0, QColor(80, 80, 80));
+//    plotGradient.setColorAt(1, QColor(50, 50, 50));
+//    QLinearGradient axisRectGradient;
+//    axisRectGradient.setStart(0, 0);
+//    axisRectGradient.setFinalStop(0, 350);
+//    axisRectGradient.setColorAt(0, QColor(80, 80, 80));
+//    axisRectGradient.setColorAt(1, QColor(30, 30, 30));
+//    customPlot->axisRect()->setBackground(axisRectGradient);
 
 
 //    QCPTextElement *title = new QCPTextElement(this);

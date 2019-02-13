@@ -9,6 +9,7 @@ CONFIG += c++14
 LIBS += -lssh -lfirpm
 DEFINES += QCUSTOMPLOT_USE_OPENGL
 QT += widgets core printsupport concurrent
+RESOURCES += qdarkstyle/style.qrc
 
 # Input
 HEADERS += \

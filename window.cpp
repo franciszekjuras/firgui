@@ -63,11 +63,11 @@ Window::Window(QWidget *parent)
     plCtrlWid->setLayout(plCtrlHBox);
 
 
-    Switch* firTransShowSwitch = new Switch("Filter transmission",QBrush(QColor(57, 106, 177)));
+    Switch* firTransShowSwitch = new Switch("Filter transmission",QBrush(QColor(31, 119, 179)));
     firTransShowSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     plCtrlHBox->addWidget(firTransShowSwitch);
 
-    Switch* srcTransShowSwitch = new Switch("Rate conversion transmission",QBrush(QColor(218, 124, 48)));
+    Switch* srcTransShowSwitch = new Switch("Rate conversion transmission",QBrush(QColor(249, 124, 14)));
     srcTransShowSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     plCtrlHBox->addWidget(srcTransShowSwitch);
 
