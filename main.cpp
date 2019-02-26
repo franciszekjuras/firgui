@@ -2,12 +2,23 @@
 #include <QStyle>
 #include <QDesktopWidget>
 #include <QDebug>
+#include <QStyleFactory>
 #include <QFile>
 #include "window.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+
+    app.setWindowIcon(QIcon(":data/icon.png"));
+
+    qDebug() << QStyleFactory::keys();
+    QStyle* style = QStyleFactory::create("GTK+");
+    if(style){
+        qDebug() << "Setting up new style...";
+        qApp->setStyle(style);
+    }
+
     QFile f(":qdarkstyle/style.qss");
     if (!f.exists())
     {
@@ -17,8 +28,9 @@ int main(int argc, char *argv[])
     {
         f.open(QFile::ReadOnly | QFile::Text);
         QTextStream ts(&f);
-       // qApp->setStyleSheet(ts.readAll());
+        //qApp->setStyleSheet(ts.readAll());
     }
+
     Window window;
     //window.setStyleSheet("QGroupBox {border: 1px solid gray; border-radius: 9px; margin-top: 0.5em;}"
      //                    "QGroupBox::title {subcontrol-origin: margin; left: 10px; padding: 0 3px 0 3px;}");

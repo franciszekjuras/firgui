@@ -4,12 +4,13 @@
 
 TEMPLATE = app
 TARGET = firgui
-INCLUDEPATH += .
+INCLUDEPATH += . include/
 CONFIG += c++14
-LIBS += -lssh -lfirpm
+LIBS += -lssh
 DEFINES += QCUSTOMPLOT_USE_OPENGL
 QT += widgets core printsupport concurrent
-RESOURCES += qdarkstyle/style.qrc
+RESOURCES += qdarkstyle/style.qrc \
+    data/data.qrc
 
 # Input
 HEADERS += \
@@ -38,4 +39,9 @@ SOURCES += main.cpp \
     bitstreamspecs.cpp \
     waitingspinnerwidget.cpp \
     boolmapwatcher.cpp \
-    switch.cpp
+    switch.cpp \
+    band.cpp \
+    barycentric.cpp \
+    cheby.cpp \
+    eigenvalue.cpp \
+    pm.cpp
