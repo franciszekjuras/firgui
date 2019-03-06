@@ -902,7 +902,7 @@ void QCPPaintBufferGlFbo::clear(const QColor &color)
     qDebug() << Q_FUNC_INFO << "OpenGL frame buffer object doesn't exist, reallocateBuffer was not called?";
     return;
   }
-  
+
   if (QOpenGLContext::currentContext() != mGlContext.data())
     mGlContext.data()->makeCurrent(mGlContext.data()->surface());
   mGlFrameBuffer->bind();

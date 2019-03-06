@@ -85,6 +85,11 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
     sc->setContext(Qt::ApplicationShortcut);
     connect(sc, &QShortcut::activated, this, &GroupSsh::toggleEnableAdv );
 
+    qDebug()<<"Calling libssh";
+    ssh.setUser("root");
+    ssh.setHost("localhost");
+    ssh.connect();
+
 }
 
 void GroupSsh::onConnect(){

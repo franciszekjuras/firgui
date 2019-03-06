@@ -91,6 +91,13 @@ KerPlot::KerPlot(QWidget* parent):
     this->xAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
     this->yAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
 
+    QFont lbFont = this->font();
+    if(lbFont.pointSize()>0){
+        lbFont.setPointSize(lbFont.pointSize()+2);
+        this->xAxis->setLabelFont(lbFont);
+        this->yAxis->setLabelFont(lbFont);
+    }
+
     this->xAxis->setLabelColor(Qt::white);
     this->yAxis->setLabelColor(Qt::white);
     this->setBackground(QColor(35, 45, 55));
@@ -135,7 +142,7 @@ void KerPlot::cntSetKernel(){
     if(freqs.size()-1 != plotPoints)
         updateFreqs();
 
-    double max;
+    double max = 1.;
     for(auto v : trns)
         if(v > max) max = v;
     qDebug() << "max gain:" << max;
@@ -165,9 +172,13 @@ void KerPlot::cntSetSrcKernel(){
     if(srcFreqs.size()-1 != srcPlotPoints)
         updateSrcFreqs();
 
-    double max;
-    for(auto v : trns)
-        if(v > max) max = v;
+    double max = 1.;
+    qDebug() << "Max trns:";
+    for(auto v : trns){
+        if(v > max){ max = v;
+            qDebug() << v;
+        }
+    }
     srcKerMaxGain = max;
 
     setPlotType(plotType);

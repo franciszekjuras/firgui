@@ -389,9 +389,9 @@ void findEigenExtrema(double& convergenceOrder,
 
 
     std::vector<std::vector<double>> pExs(subIntervals.size());
-
+//mod: for (std::size_t i = 0u; i < subIntervals.size(); ++i)
     #pragma omp parallel for
-    for (std::size_t i = 0u; i < subIntervals.size(); ++i)
+    for (int i = 0; i < subIntervals.size(); ++i)
     {
 
         // find the Chebyshev nodes scaled to the current subinterval
@@ -439,8 +439,9 @@ void findEigenExtrema(double& convergenceOrder,
 
     std::size_t startingOffset = potentialExtrema.size();
     potentialExtrema.resize(potentialExtrema.size() + pEx.size());
+   //mod: for(std::size_t i = 0u; i < pEx.size(); ++i)
     #pragma omp parallel for
-    for(std::size_t i = 0u; i < pEx.size(); ++i)
+    for(int i = 0; i < pEx.size(); ++i)
     {
         double valBuffer;
         computeError(valBuffer, pEx[i],
