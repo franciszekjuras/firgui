@@ -3,11 +3,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <fcntl.h>
 #include "ssh.h"
-
-#define O_WRONLY 1
-#define O_CREAT 64
-#define O_TRUNC 512
 
 #define BUFSIZE 4096
 #define SFTP_CHUNK 65536
