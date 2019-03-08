@@ -23,14 +23,20 @@ private:
     QComboBox* bitSpecCombo;
     double fpgaSampFreq;
     QMap<QString, QMap<QString,BitstreamSpecs> > bitMap;
+    BitstreamSpecs crrBitstream;
 
     void bitMainComboChanged(QString mainStr);
     void bitSpecComboChanged(QString specStr);
     void updateBitSpecCombo(QString mainStr);
 
+    void onLoadButton();
+
 signals:
     void bitstreamSelected(QMap<QString, int> specs);
     void fpgaSampFreqChanged(double freq);
+
+    void enableLoad(bool en);
+    void reqLoad(BitstreamSpecs bitSpecs);
 
 public slots:
 };

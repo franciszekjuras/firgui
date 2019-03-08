@@ -26,12 +26,18 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
     idLineEdit->setInputMask("HHHHHH");
     idLineEdit->setFixedWidth(this->fontMetrics().width("HHHHHH") + 10);
     //idLineEdit->setMaximumWidth(90);
-    QPushButton* connectButton = new QPushButton(tr("Connect"));
+    connectButton = new QPushButton(tr("Connect"));
     connectButton->setEnabled(false);
+
+    disconnectButton = new QPushButton(tr("Disconnect"));
+    disconnectButton->setEnabled(false);//until disconnect is implemented
+    disconnectButton->setVisible(false);
+
 
     idHBox->addWidget(idLabel);
     idHBox->addWidget(idLineEdit);
     idHBox->addWidget(connectButton);
+    idHBox->addWidget(disconnectButton);
     idHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding,QSizePolicy::Fixed));
 
     //QSpacerItem* scSpacer = new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -79,6 +85,8 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
 
     connect(connectButton, &QPushButton::released, this, &GroupSsh::onConnect);
     connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){connectButton->setEnabled((str.length() == 6));});
+
+
 //    connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){idLineEdit->setText(str);idLineEdit->setCursorPosition(str.length());});
 //    connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){qDebug() << str;});
     QShortcut* sc = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_D), this);
@@ -95,6 +103,64 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
 void GroupSsh::onConnect(){
     std::string rpMac = idLineEdit->text().toLower().toStdString();
     qDebug() << QString::fromStdString(rpMac);
+
+    qDebug() << "Connecting...";
+
+    R status = connectToRP(rpMac);
+
+    switch(status){
+    case R::ok:
+        qDebug() << "ok";
+        swapConnectButtons(true);
+        reqEnableLoad(true);
+        break;
+    case R::connection:
+        qDebug() << "con";
+        //noConnection();
+        break;
+    case R::other:
+        qDebug() << "other";
+        //sthWrong();
+        break;
+    }
+
+
+
+}
+
+GroupSsh::R GroupSsh::connectToRP(std::string rpMac){
+    return R::ok;
+}
+
+void GroupSsh::onLoad(BitstreamSpecs bitSpecs){
+    R status = loadBitstream(bitSpecs);
+    switch(status){
+    case R::ok:
+        qDebug() << "ok";
+        nfyBitstreamLoaded(bitSpecs.getSpecs());
+        break;
+    case R::connection:
+        qDebug() << "con";
+        //lostConnection();
+        break;
+    case R::other:
+        qDebug() << "other";
+        //sthWrong();
+        break;
+    }
+}
+
+GroupSsh::R GroupSsh::loadBitstream(BitstreamSpecs bitSpecs){
+    qDebug() << bitSpecs.getFilePath();
+    return R::ok;
+}
+
+void GroupSsh::loadSrcKernel(std::vector<double> crrSrcKer){
+    qDebug() << "Loading src kernel.";
+}
+
+void GroupSsh::loadKernel(std::vector<double> crrKer){
+    qDebug() << "Loading kernel.";
 }
 
 void GroupSsh::toggleEnableAdv(){
@@ -102,4 +168,15 @@ void GroupSsh::toggleEnableAdv(){
     if(advButton->isChecked())
         advButton->animateClick(0);
     advButton->setEnabled(enableAdvState);
+}
+
+void GroupSsh::swapConnectButtons(bool connected){
+    if(connected){
+        connectButton->setVisible(false);
+        disconnectButton->setVisible(true);
+    }
+    else{
+        disconnectButton->setVisible(false);
+        connectButton->setVisible(true);
+    }
 }

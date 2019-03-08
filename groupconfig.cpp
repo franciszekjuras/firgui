@@ -26,12 +26,16 @@ GroupConfig::GroupConfig(QWidget *parent) : QGroupBox(tr("Configuration"),parent
     QHBoxLayout* buttonHBox = new QHBoxLayout;
     buttonHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Preferred));
     QPushButton* loadButton = new QPushButton(tr("Load"));
+    loadButton->setDisabled(true);
     buttonHBox->addWidget(loadButton);
     vBox->addLayout(buttonHBox);
 
     this->setLayout(vBox);
 
     //---> Functionality <---//
+
+    connect(this, &GroupConfig::enableLoad, loadButton, &QPushButton::setEnabled);
+    connect(loadButton, &QPushButton::released, this, &GroupConfig::onLoadButton);
 
 //    for(auto it = bitMap.cbegin(); it != bitMap.cend(); ++it)
 //        qDebug() << it.key() << " " << it.value().getFileName();
@@ -54,6 +58,10 @@ GroupConfig::GroupConfig(QWidget *parent) : QGroupBox(tr("Configuration"),parent
 //    qDebug() << "2:" << file.filePath();
 //    qDebug() << "3:" << file.path();
 
+}
+
+void GroupConfig::onLoadButton(){
+    reqLoad(crrBitstream);
 }
 
 void GroupConfig::init(){
@@ -121,5 +129,6 @@ void GroupConfig::bitSpecComboChanged(QString specStr){
     if(specStr.isEmpty()) return;
     qDebug()<<"specStr:"<<specStr;
     assert(bitMap.value(bitMainStr).contains(specStr));
-    emit bitstreamSelected(bitMap[bitMainStr][specStr].getSpecs());
+    crrBitstream = bitMap[bitMainStr][specStr];
+    emit bitstreamSelected(crrBitstream.getSpecs());
 }

@@ -64,6 +64,7 @@ private:
     bool isKernelReady;
     bool isFilterReady;
     bool isSrcKernelReady;
+    bool isSrcKernelLoaded;
     bool pendCalculateKernel;
     bool pendCalcSrcKernel;
     bool kerLocked;
@@ -84,6 +85,7 @@ private:
 
 public slots:
     void calculateKernel();
+    void setKernels();
     void bitstreamChanged(QMap<QString, int> specs);
     void bitstreamLoaded(QMap<QString, int> specs);
     void filterReady(bool en);
@@ -97,6 +99,8 @@ signals:
     void enableCalcButton(bool en);
     void enableSetButton(bool en);
     void resetPlot(double freq, int t, int band);
+    void reqLoadSrcKernel(std::vector<double> crrSrcKer);
+    void reqLoadKernel(std::vector<double> crrKer);
 
 
 };

@@ -91,6 +91,7 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
 
     connect(calcButton, &QPushButton::released, this, &GroupSpecs::calculateKernel);
     connect(this, &GroupSpecs::enableCalcButton, calcButton,  &QPushButton::setEnabled);
+    connect(setButton, &QPushButton::released, this, &GroupSpecs::setKernels);
     connect(this, &GroupSpecs::enableSetButton, setButton,  &QPushButton::setEnabled);
     enableCalcButton(false); enableSetButton(false);
 
@@ -130,6 +131,10 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
     pendCalculateKernel = false;
     kerLocked = false;
     srcKerLocked = false;
+    isKernelReady = false;
+    isSrcKernelReady = false;
+    isFilterReady = false;
+    isSrcKernelLoaded = false;
 
 }
 
@@ -172,6 +177,7 @@ void GroupSpecs::unitChanged(QString unit){
 }
 
 void GroupSpecs::calculateKernel(){
+    kernelReady(false);
     if(kerCalcWatch.isRunning()){pendCalculateKernel = true; return;}
     pendCalculateKernel = false;
 
@@ -252,7 +258,7 @@ void GroupSpecs::kerCalcFinished(){
 }
 
 void GroupSpecs::calcSrcKernel(){
-
+    kernelReady(false); isSrcKernelLoaded = false;
     qDebug() << "Calc SRC Kernel.";
 
     if(srcKerCalcWatch.isRunning()) {
@@ -324,6 +330,13 @@ void GroupSpecs::srcKerCalcFinished(){
     emit srcKernelChanged(ker);
 }
 
+void GroupSpecs::setKernels(){
+    if(!isSrcKernelLoaded)
+        reqLoadSrcKernel(crrSrcKer);
+    isSrcKernelLoaded = true;
+    reqLoadKernel(crrKer);
+}
+
 void GroupSpecs::bitstreamChanged(QMap<QString, int> specs){
     filterReady(false);
 
@@ -379,25 +392,25 @@ void GroupSpecs::bandChanged(int band){
 
 void GroupSpecs::bitstreamLoaded(QMap<QString, int> specs){
     bitstreamChanged(specs);
-    if(isSrcKernelReady)
-    {};//send kernel -- if calculation failed, this will prevent loading filter
-    //v1: send calculated kernel
-    //v2: if ready send kernel
-    //    else set awaitingSRCKernel = true
+    filterReady(true);
 }
 
 void GroupSpecs::filterReady(bool en){
     isFilterReady = en;
-    enableSetButton(isFilterReady && isKernelReady);
+    enableSetButton(isFilterReady && isKernelReady && isSrcKernelReady);
+    qDebug() << "filterReady" << isFilterReady << isKernelReady << isSrcKernelReady;
 }
 
 void GroupSpecs::kernelReady(bool en){
     isKernelReady = en;
-    enableSetButton(isFilterReady && isKernelReady);
+    enableSetButton(isFilterReady && isKernelReady && isSrcKernelReady);
+    qDebug() << "kernelReady" << isFilterReady << isKernelReady << isSrcKernelReady;
 }
 
 void GroupSpecs::srcKernelReady(bool en){
     isSrcKernelReady = en;
+    enableSetButton(isFilterReady && isKernelReady && isSrcKernelReady);
+    qDebug() << "srcKernelReady" << isFilterReady << isKernelReady << isSrcKernelReady;
 }
 
 void GroupSpecs::setFpgaSampFreq(double freq){
