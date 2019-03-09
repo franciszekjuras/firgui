@@ -3,6 +3,7 @@
 #include <QString>
 #include <QDebug>
 #include <QShortcut>
+#include <QInputDialog>
 #include "groupssh.h"
 #include "switch.h"
 
@@ -30,7 +31,7 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
     connectButton->setEnabled(false);
 
     disconnectButton = new QPushButton(tr("Disconnect"));
-    disconnectButton->setEnabled(false);//until disconnect is implemented
+    disconnectButton->setEnabled(true);
     disconnectButton->setVisible(false);
 
 
@@ -86,6 +87,9 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
     connect(connectButton, &QPushButton::released, this, &GroupSsh::onConnect);
     connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){connectButton->setEnabled((str.length() == 6));});
 
+    connect(disconnectButton, &QPushButton::released, this, &GroupSsh::onDisconnect);
+
+    connect(this, &GroupSsh::nfyConnected, this, &GroupSsh::swapConnectButtons);
 
 //    connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){idLineEdit->setText(str);idLineEdit->setCursorPosition(str.length());});
 //    connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){qDebug() << str;});
@@ -93,11 +97,12 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
     sc->setContext(Qt::ApplicationShortcut);
     connect(sc, &QShortcut::activated, this, &GroupSsh::toggleEnableAdv );
 
-    qDebug()<<"Calling libssh";
-    ssh.setUser("root");
-    ssh.setHost("localhost");
-    ssh.connect();
+}
 
+void GroupSsh::onDisconnect(){
+    qDebug() << "Disconnecting...";
+    ssh.disconnect();
+    nfyConnected(false);
 }
 
 void GroupSsh::onConnect(){
@@ -111,8 +116,7 @@ void GroupSsh::onConnect(){
     switch(status){
     case R::ok:
         qDebug() << "ok";
-        swapConnectButtons(true);
-        reqEnableLoad(true);
+        nfyConnected(true);
         break;
     case R::connection:
         qDebug() << "con";
@@ -123,12 +127,48 @@ void GroupSsh::onConnect(){
         //sthWrong();
         break;
     }
-
-
-
 }
 
 GroupSsh::R GroupSsh::connectToRP(std::string rpMac){
+    std::string host, user;
+#ifndef COMD
+    host = "rp-" + rpMac + ".local";
+    user = "root";
+#else
+    host = "localhost";
+    user = USERD;
+#endif
+    ssh.setUser(user);
+    ssh.setHost(host);
+    if(ssh.getStatus() != Ssh::Status::disconnected){
+        qDebug() << "Last session wasn't closed."; return R::other;
+    }
+    if(ssh.connect() != Ssh::R::ok){
+        qDebug() << "No connection."; return R::connection;
+    }
+    ssh.verify();
+    if(ssh.getStatus() == Ssh::Status::unknownserv){
+        qDebug() << "Accepting:" << QString::fromStdString(ssh.getHash());
+        ssh.accept();
+    }
+    if(ssh.getStatus() != Ssh::Status::verified){
+        qDebug() << "Verification error."; ssh.disconnect(); return R::other;
+    }
+    std::string pass;
+
+#ifndef COMD
+    pass = "root";
+#else
+    pass = QInputDialog::getText(this, tr("Authentication") ,tr("Password"), QLineEdit::Password).toStdString();
+#endif
+
+    if(ssh.auth(pass) != Ssh::R::ok){
+        qDebug() << "Authentication error."; ssh.disconnect(); return R::other;
+    }
+    qDebug() << "Connection established.";
+    if(ssh.setupSftp() != Ssh::R::ok){
+        qDebug() << "Sftp initialization error."; ssh.disconnect(); return R::other;
+    }
     return R::ok;
 }
 

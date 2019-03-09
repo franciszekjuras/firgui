@@ -116,7 +116,8 @@ Window::Window(QWidget *parent)
     connect(showTooltipSwitch, &Switch::toggled, this, &Window::setTooltipsVisible);
 
     //RP connection:
-    connect(groupSsh, &GroupSsh::reqEnableLoad, groupConfig, &GroupConfig::enableLoad);
+    connect(groupSsh, &GroupSsh::nfyConnected, groupConfig, &GroupConfig::enableLoad);
+    connect(groupSsh, &GroupSsh::nfyConnected, groupSpecs, &GroupSpecs::handleConnect);
     connect(groupConfig, &GroupConfig::reqLoad, groupSsh, &GroupSsh::onLoad);
     connect(groupSsh, &GroupSsh::nfyBitstreamLoaded, groupSpecs, &GroupSpecs::bitstreamLoaded);
     connect(groupSpecs, &GroupSpecs::reqLoadSrcKernel, groupSsh, &GroupSsh::loadSrcKernel);

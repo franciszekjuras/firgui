@@ -8,6 +8,10 @@ TEMPLATE = app
 TARGET = firgui
 CONFIG += c++14
 
+#Debugging defines
+linux: DEFINES += COMD
+linux: DEFINES += USERD=\"\\\"franciszek\\\"\"
+
 DEFINES += _USE_MATH_DEFINES
 QT += widgets core printsupport concurrent
 RESOURCES += qdarkstyle/style.qrc \

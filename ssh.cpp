@@ -84,7 +84,7 @@ Ssh::R Ssh::sendFileToFile(std::string src, std::string dest){
     if(!srcFile){std::cerr << "Couldn't open local file for reading: "<< src << std::endl;return R::other;}
 
     // O_WRONLY = 1  O_CREAT = 64  O_TRUNC = 512
-    sftp_file destRFile = sftp_open(sftp, dest.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    sftp_file destRFile = sftp_open(sftp, dest.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0777);
     if(destRFile==NULL){std::cerr << "Couldn't open remote file for writing: " << dest << std::endl;return R::other;}
 
     /*-------------------------*/
@@ -109,7 +109,7 @@ Ssh::R Ssh::sendFileToFile(std::string src, std::string dest){
 Ssh::R Ssh::sendMemToFile(const void* mem, std::size_t size, std::string dest){
 
     // O_WRONLY = 1  O_CREAT = 64  O_TRUNC = 512
-    sftp_file destRFile = sftp_open(sftp, dest.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    sftp_file destRFile = sftp_open(sftp, dest.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0777);
     if(destRFile==NULL){std::cerr << "Couldn't open remote file for writing: " << dest << std::endl;return R::other;}
 
     /*-------------------------*/

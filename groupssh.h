@@ -42,13 +42,14 @@ private:
     void toggleEnableAdv();
     void swapConnectButtons(bool isConnect);
     void onConnect();
+    void onDisconnect();
 
     R connectToRP(std::string rpMac);
     R loadBitstream(BitstreamSpecs bitSpecs);
 
 signals:
-    void reqEnableLoad(bool en);
     void nfyBitstreamLoaded(QMap<QString, int> specs);
+    void nfyConnected(bool is);
 
 public slots:
     void onLoad(BitstreamSpecs bitSpecs);

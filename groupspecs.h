@@ -90,6 +90,7 @@ public slots:
     void bitstreamLoaded(QMap<QString, int> specs);
     void filterReady(bool en);
     void setFpgaSampFreq(double freq);
+    void handleConnect(bool is);
 
 signals:
     void kernelChanged(std::shared_ptr<const FirKer> ker);
