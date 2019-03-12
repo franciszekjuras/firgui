@@ -139,6 +139,10 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
 }
 
 void GroupSpecs::handleConnect(bool is){
+    if(!is){
+        filterReady(false);
+        isSrcKernelLoaded = false;
+    }
     qDebug() << "handleConnect:" << is;
 }
 
@@ -344,13 +348,13 @@ void GroupSpecs::setKernels(){
 void GroupSpecs::bitstreamChanged(QMap<QString, int> specs){
     filterReady(false);
 
-    bool validT = (specs.contains("t") && specs["t"] > 0);
-    bool validD = (specs.contains("d") && specs["d"] > 0);
-    bool validS = (specs.contains("s") && specs["s"] > 0);
+    bool validT = (specs.contains("tm") && specs["tm"] > 0);
+    bool validD = (specs.contains("fb") && specs["fb"] > 0);
+    bool validS = (specs.contains("sb") && specs["sb"] > 0);
 
-    int tOld = t; t = validT ? specs["t"] : 0;
-    int dOld = d; d = validD ? specs["d"] : 0;
-    int sOld = s; s = validS ? specs["s"] : 0;
+    int tOld = t; t = validT ? specs["tm"] : 0;
+    int dOld = d; d = validD ? specs["fb"] : 0;
+    int sOld = s; s = validS ? specs["sb"] : 0;
 
     if(!validT){
        bandCombo->clear(); enableCalcButton(false); resetPlot(fpgaSampFreq,1,0);return;

@@ -154,8 +154,8 @@ GroupSsh::R GroupSsh::connectToRP(std::string rpMac){
     if(ssh.getStatus() != Ssh::Status::verified){
         qDebug() << "Verification error."; ssh.disconnect(); return R::other;
     }
-    std::string pass;
 
+    std::string pass;
 #ifndef COMD
     pass = "root";
 #else
@@ -169,6 +169,14 @@ GroupSsh::R GroupSsh::connectToRP(std::string rpMac){
     if(ssh.setupSftp() != Ssh::R::ok){
         qDebug() << "Sftp initialization error."; ssh.disconnect(); return R::other;
     }
+
+    //TODO: prepare environment
+
+    //rw
+    //send lconf
+    //send firctrl
+
+
     return R::ok;
 }
 
@@ -180,27 +188,76 @@ void GroupSsh::onLoad(BitstreamSpecs bitSpecs){
         nfyBitstreamLoaded(bitSpecs.getSpecs());
         break;
     case R::connection:
-        qDebug() << "con";
-        //lostConnection();
+        qDebug() << "Connection lost.";
+        onDisconnect();
+        //TODO: dialog
         break;
     case R::other:
-        qDebug() << "other";
-        //sthWrong();
+        qDebug() << "Unexpected error occured during bitstream loading.";
+        //TODO: dialog
         break;
     }
 }
 
 GroupSsh::R GroupSsh::loadBitstream(BitstreamSpecs bitSpecs){
-    qDebug() << bitSpecs.getFilePath();
-    return R::ok;
+    std::string bitPath = bitSpecs.getFilePath().toStdString();
+    qDebug() << "Uploading bitstream:" << QString::fromStdString(bitPath);
+    Ssh::R stat = ssh.sendFileToFile(bitPath,"/tmp/bitstream.bin");
+    if(stat == Ssh::R::ok){
+        //TODO: check sha1sum of uploaded bitstream
+        stat = ssh.execCommand("lconf /tmp/bitstream.bin");
+        if(stat == Ssh::R::ok){
+            qDebug() << "o:" << QString::fromStdString(ssh.getSshOut());
+            qDebug() << "e:" << QString::fromStdString(ssh.getSshErr());
+            return R::ok;
+        }
+    }
+    if(stat == Ssh::R::connection)
+        return R::connection;
+    return R::other;
 }
 
 void GroupSsh::loadSrcKernel(std::vector<double> crrSrcKer){
-    qDebug() << "Loading src kernel.";
+    qDebug() << "Uploading src kernel...";
+    Ssh::R stat = ssh.sendMemToFile((void*)crrSrcKer.data(), crrSrcKer.size()*sizeof(double), "/tmp/srcker.dat");
+    if(stat == Ssh::R::ok){
+        qDebug() << "Done";
+        return;
+    }
+    if(stat == Ssh::R::connection){
+        qDebug() << "Connection lost.";
+        //TODO: dialog
+        onDisconnect();
+        return;
+    }
+    //TODO: dialog
+    qDebug() << "Unexpected error occured during src kernel loading.";
 }
 
 void GroupSsh::loadKernel(std::vector<double> crrKer){
-    qDebug() << "Loading kernel.";
+    qDebug() << "Uploading kernel...";
+    Ssh::R stat = ssh.sendMemToFile((void*)crrKer.data(), crrKer.size()*sizeof(double), "/tmp/firker.dat");
+    if(stat == Ssh::R::ok){
+        qDebug() << "Done";
+        stat = ssh.execCommand("firctrl --load");
+        if(stat == Ssh::R::ok){
+            qDebug() << "o:" << QString::fromStdString(ssh.getSshOut());
+            qDebug() << "e:" << QString::fromStdString(ssh.getSshErr());
+
+            stat = ssh.execCommand("firctrl --enable");
+            if(stat == Ssh::R::ok){
+                return;
+            }
+        }
+    }
+    if(stat == Ssh::R::connection){
+        qDebug() << "Connection lost.";
+        //TODO: dialog
+        onDisconnect();
+        return;
+    }
+    //TODO: dialog
+    qDebug() << "Unexpected error occured during kernel loading.";
 }
 
 void GroupSsh::toggleEnableAdv(){

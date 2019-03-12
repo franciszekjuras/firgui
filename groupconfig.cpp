@@ -37,22 +37,6 @@ GroupConfig::GroupConfig(QWidget *parent) : QGroupBox(tr("Configuration"),parent
     connect(this, &GroupConfig::enableLoad, loadButton, &QPushButton::setEnabled);
     connect(loadButton, &QPushButton::released, this, &GroupConfig::onLoadButton);
 
-//    for(auto it = bitMap.cbegin(); it != bitMap.cend(); ++it)
-//        qDebug() << it.key() << " " << it.value().getFileName();
-
-//    BitstreamSpecs bitspecs("fir3v11_t125d39s20fm21cm20.bin");
-//    qDebug() << "Valid:" << bitspecs.isValid();
-//    qDebug() << "Name:" << bitspecs.getFilename();
-//    qDebug() << "Version:" << bitspecs.getVersion();
-//    qDebug() << "Specs:";
-//    QMap<QString, int> specs = bitspecs.getSpecs();
-//    for(auto it = specs.cbegin(); it != specs.cend(); ++it)
-//        qDebug() << it.key() << " " << it.value();
-
-//    qDebug() << "Comment:" << bitspecs.getComment();
-
-//    qDebug() << "Sampling division:" << specs["t"];
-
 //    QFileInfo file("bitstreams/lol.txt");
 //    qDebug() << "1:" << file.fileName();
 //    qDebug() << "2:" << file.filePath();
@@ -80,22 +64,22 @@ void GroupConfig::init(){
     for(const auto& fI : binFiles){
         BitstreamSpecs bitSpec(fI);
         auto params = bitSpec.getSpecs();
-        if(bitSpec.isValid() && params.contains("t")){
-            double nyqFreq = fpgaSampFreq/2./ static_cast<double>(params["t"]);
+        if(bitSpec.isValid() && params.contains("tm")){
+            double nyqFreq = fpgaSampFreq/2./ static_cast<double>(params["tm"]);
             QString key1;
             if(nyqFreq >= 1000.) key1 = QString::number(nyqFreq/1000.,'g',4)+" MHz";
             else key1 = QString::number(nyqFreq,'g',4)+" KHz";
             QString key2;
 
-            if(params.contains("d"))
-                key2 += QString::number(params["d"]*params["t"]);
+            if(params.contains("fb"))
+                key2 += QString::number(params["fb"]*params["tm"]);
             else
                 key2 += tr("unk.");
 
             key2 += " | ";
 
-            if(params.contains("s"))
-                key2 += QString::number(params["s"]);
+            if(params.contains("sb"))
+                key2 += QString::number(params["sb"]);
             else
                 key2 += tr("unk.");
 

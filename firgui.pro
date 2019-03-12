@@ -9,7 +9,7 @@ TARGET = firgui
 CONFIG += c++14
 
 #Debugging defines
-linux: DEFINES += COMD
+#linux: DEFINES += COMD
 linux: DEFINES += USERD=\"\\\"franciszek\\\"\"
 
 DEFINES += _USE_MATH_DEFINES

@@ -1,0 +1,12 @@
+#!/bin/bash
+if [[ $# -eq 1 ]] && [[ $1 == *.bin ]]
+then
+	cat $1 >/dev/xdevcfg
+	touch /tmp/lconf_ld
+elif [[ $# -eq 0 ]]
+then
+	cat /dev/null >/dev/xdevcfg
+	rm -f /tmp/lconf_ld
+else
+	echo -e "lconf:\nSupplied argument should be a .bin file (not .bit).\nPass no arguments to clear FPGA configuration."
+fi
