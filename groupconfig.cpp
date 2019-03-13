@@ -54,7 +54,7 @@ void GroupConfig::init(){
     fpgaSampFreq = 125000.;
     emit fpgaSampFreqChanged(fpgaSampFreq);
 
-    QDir bitDir("bitstreams");
+    QDir bitDir("data/bitstreams");
     bitDir.setFilter(QDir::Files);
     bitDir.setNameFilters(QStringList("*.bin"));
     qDebug() << "bitstreams dir exists:"<< bitDir.exists();

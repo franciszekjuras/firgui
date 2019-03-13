@@ -54,11 +54,11 @@ KerPlot::KerPlot(QWidget* parent):
 
     this->addGraph();
     auto pen = QPen(QColor(249, 124, 14));
-    pen.setWidthF(2.);
+    pen.setWidth(1);
     this->graph(0)->setPen(pen);
     this->addGraph();    
     pen = QPen(QColor(31, 119, 179));
-    pen.setWidthF(2.);
+    pen.setWidth(1);
     this->graph(1)->setPen(pen);
     //this->setNotAntialiasedElements(QCP::aeAll);
 //    this->graph(0)->setAdaptiveSampling(false);
