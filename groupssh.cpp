@@ -4,6 +4,9 @@
 #include <QDebug>
 #include <QShortcut>
 #include <QInputDialog>
+#include <QtConcurrent>
+#include <QFutureWatcher>
+#include <QFuture>
 #include "groupssh.h"
 #include "switch.h"
 
@@ -16,7 +19,7 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
 
     QVBoxLayout* vBox = new QVBoxLayout;
     QHBoxLayout* idHBox = new QHBoxLayout;
-    QGridLayout* commandGrid = new QGridLayout;
+//    QGridLayout* commandGrid = new QGridLayout;
 
     /*>>>ID H Box<<<*/
 
@@ -34,11 +37,23 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
     disconnectButton->setEnabled(true);
     disconnectButton->setVisible(false);
 
+    waitSpin = new WaitingSpinnerWidget(0, false, false);
+    waitSpin->setRoundness(70.0);
+    waitSpin->setMinimumTrailOpacity(50.0);
+    waitSpin->setTrailFadePercentage(70.0);
+    waitSpin->setNumberOfLines(10);
+    waitSpin->setLineLength(6);
+    waitSpin->setLineWidth(3);
+    waitSpin->setInnerRadius(5);
+    waitSpin->setRevolutionsPerSecond(2);
+    waitSpin->setColor(QColor(0, 150, 136));
+
 
     idHBox->addWidget(idLabel);
     idHBox->addWidget(idLineEdit);
     idHBox->addWidget(connectButton);
     idHBox->addWidget(disconnectButton);
+    idHBox->addWidget(waitSpin);
     idHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding,QSizePolicy::Fixed));
 
     //QSpacerItem* scSpacer = new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -46,30 +61,30 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
     /*>>>Advanced Options<<<*/
 
     //QSpacerItem* advSpacer = new QSpacerItem(0, 10);
-    advButton = new Switch(tr("Advanced Options"));
-    enableAdvState = true; toggleEnableAdv();
+//    advButton = new Switch(tr("Advanced Options"));
+//    enableAdvState = true; toggleEnableAdv();
 
 
     //advButton->setCheckable(true);
 
     /*>>>Command Grid<<<*/
 
-    QLineEdit* commandLine = new QLineEdit;
-    QPushButton* commandButton = new QPushButton(tr("Send"));
-    QFontMetrics fm = commandButton->fontMetrics();
-    commandButton->setMaximumWidth(fm.width(tr("Send"))+20);
-    QTextBrowser* commandBrowser = new QTextBrowser;
-    commandBrowser->setFixedHeight(70);
+//    QLineEdit* commandLine = new QLineEdit;
+//    QPushButton* commandButton = new QPushButton(tr("Send"));
+//    QFontMetrics fm = commandButton->fontMetrics();
+//    commandButton->setMaximumWidth(fm.width(tr("Send"))+20);
+//    QTextBrowser* commandBrowser = new QTextBrowser;
+//    commandBrowser->setFixedHeight(70);
 
-    commandGrid->addWidget(commandLine, 0, 0);
-    commandGrid->addWidget(commandButton, 0, 1);
-    commandGrid->addWidget(commandBrowser, 1, 0, 1, 2);
+//    commandGrid->addWidget(commandLine, 0, 0);
+//    commandGrid->addWidget(commandButton, 0, 1);
+//    commandGrid->addWidget(commandBrowser, 1, 0, 1, 2);
 
     //set visibility toogle
-    commandBrowser->setVisible(false);commandLine->setVisible(false);commandButton->setVisible(false);
-    connect(advButton, SIGNAL(toggled(bool)), commandBrowser, SLOT(setVisible(bool)));
-    connect(advButton, SIGNAL(toggled(bool)), commandLine, SLOT(setVisible(bool)));
-    connect(advButton, SIGNAL(toggled(bool)), commandButton, SLOT(setVisible(bool)));
+//    commandBrowser->setVisible(false);commandLine->setVisible(false);commandButton->setVisible(false);
+//    connect(advButton, SIGNAL(toggled(bool)), commandBrowser, SLOT(setVisible(bool)));
+//    connect(advButton, SIGNAL(toggled(bool)), commandLine, SLOT(setVisible(bool)));
+//    connect(advButton, SIGNAL(toggled(bool)), commandButton, SLOT(setVisible(bool)));
 
 
 
@@ -77,8 +92,8 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
 
     vBox->addLayout(idHBox);
     //vBox->addItem(advSpacer);
-    vBox->addWidget(advButton);
-    vBox->addLayout(commandGrid);
+//    vBox->addWidget(advButton);
+//    vBox->addLayout(commandGrid);
     //vBox->addWidget(responseTextBox);
     this->setLayout(vBox);
 
@@ -91,11 +106,17 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
 
     connect(this, &GroupSsh::nfyConnected, this, &GroupSsh::swapConnectButtons);
 
+
+    //connection chain:
+    connect(&connectWatch, &QFutureWatcher<R>::finished, this, &GroupSsh::connectToRPFinished);
+    connect(&authWatch, &QFutureWatcher<R>::finished, this, &GroupSsh::authenticateRPFinished);
+
+
 //    connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){idLineEdit->setText(str);idLineEdit->setCursorPosition(str.length());});
 //    connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){qDebug() << str;});
-    QShortcut* sc = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_D), this);
-    sc->setContext(Qt::ApplicationShortcut);
-    connect(sc, &QShortcut::activated, this, &GroupSsh::toggleEnableAdv );
+//    QShortcut* sc = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_D), this);
+//    sc->setContext(Qt::ApplicationShortcut);
+//    connect(sc, &QShortcut::activated, this, &GroupSsh::toggleEnableAdv );
 
 }
 
@@ -111,22 +132,10 @@ void GroupSsh::onConnect(){
 
     qDebug() << "Connecting...";
 
-    R status = connectToRP(rpMac);
-
-    switch(status){
-    case R::ok:
-        qDebug() << "ok";
-        nfyConnected(true);
-        break;
-    case R::connection:
-        qDebug() << "con";
-        //noConnection();
-        break;
-    case R::other:
-        qDebug() << "other";
-        //sthWrong();
-        break;
-    }
+    connectButton->setDisabled(true);
+    waitSpin->start();
+    QFuture<R> fut = QtConcurrent::run([=](){return this->connectToRP(rpMac);});
+    connectWatch.setFuture(fut);
 }
 
 GroupSsh::R GroupSsh::connectToRP(std::string rpMac){
@@ -154,16 +163,40 @@ GroupSsh::R GroupSsh::connectToRP(std::string rpMac){
     if(ssh.getStatus() != Ssh::Status::verified){
         qDebug() << "Verification error."; ssh.disconnect(); return R::other;
     }
+    return R::ok;
+}
 
-    std::string pass;
-#ifndef COMD
-    pass = "root";
-#else
-    pass = QInputDialog::getText(this, tr("Authentication") ,tr("Password"), QLineEdit::Password).toStdString();
-#endif
+void GroupSsh::connectToRPFinished(){
+    R status = connectWatch.future().result();
 
+    if(status == R::ok){
+        std::string pass;
+        #ifndef COMD
+        pass = "root";
+        #else
+        pass = QInputDialog::getText(this, tr("Authentication") ,tr("Password"), QLineEdit::Password).toStdString();
+        #endif
+        QFuture<R> fut = QtConcurrent::run([=](){return this->authenticateRP(pass);});
+        authWatch.setFuture(fut);
+        return;
+    }
+
+    waitSpin->stop();    
+    connectButton->setEnabled(true);
+
+    if(status == R::other){
+        qDebug() << "Unexpected error occured while connecting.";
+        return;
+    }
+    if(status == R::connection){
+        qDebug() << "Coudn't connect to Red Pitaya.";
+        return;
+    }
+}
+
+GroupSsh::R GroupSsh::authenticateRP(std::string pass){
     if(ssh.auth(pass) != Ssh::R::ok){
-        qDebug() << "Authentication error."; ssh.disconnect(); return R::other;
+        qDebug() << "Authentication error."; ssh.disconnect(); return R::auth;
     }
     qDebug() << "Connection established.";
     if(ssh.setupSftp() != Ssh::R::ok){
@@ -180,17 +213,41 @@ GroupSsh::R GroupSsh::connectToRP(std::string rpMac){
     return R::ok;
 }
 
+void GroupSsh::authenticateRPFinished(){
+
+    R status = authWatch.future().result();
+
+    switch(status){
+    case R::ok:
+        qDebug() << "ok";
+        nfyConnected(true);
+        break;
+    case R::auth:
+        qDebug() << "auth";
+        //noConnection();
+        break;
+    case R::other:
+        qDebug() << "other";
+        //sthWrong();
+        break;
+    }
+
+    waitSpin->stop();
+    connectButton->setEnabled(true);
+}
+
 void GroupSsh::onLoad(BitstreamSpecs bitSpecs){
     R status = loadBitstream(bitSpecs);
     switch(status){
     case R::ok:
         qDebug() << "ok";
         nfyBitstreamLoaded(bitSpecs.getSpecs());
+        //TODO: print info (label?)
         break;
     case R::connection:
         qDebug() << "Connection lost.";
         onDisconnect();
-        //TODO: dialog
+        //TODO: print info (label?)
         break;
     case R::other:
         qDebug() << "Unexpected error occured during bitstream loading.";
@@ -226,7 +283,7 @@ void GroupSsh::loadSrcKernel(std::vector<double> crrSrcKer){
     }
     if(stat == Ssh::R::connection){
         qDebug() << "Connection lost.";
-        //TODO: dialog
+        //TODO: print info (label?)
         onDisconnect();
         return;
     }
@@ -252,7 +309,7 @@ void GroupSsh::loadKernel(std::vector<double> crrKer){
     }
     if(stat == Ssh::R::connection){
         qDebug() << "Connection lost.";
-        //TODO: dialog
+        //TODO: print info (label?)
         onDisconnect();
         return;
     }

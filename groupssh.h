@@ -5,9 +5,11 @@
 #include <QGroupBox>
 #include <QLineEdit>
 #include <QTimer>
+#include <QFutureWatcher>
 #include "switch.h"
 #include "ssh.h"
 #include "bitstreamspecs.h"
+#include "waitingspinnerwidget.h"
 
 class IMLineEdit : public QLineEdit{
     Q_OBJECT
@@ -25,6 +27,7 @@ private:
     enum class R {
         ok,
         connection,
+        auth,
         other
     };
 
@@ -38,14 +41,21 @@ private:
     QPushButton* disconnectButton;
     Ssh ssh;
     IMLineEdit* idLineEdit;
+    QFutureWatcher<R> connectWatch;
+    QFutureWatcher<R> authWatch;
+    WaitingSpinnerWidget* waitSpin;
 
     void toggleEnableAdv();
     void swapConnectButtons(bool isConnect);
     void onConnect();
     void onDisconnect();
 
-    R connectToRP(std::string rpMac);
     R loadBitstream(BitstreamSpecs bitSpecs);
+
+    R connectToRP(std::string rpMac);
+    void connectToRPFinished();
+    R authenticateRP(std::string pass);
+    void authenticateRPFinished();
 
 signals:
     void nfyBitstreamLoaded(QMap<QString, int> specs);
