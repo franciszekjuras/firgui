@@ -387,7 +387,8 @@ void GroupSpecs::rebuild(){
             bandW /= 1000.;
             unit = " MHz";
         }
-        bandCombo->addItem(QString::number(i * bandW) + " - " + QString::number((i+1) * bandW) + unit);
+        //QString::asprintf("%+06.2f", value)
+        bandCombo->addItem(QString::number(i * bandW,'g',4) + " - " + QString::number((i+1) * bandW,'g',4) + unit);
     }
 }
 
