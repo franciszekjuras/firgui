@@ -18,18 +18,21 @@ public:
     QString getFileName() const;
     QString getFilePath() const;
     const QString& getComment() const;
-    const QString& getVersion() const;
+    int getMajVersion() const;
+    int getSubVersion() const;
 
 
 private:
     QMap<QString, int> specs;
     QFileInfo fileInfo;
     QString comment;
-    QString version;
+    int majVersion;
+    int subVersion;
     bool valid;
 
     void init();
     static QMap<QString, int> mapSpecs(const QString& str);
+    bool setVersion(const QString& str);
     static int letterCount(const QString& str, int pos);
     static int numberCount(const QString& str, int pos);
 };

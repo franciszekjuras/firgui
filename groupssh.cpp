@@ -7,6 +7,7 @@
 #include <QtConcurrent>
 #include <QFutureWatcher>
 #include <QFuture>
+#include <QFileInfo>
 #include "groupssh.h"
 #include "switch.h"
 
@@ -111,6 +112,8 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
     connect(&connectWatch, &QFutureWatcher<R>::finished, this, &GroupSsh::connectToRPFinished);
     connect(&authWatch, &QFutureWatcher<R>::finished, this, &GroupSsh::authenticateRPFinished);
 
+    fcUploaded = false;
+
 
 //    connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){idLineEdit->setText(str);idLineEdit->setCursorPosition(str.length());});
 //    connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){qDebug() << str;});
@@ -132,6 +135,7 @@ void GroupSsh::onConnect(){
 
     qDebug() << "Connecting...";
 
+    fcUploaded = false;
     connectButton->setDisabled(true);
     waitSpin->start();
     QFuture<R> fut = QtConcurrent::run([=](){return this->connectToRP(rpMac);});
@@ -256,8 +260,74 @@ void GroupSsh::onLoad(BitstreamSpecs bitSpecs){
     }
 }
 
+GroupSsh::R GroupSsh::uploadFirCtrl(const BitstreamSpecs& bitSpecs){
+    int mV = bitSpecs.getMajVersion();
+    int sV = bitSpecs.getSubVersion();
+    int subDec = sV/10;
+    if(fcUploaded){
+        if(fcMajVer == mV && fcSubVer == subDec)
+            return R::ok;
+    }
+    QString fcFileName = "firctrl_";
+    fcFileName.append(QString::number(mV));
+    fcFileName.append("_");
+    fcFileName.append(QString::number(subDec));
+    fcFileName.append("_*");
+
+    qDebug() << "fcFileName:" << fcFileName;
+
+
+    QDir rpDir("data/redpitaya");
+    qDebug() << "redpitaya dir exists:"<< rpDir.exists();
+    QFileInfoList fcFiles = rpDir.entryInfoList(QStringList(fcFileName), QDir::Files, QDir::Name);
+    if(fcFiles.isEmpty()){
+        qDebug()<< "No matching firctrl found.";
+        return R::other;
+    }
+    QFileInfo fcFile = fcFiles.back();
+    qDebug() << fcFile.filePath();
+
+    Ssh::R r = ssh.sendFileToFile(fcFile.filePath().toStdString(),"/usr/local/bin/firctrl");
+    if(r != Ssh::R::ok){
+        switch (r) {
+        case Ssh::R::connection:
+            return R::connection;
+        case Ssh::R::authentication:
+            return R::auth;
+        default:
+            return R::other;
+        }
+    }
+    fcMajVer = mV;
+    fcSubVer = subDec;
+    qDebug() << "firctrl successfully sent.";
+    return R::ok;
+
+}
+
+
 GroupSsh::R GroupSsh::loadBitstream(BitstreamSpecs bitSpecs){
     std::string bitPath = bitSpecs.getFilePath().toStdString();
+
+    R upfcstat = uploadFirCtrl(bitSpecs);
+    if(upfcstat != R::ok)
+        return upfcstat;
+
+    QFileInfo lconfFI("data/redpitaya/lconf");
+    if(!lconfFI.exists() || !lconfFI.isFile())
+        return R::other;
+    Ssh::R lcstat = ssh.sendFileToFile(lconfFI.filePath().toStdString(),"/usr/local/bin/lconf");
+    if(lcstat != Ssh::R::ok){
+        switch (lcstat) {
+        case Ssh::R::connection:
+            return R::connection;
+        case Ssh::R::authentication:
+            return R::auth;
+        default:
+            return R::other;
+        }
+    }
+
     qDebug() << "Uploading bitstream:" << QString::fromStdString(bitPath);
     Ssh::R stat = ssh.sendFileToFile(bitPath,"/tmp/bitstream.bin");
     if(stat == Ssh::R::ok){

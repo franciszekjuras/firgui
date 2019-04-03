@@ -133,8 +133,8 @@ void GroupConfig::updateBitSpecCombo(QString mainStr){
     bitMainStr = mainStr;
     bitSpecCombo->clear();
     auto specMap = bitMap.value(mainStr);
-    for(auto it = specMap.cbegin(); it != specMap.cend(); ++it)
-        bitSpecCombo->addItem(it.key());
+    for(auto it = specMap.cend(); it != specMap.cbegin();)
+        bitSpecCombo->addItem((--it).key());
 }
 
 void GroupConfig::bitSpecComboChanged(QString specStr){

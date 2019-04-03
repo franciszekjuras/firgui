@@ -44,6 +44,9 @@ private:
     QFutureWatcher<R> connectWatch;
     QFutureWatcher<R> authWatch;
     WaitingSpinnerWidget* waitSpin;
+    int fcMajVer;
+    int fcSubVer;
+    bool fcUploaded;
 
     void toggleEnableAdv();
     void swapConnectButtons(bool isConnect);
@@ -56,6 +59,7 @@ private:
     void connectToRPFinished();
     R authenticateRP(std::string pass);
     void authenticateRPFinished();
+    R uploadFirCtrl(const BitstreamSpecs& bitSpecs);
 
 signals:
     void nfyBitstreamLoaded(QMap<QString, int> specs);

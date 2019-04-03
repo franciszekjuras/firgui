@@ -25,8 +25,8 @@ void BitstreamSpecs::init(){
     QStringList nameSplit = extSplit.at(0).split("_");//<--- underscore
     if(nameSplit.size() < 2) return;
 
-    version = nameSplit.at(0);
-    if(version.isEmpty()) return;
+    QString version = nameSplit.at(0);
+    if(!setVersion(version)) return;
 
     specs = mapSpecs(nameSplit.at(1));
     if (specs.isEmpty()) return;
@@ -45,7 +45,25 @@ const QMap<QString, int>& BitstreamSpecs::getSpecs() const{return specs;}
 QString BitstreamSpecs::getFileName() const{return fileInfo.fileName();}
 QString BitstreamSpecs::getFilePath() const{return fileInfo.filePath();}
 const QString& BitstreamSpecs::getComment() const{return comment;}
-const QString& BitstreamSpecs::getVersion() const{return version;}
+int BitstreamSpecs::getMajVersion() const{return majVersion;}
+int BitstreamSpecs::getSubVersion() const{return subVersion;}
+
+bool BitstreamSpecs::setVersion(const QString& str){
+    if(!str.startsWith("fir",Qt::CaseInsensitive))
+        return false;
+    QString ver = str.mid(3);
+    QStringList verSplit = ver.split('v');
+    if(verSplit.size()!=2) return false;
+    int majV, subV;
+    bool ok;
+    majV = verSplit.at(0).toInt();
+    subV = verSplit.at(1).toInt(&ok);
+    if(majV <= 0 || subV < 0 || (!ok))
+        return false;
+    majVersion = majV;
+    subVersion = subV;
+    return true;
+}
 
 QMap<QString, int> BitstreamSpecs::mapSpecs(const QString& str){
     QMap<QString, int> map;
