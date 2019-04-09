@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <fcntl.h>
+#include <QDebug>
 #include "ssh.h"
 
 #define BUFSIZE 4096
@@ -36,7 +37,6 @@ Ssh::R Ssh::execCommand(std::string command){
     int nbytes;
     int rc;
     char buffer[BUFSIZE];
-
 
     channel = ssh_channel_new(ssh);
     if (channel == NULL) {
@@ -83,7 +83,6 @@ Ssh::R Ssh::sendFileToFile(std::string src, std::string dest){
     std::ifstream srcFile (src, std::ifstream::binary);
     if(!srcFile){std::cerr << "Couldn't open local file for reading: "<< src << std::endl;return R::other;}
 
-    // O_WRONLY = 1  O_CREAT = 64  O_TRUNC = 512
     sftp_file destRFile = sftp_open(sftp, dest.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0777);
     if(destRFile==NULL){std::cerr << "Couldn't open remote file for writing: " << dest << std::endl;return R::other;}
 
@@ -102,13 +101,13 @@ Ssh::R Ssh::sendFileToFile(std::string src, std::string dest){
         std::cerr << "Error reading local file: " << src << std::endl;
         sftp_close(destRFile); return R::other;
     }
+
     sftp_close(destRFile);
     return R::ok;
 }
 
 Ssh::R Ssh::sendMemToFile(const void* mem, std::size_t size, std::string dest){
 
-    // O_WRONLY = 1  O_CREAT = 64  O_TRUNC = 512
     sftp_file destRFile = sftp_open(sftp, dest.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0777);
     if(destRFile==NULL){std::cerr << "Couldn't open remote file for writing: " << dest << std::endl;return R::other;}
 
@@ -126,6 +125,7 @@ Ssh::R Ssh::sendMemToFile(const void* mem, std::size_t size, std::string dest){
         }
         sizeLeft -= toWrite;
     }
+
     sftp_close(destRFile);
     return R::ok;
 }
@@ -143,6 +143,10 @@ Ssh::R Ssh::connect(){
     ssh=ssh_new();
     ssh_options_set(ssh, SSH_OPTIONS_USER, user.c_str());
     ssh_options_set(ssh, SSH_OPTIONS_HOST, host.c_str());
+
+//    long timeOut = 1L;
+//    ssh_options_set(ssh, SSH_OPTIONS_TIMEOUT, &timeOut);
+
     //ssh_options_set(ssh, SSH_OPTIONS_LOG_VERBOSITY, verbosity);
     if(ssh_connect(ssh) != 0){
         std::cerr << "Connection failed: " << ssh_get_error(ssh) << "\n";
@@ -193,8 +197,8 @@ Ssh::R Ssh::verify(){
 }
 
 Ssh::R Ssh::addKnownHost(){
-    if(status != Status::unknownserv)
-        return R::status;
+//    if(status != Status::unknownserv)
+//        return R::status;
     if(ssh_write_knownhost(ssh)<0)
         return R::other;
     return R::ok;

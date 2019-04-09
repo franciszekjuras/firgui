@@ -12,7 +12,7 @@
 #include "switch.h"
 
 
-GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
+GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("Connection"),parent)
 {
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
@@ -100,6 +100,7 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("SSH options"),parent)
 
     //---> Functionality <---//
 
+    connect(idLineEdit, &IMLineEdit::returnPressed,[=](){if(connectButton->isVisible()) connectButton->click();});
     connect(connectButton, &QPushButton::released, this, &GroupSsh::onConnect);
     connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){connectButton->setEnabled((str.length() == 6));});
 
@@ -159,7 +160,10 @@ GroupSsh::R GroupSsh::connectToRP(std::string rpMac){
     if(ssh.connect() != Ssh::R::ok){
         qDebug() << "No connection."; return R::connection;
     }
-    ssh.verify();
+    if(ssh.verify() != Ssh::R::ok){
+        ssh.addKnownHost();
+        ssh.verify();
+    }
     if(ssh.getStatus() == Ssh::Status::unknownserv){
         qDebug() << "Accepting:" << QString::fromStdString(ssh.getHash());
         ssh.accept();

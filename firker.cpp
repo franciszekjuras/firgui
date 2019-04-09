@@ -218,7 +218,7 @@ bool EqRippleFirKer::calc(){
     normFreqs.back() = 1.;
 
     //calculate kernel
-    PMOutput out = firpmRS(rank-1, normFreqs, gains, weights);
+    PMOutput out = firpmRS(rank-1, normFreqs, gains, weights, .01, 1u, 4);
 
     if(std::isnan(out.Q) || std::isnan(out.delta) || (out.iter >= 101u))
         return false;

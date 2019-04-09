@@ -173,12 +173,10 @@ void KerPlot::cntSetSrcKernel(){
         updateSrcFreqs();
 
     double max = 1.;
-    qDebug() << "Max trns:";
-    for(auto v : trns){
-        if(v > max){ max = v;
-            qDebug() << v;
-        }
-    }
+
+    for(const auto& v : trns)
+        if(v > max) max = v;
+
     srcKerMaxGain = max;
 
     setPlotType(plotType);

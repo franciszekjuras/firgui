@@ -14,6 +14,9 @@
 #include "firker.h"
 #include "waitingspinnerwidget.h"
 
+#define PASSBAND_WIDTH_RATIO 4.11 // magic numbers for .1% rippling in passband
+                                  // and -80 dB (.01%) attenuation in stopband
+
 GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),parent)
 {
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
@@ -279,16 +282,20 @@ void GroupSpecs::calcSrcKernel(){
 
     std::vector<double> freqs, gains, weights;
     int band = bandCombo->currentIndex(); assert (band >= 0); assert (band < t);
+    double dband = static_cast<double>(band);
     double dT = static_cast<double>(t);
     int srcKerRank = t * s;
-    double width = 4.11 / static_cast<double>(srcKerRank); // magic numbers for .1% rippling in passband
-    double stopBandWeight = 10.;                           // and -80 dB (.01%) attenuation in stopband
+    double width = PASSBAND_WIDTH_RATIO / static_cast<double>(srcKerRank);
+    double stopBandWeight = 10.;
 
     if(band > 0){
-        if(width > .5/dT/2.) return;
+        if(width > .5/dT/2.){
+            qDebug() << tr("Higher bands are not supported in this configuration");
+            return;
+        }
         gains.push_back(0); //--> 0 frequency
-        freqs.push_back(.5/dT*band); gains.push_back(0);
-        freqs.push_back(.5/dT*band + width); //--> frequency depends on case
+        freqs.push_back(.5/dT*(dband + .0001)); gains.push_back(0);
+        freqs.push_back(.5/dT*dband + width); //--> frequency depends on case
         weights.push_back(stopBandWeight);
     }
     else if(width > .5/dT) return;
@@ -297,7 +304,7 @@ void GroupSpecs::calcSrcKernel(){
     weights.push_back(1.);
 
     if((band + 1) < t){
-        freqs.push_back(.5/dT*(band+1) - width); freqs.push_back(.5/dT*(band+1));
+        freqs.push_back(.5/dT*(dband+1.) - width); freqs.push_back(.5/dT*(dband+1.-.0001));
         gains.push_back(0); gains.push_back(0);
         weights.push_back(stopBandWeight);
     }
@@ -305,6 +312,16 @@ void GroupSpecs::calcSrcKernel(){
     EqRippleFirKer ker;
     ker.setSampFreq(1.);
     ker.setRank(srcKerRank);
+
+    qDebug() << "freqs:";
+    for(const auto& v : freqs)
+        qDebug() << v;
+    qDebug() << "gains:";
+    for(const auto& v : gains)
+        qDebug() << v;
+    qDebug() << "weights:";
+    for(const auto& v : weights)
+        qDebug() << v;
 
     if(!ker.setSpecs(freqs,gains,weights)){
         qDebug() << "Wrong EqRipple Filter specs."; return;
@@ -360,18 +377,20 @@ void GroupSpecs::bitstreamChanged(QMap<QString, int> specs){
        bandCombo->clear(); enableCalcButton(false); resetPlot(fpgaSampFreq,1,0);return;
     }
 
-    if(t != tOld){
-        rebuild(); //---> this will rebuild all kernels and plot
-    }
-    else{//---> if t hasn't changed -- test what must be updated
-        if(!validS)
-            srcKernelClear();
-        else if(s != sOld)
-            calcSrcKernel();
+    rebuild();
 
-        if(!validD || d!= dOld)
-            kernelClear();
-    }
+//    if(t != tOld){
+//        rebuild(); //---> this will rebuild all kernels and plot
+//    }
+//    else{//---> if t hasn't changed -- test what must be updated
+//        if(!validS)
+//            srcKernelClear();
+//        else if(s != sOld)
+//            calcSrcKernel();
+
+//        if(!validD || d!= dOld)
+//            kernelClear();
+//    }
 
     enableCalcButton(validD);
 
@@ -382,12 +401,23 @@ void GroupSpecs::rebuild(){
     bandCombo->clear();
     double bandW = fpgaSampFreq / t / 2.;
     QString unit(" kHz");
-    for(double i = 0.; i < static_cast<double>(t); ++i){
+
+
+    double dT = static_cast<double>(t);
+    int srcKerRank = t * s;
+    double width = PASSBAND_WIDTH_RATIO / static_cast<double>(srcKerRank);
+    bool middleBandsEn = (width < .5/dT/2.);
+    qDebug() << "band half width:" << .5/dT/2.;
+
+    qDebug() << "passband width:" << width;
+
+    for(double i = 0.; i < dT; ++i){
         if((i+1)*bandW >= 1000.){
             bandW /= 1000.;
             unit = " MHz";
         }
         //QString::asprintf("%+06.2f", value)
+        if(middleBandsEn || i == 0. || i == (dT -1))
         bandCombo->addItem(QString::number(i * bandW,'g',4) + " - " + QString::number((i+1) * bandW,'g',4) + unit);
     }
 }
