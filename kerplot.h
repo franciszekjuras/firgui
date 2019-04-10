@@ -10,9 +10,6 @@
 #include "waitingspinnerwidget.h"
 #include "boolmapwatcher.h"
 
-#define KER_PLOT_POINTS 10000
-#define SRCKER_PLOT_POINTS 10000
-
 class KerPlot : public QCustomPlot{
     Q_OBJECT
 
@@ -26,8 +23,11 @@ protected:
     double kerMaxGain;
     double srcKerMaxGain;
     QString plotType;
-    int plotPoints;
-    int srcPlotPoints;
+    int srcPlotDiv;
+    int plotDiv;
+    int plotDivScale;
+    int t;
+    int band;
 
     //this values are for display only
     bool inverseBand;
@@ -54,6 +54,9 @@ protected:
     void setFreqs(double freq, int t, int band);
     void updateFreqs();
     void updateSrcFreqs();
+    void totalAmplTrans();
+    void totalBodeTrans();
+    void clearTotalTrans();
 
     void cntSetKernel();
     void cntSetSrcKernel();
@@ -66,6 +69,7 @@ public slots:
     void resetPlot(double freq, int t, int band);
     void clearKernel();
     void clearSrcKernel();
+    void toggleTotalTransPlot(bool);
     void toggleSrcTransPlot(bool);
     void toggleFirTransPlot(bool);
 

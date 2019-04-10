@@ -14,6 +14,7 @@ public:
 
     //bool setFrequency();
     bool setRank(int rank);
+    int getRank(); //Warninig: rank doesn't have to match ker.size()
     bool setSampFreq(double freq);
     double getSampFreq() const;
     std::vector<double> transmission(int div) const;

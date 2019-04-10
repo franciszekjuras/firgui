@@ -90,6 +90,9 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
 
     unitMult = 1.;
 
+    connect(freqsLineEdit, &QLineEdit::returnPressed, gainsLineEdit, static_cast<void (QLineEdit::*)()>(&QLineEdit::setFocus));
+    connect(gainsLineEdit, &QLineEdit::returnPressed, calcButton, &QPushButton::click);
+
     connect(helpButton, &QPushButton::released, this, &GroupSpecs::showHelp);
 
     connect(calcButton, &QPushButton::released, this, &GroupSpecs::calculateKernel);
@@ -209,7 +212,7 @@ void GroupSpecs::calculateKernel(){
         v *= unitMult;
     }
 
-    int band = bandCombo->currentIndex();
+    int band = currentBand();
     double kerNqFreq = kerSampFreq / 2.;
 
     qDebug()<<"Shift: ";
@@ -281,18 +284,20 @@ void GroupSpecs::calcSrcKernel(){
     if(t == 1) return;
 
     std::vector<double> freqs, gains, weights;
-    int band = bandCombo->currentIndex(); assert (band >= 0); assert (band < t);
+    int band = currentBand();
     double dband = static_cast<double>(band);
     double dT = static_cast<double>(t);
     int srcKerRank = t * s;
     double width = PASSBAND_WIDTH_RATIO / static_cast<double>(srcKerRank);
     double stopBandWeight = 10.;
 
+    if((band!=0) && (band != (t-1)) && (width > .5/dT/2.)){
+        qDebug() << "Band" << band << "t" << t;
+        qDebug() << tr("Higher bands are not supported in this configuration");
+        return;
+    }
+
     if(band > 0){
-        if(width > .5/dT/2.){
-            qDebug() << tr("Higher bands are not supported in this configuration");
-            return;
-        }
         gains.push_back(0); //--> 0 frequency
         freqs.push_back(.5/dT*(dband + .0001)); gains.push_back(0);
         freqs.push_back(.5/dT*dband + width); //--> frequency depends on case
@@ -351,6 +356,10 @@ void GroupSpecs::srcKerCalcFinished(){
 
     qDebug() << "Calculation finished.";
     crrSrcKer = ker->getKernel();
+    while(crrSrcKer.size() < ker->getRank()){
+        qDebug() << "Adding leading 0 to src kernel.";
+        crrSrcKer.push_back(0.);
+    }
     ker->setSampFreq(fpgaSampFreq);
     emit srcKernelChanged(ker);
 }
@@ -376,8 +385,11 @@ void GroupSpecs::bitstreamChanged(QMap<QString, int> specs){
     if(!validT){
        bandCombo->clear(); enableCalcButton(false); resetPlot(fpgaSampFreq,1,0);return;
     }
-
-    rebuild();
+    //TODO: find better solution (to prevent clearing calculated kernel when loading bitstream)
+    if(t == tOld && validS && s == sOld && validD && d == dOld)
+        qDebug() << "No changes in bitstream.";
+    else
+        rebuild();
 
 //    if(t != tOld){
 //        rebuild(); //---> this will rebuild all kernels and plot
@@ -406,7 +418,7 @@ void GroupSpecs::rebuild(){
     double dT = static_cast<double>(t);
     int srcKerRank = t * s;
     double width = PASSBAND_WIDTH_RATIO / static_cast<double>(srcKerRank);
-    bool middleBandsEn = (width < .5/dT/2.);
+    middleBandsEn = (width < .5/dT/2.);
     qDebug() << "band half width:" << .5/dT/2.;
 
     qDebug() << "passband width:" << width;
@@ -425,7 +437,7 @@ void GroupSpecs::rebuild(){
 void GroupSpecs::bandChanged(int band){
     qDebug() << band;
     if(band < 0) return;
-    resetPlot(fpgaSampFreq, t, band);
+    resetPlot(fpgaSampFreq, t, currentBand());
     calcSrcKernel();
 }
 
@@ -467,4 +479,10 @@ bool GroupSpecs::textToDoubles(const std::string& str, std::vector<double>& v){
         return false;
     }
     return true;
+}
+
+int GroupSpecs::currentBand(){
+    int band = bandCombo->currentIndex(); assert (band >= 0); assert (band < t);
+    if(!middleBandsEn && (band == 1)) band = t - 1;
+    return band;
 }

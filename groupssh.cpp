@@ -1,5 +1,6 @@
 #include <QtWidgets>
 #include <string>
+#include <fstream>
 #include <QString>
 #include <QDebug>
 #include <QShortcut>
@@ -231,7 +232,11 @@ void GroupSsh::authenticateRPFinished(){
         nfyConnected(true);
         break;
     case R::auth:
-        qDebug() << "auth";
+        qDebug() << "connection";
+        //noConnection();
+        break;
+    case R::connection:
+        qDebug() << "connection";
         //noConnection();
         break;
     case R::other:
@@ -255,6 +260,10 @@ void GroupSsh::onLoad(BitstreamSpecs bitSpecs){
     case R::connection:
         qDebug() << "Connection lost.";
         onDisconnect();
+        //TODO: print info (label?)
+        break;
+    case R::auth:
+        qDebug() << "Authorization error.";
         //TODO: print info (label?)
         break;
     case R::other:
@@ -351,6 +360,10 @@ GroupSsh::R GroupSsh::loadBitstream(BitstreamSpecs bitSpecs){
 void GroupSsh::loadSrcKernel(std::vector<double> crrSrcKer){
     qDebug() << "Uploading src kernel...";
     Ssh::R stat = ssh.sendMemToFile((void*)crrSrcKer.data(), crrSrcKer.size()*sizeof(double), "/tmp/srcker.dat");
+    //local copy
+    std::ofstream ofp("srcker.dat", std::ios::out | std::ios::binary);
+    ofp.write(reinterpret_cast<const char*>(crrSrcKer.data()), crrSrcKer.size() * sizeof(crrSrcKer[0]));ofp.close();
+
     if(stat == Ssh::R::ok){
         qDebug() << "Done";
         return;
@@ -368,6 +381,10 @@ void GroupSsh::loadSrcKernel(std::vector<double> crrSrcKer){
 void GroupSsh::loadKernel(std::vector<double> crrKer){
     qDebug() << "Uploading kernel...";
     Ssh::R stat = ssh.sendMemToFile((void*)crrKer.data(), crrKer.size()*sizeof(double), "/tmp/firker.dat");
+    //local copy
+    std::ofstream ofp("firker.dat", std::ios::out | std::ios::binary);
+    ofp.write(reinterpret_cast<const char*>(crrKer.data()), crrKer.size() * sizeof(crrKer[0]));ofp.close();
+
     if(stat == Ssh::R::ok){
         qDebug() << "Done";
         stat = ssh.execCommand("firctrl --load");

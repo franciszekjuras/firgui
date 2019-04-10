@@ -70,6 +70,7 @@ private:
     bool kerLocked;
     bool srcKerLocked;
     BoolMapOr spinWatch;
+    bool middleBandsEn;
 
     static bool textToDoubles(const std::string& str, std::vector<double>& v);
     void kerCalcFinished();
@@ -82,6 +83,7 @@ private:
     void bandChanged(int band);
     void unitChanged(QString unit);
     void showHelp();
+    int currentBand();
 
 public slots:
     void calculateKernel();

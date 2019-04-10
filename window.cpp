@@ -63,13 +63,17 @@ Window::Window(QWidget *parent)
     plCtrlWid->setLayout(plCtrlHBox);
 
 
-    Switch* firTransShowSwitch = new Switch("Filter transmission",QBrush(QColor(31, 119, 179)));
+    Switch* firTransShowSwitch = new Switch("Filter transmission",QBrush(QColor(132,186,91)));
     firTransShowSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     plCtrlHBox->addWidget(firTransShowSwitch);
 
-    Switch* srcTransShowSwitch = new Switch("Rate conversion transmission",QBrush(QColor(249, 124, 14)));
+    Switch* srcTransShowSwitch = new Switch("Rate conversion trans.",QBrush(QColor(249, 124, 14)));
     srcTransShowSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     plCtrlHBox->addWidget(srcTransShowSwitch);
+
+    Switch* totalTransShowSwitch = new Switch("Total trans.",QBrush(QColor(114,147,203)));
+    totalTransShowSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    plCtrlHBox->addWidget(totalTransShowSwitch);
 
     plCtrlHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Expanding));
 
@@ -105,9 +109,13 @@ Window::Window(QWidget *parent)
     plotTypeCombo->setCurrentIndex(-1);plotTypeCombo->setCurrentIndex(0);
     connect(srcTransShowSwitch, &Switch::toggled, kerPlot, &KerPlot::toggleSrcTransPlot);
     connect(firTransShowSwitch, &Switch::toggled, kerPlot, &KerPlot::toggleFirTransPlot);
+    connect(totalTransShowSwitch, &Switch::toggled, kerPlot, &KerPlot::toggleTotalTransPlot);
 
     srcTransShowSwitch->animateClick(0);
     firTransShowSwitch->animateClick(0);
+    kerPlot->toggleTotalTransPlot(false);
+    //totalTransShowSwitch->animateClick(0);
+
 
     connect(groupConfig, &GroupConfig::bitstreamSelected, groupSpecs, &GroupSpecs::bitstreamChanged);
     connect(groupConfig, &GroupConfig::fpgaSampFreqChanged, groupSpecs, &GroupSpecs::setFpgaSampFreq);

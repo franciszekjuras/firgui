@@ -34,6 +34,9 @@ bool FirKer::setRank(int rank){
     }
     return true;
 }
+int FirKer::getRank(){
+    return rank;
+}
 
 const std::vector<double>& FirKer::getKernel() const{return ker;}
 
@@ -205,11 +208,11 @@ bool EqRippleFirKer::calc(){
     if(freqs.size()!=0 && freqs.back() >= (.5*sampFreq))
         return false;
     //body
+    int crank = rank;
+    if((crank%2 == 0) && (gains.back() != 0))
+        crank--; //prevent firpm library from increasing filter rank
 
-    if((rank%2 == 0) && (gains.back() != 0))
-        rank--; //prevent firpm library from increasing filter rank
-
-    ker.resize(rank);
+    ker.resize(crank);
     std::vector<double> normFreqs;
     normFreqs.resize(freqs.size()+2);
     for(int i = 0; i < freqs.size(); ++i)
@@ -218,9 +221,9 @@ bool EqRippleFirKer::calc(){
     normFreqs.back() = 1.;
 
     //calculate kernel
-    PMOutput out = firpmRS(rank-1, normFreqs, gains, weights, .01, 1u, 4);
+    PMOutput out = firpmRS(crank-1, normFreqs, gains, weights, .01, 1u, 4);
 
-    if(std::isnan(out.Q) || std::isnan(out.delta) || (out.iter >= 101u))
+    if(std::isnan(out.Q) || std::isnan(out.delta) || (out.iter >= 101u) || std::isnan(out.h[0]))
         return false;
 
     this->ker = out.h;
