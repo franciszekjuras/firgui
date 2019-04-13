@@ -58,8 +58,8 @@ std::vector<double> FirKer::transmission(int div) const{
         luCos[k] = std::cos(M_PI_2*static_cast<double>(k)/static_cast<double>(div));
 
     int mStart = ((ker.size()%2) == 0) ? 1 : 2;
-    for(long i = 0; i <= div; ++i){
-        long m = mStart;
+    for(long long i = 0; i <= div; ++i){
+        long long m = mStart;
         for(int j = ((ker.size()+1)/2); j < ker.size(); ++j){
             trns[i] += 2. * ker[j] * luCos[(i*m)%(4*ldiv)];
             m += 2;
@@ -83,7 +83,7 @@ std::vector<double> FirKer::transmission(int div, int beg, int end) const{
         std::cerr << "Invalid parameters.\n";
         return std::vector<double>();
     }
-    long ldiv = (long)div;
+    long long ldiv = (long long)div;
     std::vector<double> trns;
     trns.resize(div+1, 0);
     std::vector<double> luCos;
@@ -93,8 +93,8 @@ std::vector<double> FirKer::transmission(int div, int beg, int end) const{
         luCos[k] = std::cos(M_PI_2*static_cast<double>(k)/static_cast<double>(div));
 
     int mStart = ((ker.size()%2) == 0) ? 1 : 2;
-    for(long i = beg; i <= end; ++i){
-        long m = mStart;
+    for(long long i = beg; i <= end; ++i){
+        long long  m = mStart;
         for(int j = ((ker.size()+1)/2); j < ker.size(); ++j){
             trns[i] += 2. * ker[j] * luCos[(i*m)%(4*ldiv)];
             m += 2;

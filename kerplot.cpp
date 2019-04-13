@@ -73,7 +73,7 @@ KerPlot::KerPlot(QWidget* parent):
     setFreqs(1., 1, 0);
     kerMaxGain = 1.;
     srcKerMaxGain = 1.;
-    srcPlotDiv = 30000;
+    srcPlotDiv = 20000;
     plotDivScale = 1;
     plotDiv = srcPlotDiv*plotDivScale;
 

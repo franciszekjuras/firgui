@@ -37,6 +37,12 @@ INCLUDEPATH += $$PWD/win32/include
 DEPENDPATH += $$PWD/win32/include
 }
 
+win32{
+VERSION = 1.0.4
+QMAKE_TARGET_PRODUCT = "Fir Controller"
+QMAKE_TARGET_DESCRIPTION = "Controller for FIR filter based on Red Pitaya board."
+}
+
 # Input
 HEADERS += \
     window.h \
