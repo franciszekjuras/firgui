@@ -36,12 +36,19 @@ Window::Window(QWidget *parent)
 
     lVBox->addItem(new QSpacerItem(0,0,QSizePolicy::Preferred, QSizePolicy::Expanding));
 
+    QWidget* lbotWid = new QWidget;
+    QHBoxLayout* lbotHBox = new QHBoxLayout;
+
     Switch* showTooltipSwitch = new Switch(tr("Show Tooltips"));
     showTooltipSwitch->animateClick(0);
-    //QCheckBox* srcTransShowSwitch = new QCheckBox("Show rate conversion transmission");
     showTooltipSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    lVBox->addWidget(showTooltipSwitch);
+    lbotHBox->addWidget(showTooltipSwitch);
 
+    lbotHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Preferred));
+    lbotHBox->addWidget(new QLabel("v1.0.4"));
+
+    lbotWid->setLayout(lbotHBox);
+    lVBox->addWidget(lbotWid);
 
 //    QFrame* line = new QFrame(); line->setFrameShape(QFrame::HLine); line->setFrameShadow(QFrame::Sunken);
 //    lVBox->addWidget(line);

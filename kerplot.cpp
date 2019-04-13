@@ -73,8 +73,8 @@ KerPlot::KerPlot(QWidget* parent):
     setFreqs(1., 1, 0);
     kerMaxGain = 1.;
     srcKerMaxGain = 1.;
-    srcPlotDiv = 2000;
-    plotDivScale = 15;
+    srcPlotDiv = 30000;
+    plotDivScale = 1;
     plotDiv = srcPlotDiv*plotDivScale;
 
     this->xAxis->setBasePen(QPen(Qt::white, 1));
@@ -162,7 +162,7 @@ void KerPlot::cntSetKernel(){
 
 void KerPlot::setSrcKernel(std::shared_ptr<const FirKer> kernel){
     qDebug() << "t" << t;
-    QFuture<std::vector<double> > fut = QtConcurrent::run([=](){return kernel->transmission((srcPlotDiv*t));});
+    QFuture<std::vector<double> > fut = QtConcurrent::run([=](){return kernel->transmission((srcPlotDiv*t),(srcPlotDiv*band),(srcPlotDiv*(band+1)));});
     srcKerTransWatch.setFuture(fut);
     srcPlotClearedMeanwhile = false;
 }

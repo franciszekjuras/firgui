@@ -44,6 +44,11 @@ double FirKer::getSampFreq() const{return sampFreq;}
 
 
 std::vector<double> FirKer::transmission(int div) const{
+    if(div < 0){
+        std::cerr << "Invalid parameters.\n";
+        return std::vector<double>();
+    }
+    long ldiv = (long)div;
     std::vector<double> trns;
     trns.resize(div+1);
     std::vector<double> luCos;
@@ -53,10 +58,10 @@ std::vector<double> FirKer::transmission(int div) const{
         luCos[k] = std::cos(M_PI_2*static_cast<double>(k)/static_cast<double>(div));
 
     int mStart = ((ker.size()%2) == 0) ? 1 : 2;
-    for(int i = 0; i <= div; ++i){
-        int m = mStart;
+    for(long i = 0; i <= div; ++i){
+        long m = mStart;
         for(int j = ((ker.size()+1)/2); j < ker.size(); ++j){
-            trns[i] += 2. * ker[j] * luCos[(i*m)%(4*div)];
+            trns[i] += 2. * ker[j] * luCos[(i*m)%(4*ldiv)];
             m += 2;
         }
     }
@@ -64,6 +69,43 @@ std::vector<double> FirKer::transmission(int div) const{
         for(int i = 0; i <= div; ++i)
             trns[i] += ker[ker.size()/2];
     }
+    for(auto& t : trns){
+        t = std::abs(t);
+    }
+    // for(int i = 0; i < trns.size(); ++i)
+    // 	trns[i] = std::abs(trns[i]);
+
+    return trns;
+}
+
+std::vector<double> FirKer::transmission(int div, int beg, int end) const{
+    if(!(0 <= beg && beg <= end && end <= div)){
+        std::cerr << "Invalid parameters.\n";
+        return std::vector<double>();
+    }
+    long ldiv = (long)div;
+    std::vector<double> trns;
+    trns.resize(div+1, 0);
+    std::vector<double> luCos;
+    luCos.resize(4*div);
+
+    for(int k = 0; k < 4 * div; ++k)
+        luCos[k] = std::cos(M_PI_2*static_cast<double>(k)/static_cast<double>(div));
+
+    int mStart = ((ker.size()%2) == 0) ? 1 : 2;
+    for(long i = beg; i <= end; ++i){
+        long m = mStart;
+        for(int j = ((ker.size()+1)/2); j < ker.size(); ++j){
+            trns[i] += 2. * ker[j] * luCos[(i*m)%(4*ldiv)];
+            m += 2;
+        }
+    }
+
+    if((ker.size()%2) == 1){
+        for(int i = 0; i <= div; ++i)
+            trns[i] += ker[ker.size()/2];
+    }
+
     for(auto& t : trns){
         t = std::abs(t);
     }

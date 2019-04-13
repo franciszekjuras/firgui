@@ -18,6 +18,7 @@ public:
     bool setSampFreq(double freq);
     double getSampFreq() const;
     std::vector<double> transmission(int div) const;
+    std::vector<double> transmission(int div, int beg, int end) const;
     static std::vector<double> toBode(const std::vector<double>& trns);
     const std::vector<double>& getKernel() const;
 
