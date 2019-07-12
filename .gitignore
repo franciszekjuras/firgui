@@ -4,6 +4,6 @@ firgui
 debug/
 release/
 build*/
-firgui.pro.user
+firgui.pro.user*
 *.o
 Makefile
