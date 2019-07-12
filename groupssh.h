@@ -11,6 +11,10 @@
 #include "bitstreamspecs.h"
 #include "waitingspinnerwidget.h"
 
+#ifndef SSH_TIMEOUT
+#define SSH_TIMEOUT=10L
+#endif
+
 class IMLineEdit : public QLineEdit{
     Q_OBJECT
 private:
@@ -52,6 +56,7 @@ private:
     void swapConnectButtons(bool isConnect);
     void onConnect();
     void onDisconnect();
+    void test();
 
     R loadBitstream(BitstreamSpecs bitSpecs);
 

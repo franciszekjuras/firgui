@@ -20,6 +20,7 @@ GroupConfig::GroupConfig(QWidget *parent) : QGroupBox(tr("Configuration"),parent
     bitMainCombo->setToolTip("Roll-off decreases qudratically with working band width.");
     bitForm->addRow(tr("Working band width"), bitMainCombo);
     bitSpecCombo = new QComboBox;
+    bitSpecCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
     bitSpecCombo->setToolTip(tr("Higher number of SRC blocks gives sharper rate conversion transmission on cost of reduced filter rank."));
     QString specComboName = tr("Filter Rank") + " | " + tr("SRC blocks");
     bitForm->addRow(specComboName, bitSpecCombo);
@@ -38,12 +39,6 @@ GroupConfig::GroupConfig(QWidget *parent) : QGroupBox(tr("Configuration"),parent
 
     connect(this, &GroupConfig::enableLoad, loadButton, &QPushButton::setEnabled);
     connect(loadButton, &QPushButton::released, this, &GroupConfig::onLoadButton);
-
-//    QFileInfo file("bitstreams/lol.txt");
-//    qDebug() << "1:" << file.fileName();
-//    qDebug() << "2:" << file.filePath();
-//    qDebug() << "3:" << file.path();
-
 }
 
 void GroupConfig::onLoadButton(){
@@ -59,7 +54,6 @@ void GroupConfig::init(){
     QDir bitDir("data/bitstreams");
     bitDir.setFilter(QDir::Files);
     bitDir.setNameFilters(QStringList("*.bin"));
-    qDebug() << "bitstreams dir exists:"<< bitDir.exists();
     QFileInfoList binFiles = bitDir.entryInfoList();
 
     std::vector<BitstreamSpecs> bitSpecsV;
@@ -115,13 +109,6 @@ void GroupConfig::init(){
     connect(bitMainCombo, &QComboBox::currentTextChanged, this, &GroupConfig::bitMainComboChanged);
     connect(bitSpecCombo, &QComboBox::currentTextChanged, this, &GroupConfig::bitSpecComboChanged);
     bitMainCombo->setCurrentIndex(0);
-
-
-
-//    for(auto it = bitMap.cbegin(); it != bitMap.cend(); ++it){
-//        qDebug()<<"it:"<<it.key();
-//        bitMainCombo->addItem(it.key());
-//    }
 }
 
 void GroupConfig::bitMainComboChanged(QString mainStr){
@@ -139,7 +126,6 @@ void GroupConfig::updateBitSpecCombo(QString mainStr){
 
 void GroupConfig::bitSpecComboChanged(QString specStr){
     if(specStr.isEmpty()) return;
-    qDebug()<<"specStr:"<<specStr;
     assert(bitMap.value(bitMainStr).contains(specStr));
     crrBitstream = bitMap[bitMainStr][specStr];
     emit bitstreamSelected(crrBitstream.getSpecs());

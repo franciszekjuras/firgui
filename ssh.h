@@ -5,7 +5,6 @@
 #include <libssh/sftp.h>
 #include <string>
 
-
 class Ssh
 {
 public:
@@ -36,7 +35,7 @@ public:
     R verify();
     R accept();
     R addKnownHost();
-    R connect();
+    R connect(long timeOut = 10L);
     R setupSftp();
     R disconnect();
     //R echo();

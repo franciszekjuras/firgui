@@ -133,7 +133,7 @@ Ssh::R Ssh::sendMemToFile(const void* mem, std::size_t size, std::string dest){
 /*----------------------Connection------------------------*/
 
 
-Ssh::R Ssh::connect(){
+Ssh::R Ssh::connect(long timeOut){
     // connect reconnects if status is not 'disconnected'
     if(status != Status::disconnected)
         return R::status;
@@ -143,9 +143,12 @@ Ssh::R Ssh::connect(){
     ssh=ssh_new();
     ssh_options_set(ssh, SSH_OPTIONS_USER, user.c_str());
     ssh_options_set(ssh, SSH_OPTIONS_HOST, host.c_str());
-
-//    long timeOut = 1L;
-//    ssh_options_set(ssh, SSH_OPTIONS_TIMEOUT, &timeOut);
+    int verbosity = SSH_LOG_NOLOG;
+#ifdef COMD
+    verbosity = SSH_LOG_WARNING;
+#endif
+    ssh_options_set(ssh, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
+    ssh_options_set(ssh, SSH_OPTIONS_TIMEOUT, &timeOut);
 
     //ssh_options_set(ssh, SSH_OPTIONS_LOG_VERBOSITY, verbosity);
     if(ssh_connect(ssh) != 0){

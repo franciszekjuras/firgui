@@ -9,6 +9,7 @@
 #include <QFutureWatcher>
 #include <QFuture>
 #include <QFileInfo>
+#include <QMessageBox>
 #include "groupssh.h"
 #include "switch.h"
 
@@ -35,6 +36,8 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("Connection"),parent)
     connectButton = new QPushButton(tr("Connect"));
     connectButton->setEnabled(false);
 
+    QPushButton* testButton = new QPushButton(tr("Test"));
+
     disconnectButton = new QPushButton(tr("Disconnect"));
     disconnectButton->setEnabled(true);
     disconnectButton->setVisible(false);
@@ -55,48 +58,15 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("Connection"),parent)
     idHBox->addWidget(idLineEdit);
     idHBox->addWidget(connectButton);
     idHBox->addWidget(disconnectButton);
+#ifdef COMD
+    idHBox->addWidget(testButton);
+#endif
     idHBox->addWidget(waitSpin);
     idHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding,QSizePolicy::Fixed));
-
-    //QSpacerItem* scSpacer = new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Preferred);
-
-    /*>>>Advanced Options<<<*/
-
-    //QSpacerItem* advSpacer = new QSpacerItem(0, 10);
-//    advButton = new Switch(tr("Advanced Options"));
-//    enableAdvState = true; toggleEnableAdv();
-
-
-    //advButton->setCheckable(true);
-
-    /*>>>Command Grid<<<*/
-
-//    QLineEdit* commandLine = new QLineEdit;
-//    QPushButton* commandButton = new QPushButton(tr("Send"));
-//    QFontMetrics fm = commandButton->fontMetrics();
-//    commandButton->setMaximumWidth(fm.width(tr("Send"))+20);
-//    QTextBrowser* commandBrowser = new QTextBrowser;
-//    commandBrowser->setFixedHeight(70);
-
-//    commandGrid->addWidget(commandLine, 0, 0);
-//    commandGrid->addWidget(commandButton, 0, 1);
-//    commandGrid->addWidget(commandBrowser, 1, 0, 1, 2);
-
-    //set visibility toogle
-//    commandBrowser->setVisible(false);commandLine->setVisible(false);commandButton->setVisible(false);
-//    connect(advButton, SIGNAL(toggled(bool)), commandBrowser, SLOT(setVisible(bool)));
-//    connect(advButton, SIGNAL(toggled(bool)), commandLine, SLOT(setVisible(bool)));
-//    connect(advButton, SIGNAL(toggled(bool)), commandButton, SLOT(setVisible(bool)));
-
-
 
     /*>>>Widget Layout<<<*/
 
     vBox->addLayout(idHBox);
-    //vBox->addItem(advSpacer);
-//    vBox->addWidget(advButton);
-//    vBox->addLayout(commandGrid);
-    //vBox->addWidget(responseTextBox);
     this->setLayout(vBox);
 
     //---> Functionality <---//
@@ -109,20 +79,18 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("Connection"),parent)
 
     connect(this, &GroupSsh::nfyConnected, this, &GroupSsh::swapConnectButtons);
 
+    connect(testButton, &QPushButton::released, this, &GroupSsh::test);
 
     //connection chain:
     connect(&connectWatch, &QFutureWatcher<R>::finished, this, &GroupSsh::connectToRPFinished);
     connect(&authWatch, &QFutureWatcher<R>::finished, this, &GroupSsh::authenticateRPFinished);
 
     fcUploaded = false;
+}
 
-
-//    connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){idLineEdit->setText(str);idLineEdit->setCursorPosition(str.length());});
-//    connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){qDebug() << str;});
-//    QShortcut* sc = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_D), this);
-//    sc->setContext(Qt::ApplicationShortcut);
-//    connect(sc, &QShortcut::activated, this, &GroupSsh::toggleEnableAdv );
-
+void GroupSsh::test(){
+    qDebug() << "Test";
+    ssh.execCommand("echo test >>text.txt");
 }
 
 void GroupSsh::onDisconnect(){
@@ -158,7 +126,7 @@ GroupSsh::R GroupSsh::connectToRP(std::string rpMac){
     if(ssh.getStatus() != Ssh::Status::disconnected){
         qDebug() << "Last session wasn't closed."; return R::other;
     }
-    if(ssh.connect() != Ssh::R::ok){
+    if(ssh.connect(SSH_TIMEOUT) != Ssh::R::ok){
         qDebug() << "No connection."; return R::connection;
     }
     if(ssh.verify() != Ssh::R::ok){
@@ -195,10 +163,12 @@ void GroupSsh::connectToRPFinished(){
 
     if(status == R::other){
         qDebug() << "Unexpected error occured while connecting.";
+        QMessageBox::critical(this, tr("Fir Controller - Connection error"), tr("Unexpected error occured while connecting."));
         return;
     }
     if(status == R::connection){
-        qDebug() << "Coudn't connect to Red Pitaya.";
+        qDebug() << "Coudn't connect to Red Pitaya.";        
+        QMessageBox::warning(this, tr("Fir Controller - Connection error"), tr("Connection with Red Pitaya could not be established. Check if:\n- Red Pitaya is powered on,\n- all cables are attached,\n- proper ID was entered."));
         return;
     }
 }
@@ -211,14 +181,6 @@ GroupSsh::R GroupSsh::authenticateRP(std::string pass){
     if(ssh.setupSftp() != Ssh::R::ok){
         qDebug() << "Sftp initialization error."; ssh.disconnect(); return R::other;
     }
-
-    //TODO: prepare environment
-
-    //rw
-    //send lconf
-    //send firctrl
-
-
     return R::ok;
 }
 
@@ -232,45 +194,18 @@ void GroupSsh::authenticateRPFinished(){
         nfyConnected(true);
         break;
     case R::auth:
-        qDebug() << "connection";
-        //noConnection();
-        break;
-    case R::connection:
-        qDebug() << "connection";
-        //noConnection();
+        qDebug() << "Authentication failed";
+        QMessageBox::critical(this, tr("Fir Controller - Authentication error"), tr("Authentication failed. Maybe someone changed root password on RedPitaya?. If problem persists try flashing fresh system on RedPitaya SD card."));
         break;
     case R::other:
-        qDebug() << "other";
+        qDebug() << "Unexpected error";
+        QMessageBox::critical(this, tr("Fir Controller - Authentication error"), tr("Unexpected error occured during authentication."));
         //sthWrong();
         break;
     }
 
     waitSpin->stop();
     connectButton->setEnabled(true);
-}
-
-void GroupSsh::onLoad(BitstreamSpecs bitSpecs){
-    R status = loadBitstream(bitSpecs);
-    switch(status){
-    case R::ok:
-        qDebug() << "ok";
-        nfyBitstreamLoaded(bitSpecs.getSpecs());
-        //TODO: print info (label?)
-        break;
-    case R::connection:
-        qDebug() << "Connection lost.";
-        onDisconnect();
-        //TODO: print info (label?)
-        break;
-    case R::auth:
-        qDebug() << "Authorization error.";
-        //TODO: print info (label?)
-        break;
-    case R::other:
-        qDebug() << "Unexpected error occured during bitstream loading.";
-        //TODO: dialog
-        break;
-    }
 }
 
 GroupSsh::R GroupSsh::uploadFirCtrl(const BitstreamSpecs& bitSpecs){
@@ -305,8 +240,6 @@ GroupSsh::R GroupSsh::uploadFirCtrl(const BitstreamSpecs& bitSpecs){
         switch (r) {
         case Ssh::R::connection:
             return R::connection;
-        case Ssh::R::authentication:
-            return R::auth;
         default:
             return R::other;
         }
@@ -318,9 +251,36 @@ GroupSsh::R GroupSsh::uploadFirCtrl(const BitstreamSpecs& bitSpecs){
 
 }
 
+void GroupSsh::onLoad(BitstreamSpecs bitSpecs){
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
+
+    R status = loadBitstream(bitSpecs);
+
+    QApplication::restoreOverrideCursor();
+
+    switch(status){
+    case R::ok:
+        qDebug() << "ok";
+        nfyBitstreamLoaded(bitSpecs.getSpecs());
+        break;
+    case R::connection:
+        qDebug() << "Connection lost.";
+        onDisconnect();
+        QMessageBox::critical(this, tr("Fir Controller - Connection lost."), tr("Connection lost. Try connecting again."));
+        break;
+    default:
+        qDebug() << "Unexpected error occured during bitstream loading.";
+        QMessageBox::critical(this, tr("Fir Controller - Unexpected error."), tr("Unexpected error occured when loading bitstream."));
+        break;
+    }
+}
 
 GroupSsh::R GroupSsh::loadBitstream(BitstreamSpecs bitSpecs){
+
     std::string bitPath = bitSpecs.getFilePath().toStdString();
+
+#ifndef COMD
 
     R upfcstat = uploadFirCtrl(bitSpecs);
     if(upfcstat != R::ok)
@@ -334,18 +294,31 @@ GroupSsh::R GroupSsh::loadBitstream(BitstreamSpecs bitSpecs){
         switch (lcstat) {
         case Ssh::R::connection:
             return R::connection;
-        case Ssh::R::authentication:
-            return R::auth;
         default:
             return R::other;
         }
     }
 
+#endif //COMD
+    Ssh::R stat = ssh.execCommand("echo"); //check connection
+    switch(stat){
+    case Ssh::R::ok:
+        break;
+    case Ssh::R::connection:
+        return R::connection;
+    default:
+        return R::other;
+    }
     qDebug() << "Uploading bitstream:" << QString::fromStdString(bitPath);
-    Ssh::R stat = ssh.sendFileToFile(bitPath,"/tmp/bitstream.bin");
+    stat = ssh.sendFileToFile(bitPath,"/tmp/bitstream.bin");
     if(stat == Ssh::R::ok){
         //TODO: check sha1sum of uploaded bitstream
+#ifdef COMD
+        stat = ssh.execCommand(".local/bin/lconf /tmp/bitstream.bin");
+#else
         stat = ssh.execCommand("lconf /tmp/bitstream.bin");
+#endif
+
         if(stat == Ssh::R::ok){
             qDebug() << "o:" << QString::fromStdString(ssh.getSshOut());
             qDebug() << "e:" << QString::fromStdString(ssh.getSshErr());
@@ -358,53 +331,80 @@ GroupSsh::R GroupSsh::loadBitstream(BitstreamSpecs bitSpecs){
 }
 
 void GroupSsh::loadSrcKernel(std::vector<double> crrSrcKer){
-    qDebug() << "Uploading src kernel...";
-    Ssh::R stat = ssh.sendMemToFile((void*)crrSrcKer.data(), crrSrcKer.size()*sizeof(double), "/tmp/srcker.dat");
-    //local copy
-    std::ofstream ofp("srcker.dat", std::ios::out | std::ios::binary);
-    ofp.write(reinterpret_cast<const char*>(crrSrcKer.data()), crrSrcKer.size() * sizeof(crrSrcKer[0]));ofp.close();
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
+
+    Ssh::R stat = ssh.execCommand("echo"); //check connection
+    if(stat == Ssh::R::ok){
+        qDebug() << "Uploading src kernel...";
+        stat = ssh.sendMemToFile((void*)crrSrcKer.data(), crrSrcKer.size()*sizeof(double), "/tmp/srcker.dat");
+        //local copy
+        std::ofstream ofp("srcker.dat", std::ios::out | std::ios::binary);
+        ofp.write(reinterpret_cast<const char*>(crrSrcKer.data()), crrSrcKer.size() * sizeof(crrSrcKer[0]));ofp.close();
+    }
+    QApplication::restoreOverrideCursor();
 
     if(stat == Ssh::R::ok){
-        qDebug() << "Done";
+        qDebug() << "ok";
         return;
     }
     if(stat == Ssh::R::connection){
         qDebug() << "Connection lost.";
-        //TODO: print info (label?)
+        QMessageBox::critical(this, tr("Fir Controller - Connection lost."), tr("Connection lost. Try connecting again."));
         onDisconnect();
         return;
     }
-    //TODO: dialog
+    //other:
+    QMessageBox::critical(this, tr("Fir Controller - Unexpected error."), tr("Unexpected error occured when loading SRC kernel."));
     qDebug() << "Unexpected error occured during src kernel loading.";
 }
 
 void GroupSsh::loadKernel(std::vector<double> crrKer){
-    qDebug() << "Uploading kernel...";
-    Ssh::R stat = ssh.sendMemToFile((void*)crrKer.data(), crrKer.size()*sizeof(double), "/tmp/firker.dat");
-    //local copy
-    std::ofstream ofp("firker.dat", std::ios::out | std::ios::binary);
-    ofp.write(reinterpret_cast<const char*>(crrKer.data()), crrKer.size() * sizeof(crrKer[0]));ofp.close();
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::processEvents();
 
+    Ssh::R stat = ssh.execCommand("echo"); //check connection
+    if(stat == Ssh::R::status){
+        QApplication::restoreOverrideCursor();
+        return; //this covers situation when connection brakes during loadSrcKernel
+    }           //but groupspecs doesn't know that and calls loadKernel anyway
     if(stat == Ssh::R::ok){
-        qDebug() << "Done";
+        qDebug() << "Uploading kernel...";
+        Ssh::R stat = ssh.sendMemToFile((void*)crrKer.data(), crrKer.size()*sizeof(double), "/tmp/firker.dat");
+        //local copy
+        std::ofstream ofp("firker.dat", std::ios::out | std::ios::binary);
+        ofp.write(reinterpret_cast<const char*>(crrKer.data()), crrKer.size() * sizeof(crrKer[0]));ofp.close();
+    }
+    if(stat == Ssh::R::ok){
+        qDebug() << "ok";
+#ifdef COMD
+        stat = ssh.execCommand(".local/bin/firctrl --load");
+#else
         stat = ssh.execCommand("firctrl --load");
+#endif
         if(stat == Ssh::R::ok){
             qDebug() << "o:" << QString::fromStdString(ssh.getSshOut());
             qDebug() << "e:" << QString::fromStdString(ssh.getSshErr());
-
+#ifdef COMD
+            stat = ssh.execCommand(".local/bin/firctrl --enable");
+#else
             stat = ssh.execCommand("firctrl --enable");
-            if(stat == Ssh::R::ok){
-                return;
-            }
+#endif
+            stat = ssh.execCommand("firctrl --enable");
         }
+    }
+    QApplication::restoreOverrideCursor();
+
+    if(stat == Ssh::R::ok){
+        return;
     }
     if(stat == Ssh::R::connection){
         qDebug() << "Connection lost.";
-        //TODO: print info (label?)
+        QMessageBox::critical(this, tr("Fir Controller - Connection lost."), tr("Connection lost. Try connecting again."));
         onDisconnect();
         return;
     }
-    //TODO: dialog
+    QMessageBox::critical(this, tr("Fir Controller - Unexpected error."), tr("Unexpected error occured when loading filter kernel."));
     qDebug() << "Unexpected error occured during kernel loading.";
 }
 

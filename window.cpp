@@ -45,7 +45,7 @@ Window::Window(QWidget *parent)
     lbotHBox->addWidget(showTooltipSwitch);
 
     lbotHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Preferred));
-    lbotHBox->addWidget(new QLabel("v1.0.4"));
+    lbotHBox->addWidget(new QLabel("v1.0.5dev"));
 
     lbotWid->setLayout(lbotHBox);
     lVBox->addWidget(lbotWid);

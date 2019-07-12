@@ -149,7 +149,6 @@ void GroupSpecs::handleConnect(bool is){
         filterReady(false);
         isSrcKernelLoaded = false;
     }
-    qDebug() << "handleConnect:" << is;
 }
 
 void GroupSpecs::showHelp(){
@@ -203,7 +202,6 @@ void GroupSpecs::calculateKernel(){
 
     if(!textToDoubles(freqsLineEdit->text().toStdString(),freqs) ||
         !textToDoubles(gainsLineEdit->text().toStdString(),gains)){
-        qDebug()<<"Parsing failed";
         return;
     }
 
@@ -215,42 +213,28 @@ void GroupSpecs::calculateKernel(){
     int band = currentBand();
     double kerNqFreq = kerSampFreq / 2.;
 
-    qDebug()<<"Shift: ";
-    for(auto& v : freqs){
+    for(auto& v : freqs)
         v -= (kerNqFreq*band); //shift
-        qDebug() << v;
-    }
 
     if((band%2) == 1){
-        qDebug()<<"Reversal: ";
-        for(auto& v : freqs){
+        //band reversal
+        for(auto& v : freqs)
             v = kerNqFreq - v; //reversal
-            qDebug() << v;
-        }
+
         std::reverse(freqs.begin(),freqs.end());
         std::reverse(gains.begin(),gains.end());
     }
 
     if(!ker.setSpecs(freqs, gains)){
-        qDebug()<<"Bad specs";
-        int uc = QMessageBox::information(this, tr("FIR Controller -- Incorrect Specification"),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
+        int uc = QMessageBox::warning(this, tr("FIR Controller - Incorrect Specification"),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
         if(uc == 0)showHelp();
         return;
     }
     ker.setWindow(crrWnd);
 
-
-    qDebug() << "Starting Calc Thread.";
-    //kerLocked = true;
     std::shared_ptr<FirKer> ker_shared = std::make_shared<LeastSqFirKer>(ker);
     QFuture<std::shared_ptr<FirKer>> fut = QtConcurrent::run([=](){ker_shared->calc(); return ker_shared;});
     kerCalcWatch.setFuture(fut);
-
-//    kerCalcThread.setKernel(std::make_shared<LeastSqFirKer>(ker));
-//    kerCalcThread.wait();
-//    qDebug() << "Starting Calc Thread.";
-//    kerLocked = true;
-//    kerCalcThread.start();
 }
 
 void GroupSpecs::kerCalcFinished(){
@@ -261,22 +245,18 @@ void GroupSpecs::kerCalcFinished(){
     std::shared_ptr<FirKer> ker = kerCalcWatch.future().result();
 
     if(!ker->isValid()){
-        qDebug()<<"Calculation failed.";
-        int uc = QMessageBox::information(this, tr("FIR Controller -- Incorrect Specification"),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
+        int uc = QMessageBox::warning(this, tr("FIR Controller - Incorrect Specification"),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
         if(uc == 0)showHelp();
-        return;}
-
-    qDebug() << "Calculation finished.";
+        return;
+    }
     crrKer = ker->getKernel();
     emit kernelChanged(ker);
 }
 
 void GroupSpecs::calcSrcKernel(){
     kernelReady(false); isSrcKernelLoaded = false;
-    qDebug() << "Calc SRC Kernel.";
 
-    if(srcKerCalcWatch.isRunning()) {
-        qDebug() << "Calc SRC Kernel already running.";
+    if(srcKerCalcWatch.isRunning()){
         pendCalcSrcKernel = true; return;
     }
     pendCalcSrcKernel = false;
@@ -298,9 +278,9 @@ void GroupSpecs::calcSrcKernel(){
     }
 
     if(band > 0){
-        gains.push_back(0); //--> 0 frequency
-        freqs.push_back(.5/dT*(dband + .0001)); gains.push_back(0);
-        freqs.push_back(.5/dT*dband + width); //--> frequency depends on case
+        gains.push_back(0); // 0 frequency
+        freqs.push_back(.5/dT*(dband + .0001)); gains.push_back(0); // small shift added to prevent kernel calculation issues
+        freqs.push_back(.5/dT*dband + width); // max frequency
         weights.push_back(stopBandWeight);
     }
     else if(width > .5/dT) return;
@@ -318,46 +298,26 @@ void GroupSpecs::calcSrcKernel(){
     ker.setSampFreq(1.);
     ker.setRank(srcKerRank);
 
-    qDebug() << "freqs:";
-    for(const auto& v : freqs)
-        qDebug() << v;
-    qDebug() << "gains:";
-    for(const auto& v : gains)
-        qDebug() << v;
-    qDebug() << "weights:";
-    for(const auto& v : weights)
-        qDebug() << v;
-
     if(!ker.setSpecs(freqs,gains,weights)){
         qDebug() << "Wrong EqRipple Filter specs."; return;
     }
 
-
-    qDebug() << "Starting Src Calc Thread.";
-   // srcKerLocked = true;
     std::shared_ptr<FirKer> ker_shared = std::make_shared<EqRippleFirKer>(ker);
     QFuture<std::shared_ptr<FirKer>> fut = QtConcurrent::run([=](){ker_shared->calc(); return ker_shared;});
     srcKerCalcWatch.setFuture(fut);
-
-//    srcKerCalcThread.setKernel(std::make_shared<EqRippleFirKer>(ker));
-//    srcKerCalcThread.wait();
-//    qDebug() << "Starting Src Calc Thread.";
-//    srcKerCalcThread.start();
 }
 
 void GroupSpecs::srcKerCalcFinished(){
     spinWatch.disable("srcKerCalc");
-   // srcKerLocked = false;
     if(pendCalcSrcKernel){calcSrcKernel();return;}
 
 
     std::shared_ptr<FirKer> ker = srcKerCalcWatch.future().result();
-    if(!ker->isValid()){qDebug()<<"Calculation failed.";return;}
+    if(!ker->isValid()){qDebug()<<"Src kernel calculation failed.";return;}
 
-    qDebug() << "Calculation finished.";
     crrSrcKer = ker->getKernel();
     while(crrSrcKer.size() < ker->getRank()){
-        qDebug() << "Adding leading 0 to src kernel.";
+        qDebug() << "Adding 0 to src kernel.";
         crrSrcKer.push_back(0.);
     }
     ker->setSampFreq(fpgaSampFreq);
@@ -419,9 +379,6 @@ void GroupSpecs::rebuild(){
     int srcKerRank = t * s;
     double width = PASSBAND_WIDTH_RATIO / static_cast<double>(srcKerRank);
     middleBandsEn = (width < .5/dT/2.);
-    qDebug() << "band half width:" << .5/dT/2.;
-
-    qDebug() << "passband width:" << width;
 
     for(double i = 0.; i < dT; ++i){
         if((i+1)*bandW >= 1000.){
@@ -435,7 +392,6 @@ void GroupSpecs::rebuild(){
 }
 
 void GroupSpecs::bandChanged(int band){
-    qDebug() << band;
     if(band < 0) return;
     resetPlot(fpgaSampFreq, t, currentBand());
     calcSrcKernel();
@@ -449,19 +405,19 @@ void GroupSpecs::bitstreamLoaded(QMap<QString, int> specs){
 void GroupSpecs::filterReady(bool en){
     isFilterReady = en;
     enableSetButton(isFilterReady && isKernelReady && isSrcKernelReady);
-    qDebug() << "filterReady" << isFilterReady << isKernelReady << isSrcKernelReady;
+    //qDebug() << "filterReady" << isFilterReady << isKernelReady << isSrcKernelReady;
 }
 
 void GroupSpecs::kernelReady(bool en){
     isKernelReady = en;
     enableSetButton(isFilterReady && isKernelReady && isSrcKernelReady);
-    qDebug() << "kernelReady" << isFilterReady << isKernelReady << isSrcKernelReady;
+    //qDebug() << "kernelReady" << isFilterReady << isKernelReady << isSrcKernelReady;
 }
 
 void GroupSpecs::srcKernelReady(bool en){
     isSrcKernelReady = en;
     enableSetButton(isFilterReady && isKernelReady && isSrcKernelReady);
-    qDebug() << "srcKernelReady" << isFilterReady << isKernelReady << isSrcKernelReady;
+    //qDebug() << "srcKernelReady" << isFilterReady << isKernelReady << isSrcKernelReady;
 }
 
 void GroupSpecs::setFpgaSampFreq(double freq){
