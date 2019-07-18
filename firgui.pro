@@ -31,7 +31,7 @@ win32{
 QMAKE_CXXFLAGS += /openmp
 RC_ICONS = icon.ico
 DEFINES += WIN32_LEAN_AND_MEAN
-LIBS += -L$$PWD/win32/libs/ -lssh
+LIBS += -L$$PWD/win32/lib/ -lssh
 INCLUDEPATH += $$PWD/win32/include
 DEPENDPATH += $$PWD/win32/include
 }
