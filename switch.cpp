@@ -207,7 +207,7 @@ void Switch::paintEvent(QPaintEvent *) {
         p.setOpacity(1.0);
         p.setPen(palette().color(QPalette::Active, QPalette::ButtonText));
         p.setFont(font());
-        p.drawText(_textRect, Qt::AlignLeft | Qt::AlignVCenter, text());
+        p.drawText(_textRect, Qt::AlignLeft | Qt::AlignVCenter | Qt::TextShowMnemonic, text());
     } else {
         p.setOpacity(style.trackDisabledOpacity);
         p.setPen(Qt::NoPen);

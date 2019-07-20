@@ -16,11 +16,6 @@ KerPlot::KerPlot(QWidget* parent):
     QCustomPlot(parent)
 {
     //this->setOpenGl(true);
-    //setNotAntialiasedElement(QCP::aeAxes);
-    //setNotAntialiasedElement(QCP::aeGrid);
-
-//    this->yAxis->setLabelColor(QColor(76,76,76));
-//    this->xAxis->setLabelColor(QColor(76,76,76));
 
     waitSpin = new WaitingSpinnerWidget(this, true, true);
 
@@ -64,9 +59,6 @@ KerPlot::KerPlot(QWidget* parent):
     pen = QPen(QColor(114,147,203));
     pen.setWidth(1);
     this->graph(2)->setPen(pen);
-    //this->setNotAntialiasedElements(QCP::aeAll);
-//    this->graph(0)->setAdaptiveSampling(false);
-//    this->graph(1)->setAdaptiveSampling(false);
 
     this->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     //default values
@@ -98,7 +90,7 @@ KerPlot::KerPlot(QWidget* parent):
 
     QFont lbFont = this->font();
     if(lbFont.pointSize()>0){
-        lbFont.setPointSize(lbFont.pointSize()+2);
+        lbFont.setPointSize(lbFont.pointSize()+1);
         this->xAxis->setLabelFont(lbFont);
         this->yAxis->setLabelFont(lbFont);
     }
@@ -106,25 +98,6 @@ KerPlot::KerPlot(QWidget* parent):
     this->xAxis->setLabelColor(Qt::white);
     this->yAxis->setLabelColor(Qt::white);
     this->setBackground(QColor(35, 45, 55));
-//    QLinearGradient plotGradient;
-//    plotGradient.setStart(0, 0);
-//    plotGradient.setFinalStop(0, 350);
-//    plotGradient.setColorAt(0, QColor(80, 80, 80));
-//    plotGradient.setColorAt(1, QColor(50, 50, 50));
-//    QLinearGradient axisRectGradient;
-//    axisRectGradient.setStart(0, 0);
-//    axisRectGradient.setFinalStop(0, 350);
-//    axisRectGradient.setColorAt(0, QColor(80, 80, 80));
-//    axisRectGradient.setColorAt(1, QColor(30, 30, 30));
-//    customPlot->axisRect()->setBackground(axisRectGradient);
-
-
-//    QCPTextElement *title = new QCPTextElement(this);
-//    title->setText("Plot Title Example");
-//    title->setFont(QFont("sans", 12, QFont::Bold));
-    // then we add it to the main plot layout:
-//    this->plotLayout()->insertRow(0); // insert an empty row above the axis rect
-//    this->plotLayout()->addElement(0, 0, title); // place the title in the empty cell we've just created
 }
 
 void KerPlot::setKernel(std::shared_ptr<const FirKer> kernel){
@@ -287,9 +260,7 @@ void KerPlot::clearTotalTrans(){
 
 void KerPlot::checkXBounds(const QCPRange& newRange, const QCPRange& oldRange){
     if(newRange.lower < this->xRange.lower || newRange.upper > this->xRange.upper){
-        if(newRange.size() == oldRange.size())
-            this->xAxis->setRange(oldRange);
-        else if(newRange.size() > this->xRange.size()){
+        if(newRange.size() > this->xRange.size()){
             this->xAxis->setRange(this->xRange);
         }
         else if(newRange.lower < this->xRange.lower){
@@ -323,7 +294,7 @@ void KerPlot::setFreqs(double freq, int t, int band){
 }
 
 void KerPlot::updateFreqs(){
-    size_t l = plotDiv + 1;
+    int l = plotDiv + 1;
     this->freqs.resize(l);
     double div = static_cast<double>(l - 1);
     double step = (rBandLimit - lBandLimit)/div;
@@ -333,7 +304,7 @@ void KerPlot::updateFreqs(){
 }
 
 void KerPlot::updateSrcFreqs(){
-    size_t l = (srcPlotDiv*t) + 1;
+    int l = (srcPlotDiv*t) + 1;
     this->srcFreqs.resize(l);
     double div = static_cast<double>(l - 1);
     double step = nqFreq/div;
