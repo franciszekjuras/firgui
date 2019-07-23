@@ -7,8 +7,8 @@ TARGET = firgui
 CONFIG += c++14
 
 #Debugging defines
-#linux: DEFINES += COMD
-#linux: DEFINES += USERD=\"\\\"franciszek\\\"\"
+linux: DEFINES += COMD
+linux: DEFINES += USERD=\"\\\"franciszek\\\"\"
 
 DEFINES += _USE_MATH_DEFINES
 DEFINES += SSH_TIMEOUT=3L

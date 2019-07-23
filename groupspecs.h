@@ -13,34 +13,15 @@
 #include "firker.h"
 #include "boolmapwatcher.h"
 
-//Q_DECLARE_METATYPE(std::shared_ptr<FirKer>)
-
 class QLineEdit;
 class QComboBox;
 class WaitingSpinnerWidget;
-
-//class KernelCalcThread : public QThread{
-//    Q_OBJECT
-//signals:
-//    void calcFinished(std::shared_ptr<FirKer> ker);
-//private:
-//    std::shared_ptr<FirKer> ker;
-//public:
-//    void setKernel(std::shared_ptr<FirKer> ker){
-//        this->ker = ker;
-//    }
-//private:
-//    void run() override {
-//        ker->calc();
-//        emit calcFinished(ker);
-//    }
-//};
 
 class GroupSpecs : public QGroupBox
 {
     Q_OBJECT
 public:
-    explicit GroupSpecs(QWidget *parent = 0);
+    explicit GroupSpecs(QWidget *parent = nullptr);
 
 private:
     QLineEdit* freqsLineEdit;
@@ -50,14 +31,12 @@ private:
 
     std::vector<double> crrKer;
     std::vector<double> crrSrcKer;
-    double fpgaSampFreq;
-    double unitMult;
-    LeastSqFirKer::Window crrWnd;
-    //KernelCalcThread kerCalcThread;
-    //KernelCalcThread srcKerCalcThread;
+    double fpgaSamplingFreq;
+    double unitMultiplier;
+    LeastSqFirKer::Window currentWindow;
 
-    QFutureWatcher<std::shared_ptr<FirKer> > kerCalcWatch;
-    QFutureWatcher<std::shared_ptr<FirKer> > srcKerCalcWatch;
+    QFutureWatcher<std::shared_ptr<FirKer> > calculateKernelWatch;
+    QFutureWatcher<std::shared_ptr<FirKer> > calculateSrcKernelWatch;
 
     int t, d, s;
 
@@ -65,21 +44,19 @@ private:
     bool isFilterReady;
     bool isSrcKernelReady;
     bool isSrcKernelLoaded;
-    bool pendCalculateKernel;
-    bool pendCalcSrcKernel;
-    bool kerLocked;
-    bool srcKerLocked;
+    bool pendingCalculateKernel;
+    bool pendingCalculateSrcKernel;
     BoolMapOr spinWatch;
     bool middleBandsEn;
 
     static bool textToDoubles(const std::string& str, std::vector<double>& v);
-    void kerCalcFinished();
-    void srcKerCalcFinished();
+    void calculateKernelFinished();
+    void calculateSrcKernelFinished();
     void kernelReady(bool en);
     void srcKernelReady(bool en);
-    void calcSrcKernel();
+    void calculateSrcKernel();
     void rebuild();
-    void wndChanged(QString wndStr);
+    void windowChanged(QString windowStr);
     void bandChanged(int band);
     void unitChanged(QString unit);
     void showHelp();
@@ -91,15 +68,15 @@ public slots:
     void bitstreamChanged(QMap<QString, int> specs);
     void bitstreamLoaded(QMap<QString, int> specs);
     void filterReady(bool en);
-    void setFpgaSampFreq(double freq);
+    void setfpgaSamplingFreq(double freq);
     void handleConnect(bool is);
 
 signals:
     void kernelChanged(std::shared_ptr<const FirKer> ker);
-    void kernelClear();
+//    void kernelClear();
     void srcKernelChanged(std::shared_ptr<const FirKer> ker);
-    void srcKernelClear();
-    void enableCalcButton(bool en);
+//    void srcKernelClear();
+    void enableCalculateButton(bool en);
     void enableSetButton(bool en);
     void resetPlot(double freq, int t, int band);
     void reqLoadSrcKernel(std::vector<double> crrSrcKer);

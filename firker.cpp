@@ -18,7 +18,7 @@ void FirKer::validate(){this->valid = true;}
 
 bool FirKer::isValid() const {return this->valid;}
 
-bool FirKer::setSampFreq(double freq){
+bool FirKer::setSamplingFreq(double freq){
     if(freq <= 0.)
         return false;
     this->sampFreq = freq;
@@ -48,7 +48,7 @@ std::vector<double> FirKer::transmission(int div) const{
         std::cerr << "Invalid parameters.\n";
         return std::vector<double>();
     }
-    long ldiv = (long)div;
+    long ldiv = div;
     std::vector<double> trns;
     trns.resize(div+1);
     std::vector<double> luCos;
@@ -60,7 +60,7 @@ std::vector<double> FirKer::transmission(int div) const{
     int mStart = ((ker.size()%2) == 0) ? 1 : 2;
     for(long long i = 0; i <= div; ++i){
         long long m = mStart;
-        for(int j = ((ker.size()+1)/2); j < ker.size(); ++j){
+        for(long j = ((ker.size()+1)/2); j < ker.size(); ++j){
             trns[i] += 2. * ker[j] * luCos[(i*m)%(4*ldiv)];
             m += 2;
         }
@@ -83,7 +83,7 @@ std::vector<double> FirKer::transmission(int div, int beg, int end) const{
         std::cerr << "Invalid parameters.\n";
         return std::vector<double>();
     }
-    long long ldiv = (long long)div;
+    long long ldiv = div;
     std::vector<double> trns;
     trns.resize(div+1, 0);
     std::vector<double> luCos;
@@ -95,7 +95,7 @@ std::vector<double> FirKer::transmission(int div, int beg, int end) const{
     int mStart = ((ker.size()%2) == 0) ? 1 : 2;
     for(long long i = beg; i <= end; ++i){
         long long  m = mStart;
-        for(int j = ((ker.size()+1)/2); j < ker.size(); ++j){
+        for(long j = ((ker.size()+1)/2); j < ker.size(); ++j){
             trns[i] += 2. * ker[j] * luCos[(i*m)%(4*ldiv)];
             m += 2;
         }
@@ -133,7 +133,7 @@ LeastSqFirKer::LeastSqFirKer(){
 }
 
 
-bool LeastSqFirKer::setSpecs(const std::vector<double>& freqs, const std::vector<double>& gains){
+bool LeastSqFirKer::setSpecification(const std::vector<double>& freqs, const std::vector<double>& gains){
     if((freqs.size()+1) != gains.size())
         return false;
 
@@ -226,7 +226,7 @@ EqRippleFirKer::EqRippleFirKer(){
 }
 
 
-bool EqRippleFirKer::setSpecs(const std::vector<double>& freqs, const std::vector<double>& gains, const std::vector<double>& weights){
+bool EqRippleFirKer::setSpecification(const std::vector<double>& freqs, const std::vector<double>& gains, const std::vector<double>& weights){
     if((freqs.size()+2) != gains.size() || (weights.size()*2) != gains.size() )
         return false;
 
@@ -251,7 +251,7 @@ bool EqRippleFirKer::calc(){
         return false;
     //body
     int crank = rank;
-    if((crank%2 == 0) && (gains.back() != 0))
+    if((crank%2 == 0) && (gains.back() != 0.))
         crank--; //prevent firpm library from increasing filter rank
 
     ker.resize(crank);

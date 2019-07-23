@@ -18,92 +18,66 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("Connection"),parent)
 {
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
-    /*>>>Layouts<<<*/
+//part:layout
 
-    QVBoxLayout* vBox = new QVBoxLayout;
-    QHBoxLayout* idHBox = new QHBoxLayout;
-//    QGridLayout* commandGrid = new QGridLayout;
-
-    /*>>>ID H Box<<<*/
+QHBoxLayout* idHBox = new QHBoxLayout;
+this->setLayout(idHBox);
+//idHBox --v
 
     QLabel* idLabel = new QLabel(tr("ID"));
+    idHBox->addWidget(idLabel);
     idLabel->setToolTip(tr("Last 6 symbols of Red Pitaya MAC adrress (see WLAN connector)"));
+
     idLineEdit = new IMLineEdit;
+    idHBox->addWidget(idLineEdit);
     idLineEdit->setToolTip(tr("Last 6 symbols of Red Pitaya MAC adrress (see WLAN connector)"));
     idLineEdit->setInputMask("HHHHHH");
     idLineEdit->setFixedWidth(this->fontMetrics().width("HHHHHH") + 10);
-    //idLineEdit->setMaximumWidth(90);
+
     connectButton = new QPushButton(tr("Connect"));
+    idHBox->addWidget(connectButton);
     connectButton->setEnabled(false);
 
-    QPushButton* testButton = new QPushButton(tr("Test"));
-
     disconnectButton = new QPushButton(tr("Disconnect"));
+    idHBox->addWidget(disconnectButton);
     disconnectButton->setEnabled(true);
     disconnectButton->setVisible(false);
 
-    waitSpin = new WaitingSpinnerWidget(0, false, false);
-    waitSpin->setRoundness(70.0);
-    waitSpin->setMinimumTrailOpacity(50.0);
-    waitSpin->setTrailFadePercentage(70.0);
-    waitSpin->setNumberOfLines(10);
-    waitSpin->setLineLength(6);
-    waitSpin->setLineWidth(3);
-    waitSpin->setInnerRadius(5);
-    waitSpin->setRevolutionsPerSecond(2);
-    waitSpin->setColor(QColor(0, 150, 136));
-
-
-    idHBox->addWidget(idLabel);
-    idHBox->addWidget(idLineEdit);
-    idHBox->addWidget(connectButton);
-    idHBox->addWidget(disconnectButton);
-#ifdef COMD
-    idHBox->addWidget(testButton);
-#endif
+    waitSpin = new WaitingSpinnerWidget(nullptr, false, false);
     idHBox->addWidget(waitSpin);
+    waitSpin->setRoundness(70.0);   waitSpin->setMinimumTrailOpacity(50.0); waitSpin->setTrailFadePercentage(70.0);
+    waitSpin->setNumberOfLines(10); waitSpin->setLineLength(6);             waitSpin->setLineWidth(3);
+    waitSpin->setInnerRadius(5);    waitSpin->setRevolutionsPerSecond(2);   waitSpin->setColor(QColor(0, 150, 136));
+
     idHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding,QSizePolicy::Fixed));
 
-    /*>>>Widget Layout<<<*/
+//part:function
 
-    vBox->addLayout(idHBox);
-    this->setLayout(vBox);
-
-    //---> Functionality <---//
-
+    //:idLineEdit
     connect(idLineEdit, &IMLineEdit::returnPressed,[=](){if(connectButton->isVisible()) connectButton->click();});
-    connect(connectButton, &QPushButton::released, this, &GroupSsh::onConnect);
     connect(idLineEdit, &QLineEdit::textChanged, [=](const QString& str){connectButton->setEnabled((str.length() == 6));});
 
-    connect(disconnectButton, &QPushButton::released, this, &GroupSsh::onDisconnect);
+    //:connectButton|:disconnectButton
+    connect(connectButton, &QPushButton::clicked, this, &GroupSsh::onConnect);
+    connect(disconnectButton, &QPushButton::clicked, this, &GroupSsh::onDisconnect);
 
+    //:this
     connect(this, &GroupSsh::nfyConnected, this, &GroupSsh::swapConnectButtons);
 
-    connect(testButton, &QPushButton::released, this, &GroupSsh::test);
-
-    //connection chain:
+    //:connectWatch|authWatch
     connect(&connectWatch, &QFutureWatcher<R>::finished, this, &GroupSsh::connectToRPFinished);
     connect(&authWatch, &QFutureWatcher<R>::finished, this, &GroupSsh::authenticateRPFinished);
 
     fcUploaded = false;
 }
 
-void GroupSsh::test(){
-    qDebug() << "Test";
-    ssh.execCommand("echo test >>text.txt");
-}
-
 void GroupSsh::onDisconnect(){
-    qDebug() << "Disconnecting...";
     ssh.disconnect();
     nfyConnected(false);
 }
 
 void GroupSsh::onConnect(){
     std::string rpMac = idLineEdit->text().toLower().toStdString();
-    qDebug() << QString::fromStdString(rpMac);
-
-    qDebug() << "Connecting...";
 
     fcUploaded = false;
     connectButton->setDisabled(true);
@@ -162,12 +136,10 @@ void GroupSsh::connectToRPFinished(){
     connectButton->setEnabled(true);
 
     if(status == R::other){
-        qDebug() << "Unexpected error occured while connecting.";
         QMessageBox::critical(this, tr("Fir Controller - Connection error"), tr("Unexpected error occured while connecting."));
         return;
     }
     if(status == R::connection){
-        qDebug() << "Coudn't connect to Red Pitaya.";        
         QMessageBox::warning(this, tr("Fir Controller - Connection error"), tr("Connection with Red Pitaya could not be established. Check if:\n- Red Pitaya is powered on,\n- all cables are attached,\n- proper ID was entered."));
         return;
     }
@@ -175,7 +147,7 @@ void GroupSsh::connectToRPFinished(){
 
 GroupSsh::R GroupSsh::authenticateRP(std::string pass){
     if(ssh.auth(pass) != Ssh::R::ok){
-        qDebug() << "Authentication error."; ssh.disconnect(); return R::auth;
+        ssh.disconnect(); return R::auth;
     }
     qDebug() << "Connection established.";
     if(ssh.setupSftp() != Ssh::R::ok){
@@ -194,14 +166,13 @@ void GroupSsh::authenticateRPFinished(){
         nfyConnected(true);
         break;
     case R::auth:
-        qDebug() << "Authentication failed";
         QMessageBox::critical(this, tr("Fir Controller - Authentication error"), tr("Authentication failed. Maybe someone changed root password on RedPitaya?. If problem persists try flashing fresh system on RedPitaya SD card."));
         break;
     case R::other:
-        qDebug() << "Unexpected error";
         QMessageBox::critical(this, tr("Fir Controller - Authentication error"), tr("Unexpected error occured during authentication."));
         //sthWrong();
         break;
+    default: ;
     }
 
     waitSpin->stop();
@@ -221,9 +192,6 @@ GroupSsh::R GroupSsh::uploadFirCtrl(const BitstreamSpecs& bitSpecs){
     fcFileName.append("_");
     fcFileName.append(QString::number(subDec));
     fcFileName.append("_*");
-
-    qDebug() << "fcFileName:" << fcFileName;
-
 
     QDir rpDir("data/redpitaya");
     qDebug() << "redpitaya dir exists:"<< rpDir.exists();
@@ -314,14 +282,21 @@ GroupSsh::R GroupSsh::loadBitstream(BitstreamSpecs bitSpecs){
     if(stat == Ssh::R::ok){
         //TODO: check sha1sum of uploaded bitstream
 #ifdef COMD
-        stat = ssh.execCommand(".local/bin/lconf /tmp/bitstream.bin");
+        stat = ssh.execCommand(".local/bin/lconf /tmp/bitstream.bin && printf \"ok\" || printf \"error\"");
 #else
-        stat = ssh.execCommand("lconf /tmp/bitstream.bin");
+        stat = ssh.execCommand("lconf /tmp/bitstream.bin && printf \"ok\" || printf \"error\"");
 #endif
 
         if(stat == Ssh::R::ok){
-            qDebug() << "o:" << QString::fromStdString(ssh.getSshOut());
-            qDebug() << "e:" << QString::fromStdString(ssh.getSshErr());
+            QString rpOut = QString::fromStdString(ssh.getSshOut());
+            QString rpErr = QString::fromStdString(ssh.getSshErr());
+            qDebug() << "o:" << rpOut;
+            qDebug() << "e:" << rpErr;
+            if(rpOut != "ok"){
+                QApplication::restoreOverrideCursor();
+                QMessageBox::critical(this, tr("Fir Controller - RedPitaya error."), tr("RedPitaya returned error:\n") + rpErr);
+                return R::other;
+            }
             return R::ok;
         }
     }
@@ -337,7 +312,7 @@ void GroupSsh::loadSrcKernel(std::vector<double> crrSrcKer){
     Ssh::R stat = ssh.execCommand("echo"); //check connection
     if(stat == Ssh::R::ok){
         qDebug() << "Uploading src kernel...";
-        stat = ssh.sendMemToFile((void*)crrSrcKer.data(), crrSrcKer.size()*sizeof(double), "/tmp/srcker.dat");
+        stat = ssh.sendMemToFile(static_cast<void*>(crrSrcKer.data()), crrSrcKer.size()*sizeof(double), "/tmp/srcker.dat");
         //local copy
         std::ofstream ofp("srcker.dat", std::ios::out | std::ios::binary);
         ofp.write(reinterpret_cast<const char*>(crrSrcKer.data()), crrSrcKer.size() * sizeof(crrSrcKer[0]));ofp.close();
@@ -370,7 +345,7 @@ void GroupSsh::loadKernel(std::vector<double> crrKer){
     }           //but groupspecs doesn't know that and calls loadKernel anyway
     if(stat == Ssh::R::ok){
         qDebug() << "Uploading kernel...";
-        Ssh::R stat = ssh.sendMemToFile((void*)crrKer.data(), crrKer.size()*sizeof(double), "/tmp/firker.dat");
+        stat = ssh.sendMemToFile(static_cast<void*>(crrKer.data()), crrKer.size()*sizeof(double), "/tmp/firker.dat");
         //local copy
         std::ofstream ofp("firker.dat", std::ios::out | std::ios::binary);
         ofp.write(reinterpret_cast<const char*>(crrKer.data()), crrKer.size() * sizeof(crrKer[0]));ofp.close();
@@ -406,13 +381,6 @@ void GroupSsh::loadKernel(std::vector<double> crrKer){
     }
     QMessageBox::critical(this, tr("Fir Controller - Unexpected error."), tr("Unexpected error occured when loading filter kernel."));
     qDebug() << "Unexpected error occured during kernel loading.";
-}
-
-void GroupSsh::toggleEnableAdv(){
-    enableAdvState = !enableAdvState;
-    if(advButton->isChecked())
-        advButton->animateClick(0);
-    advButton->setEnabled(enableAdvState);
 }
 
 void GroupSsh::swapConnectButtons(bool connected){

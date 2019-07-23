@@ -12,12 +12,12 @@
 
 Ssh::Ssh(){
     status = Status::disconnected;
-    ssh = NULL;
-    sftp = NULL;
+    ssh = nullptr;
+    sftp = nullptr;
 }
 
 Ssh::~Ssh(){
-    if(sftp != NULL)
+    if(sftp != nullptr)
         sftp_free(sftp);
     if(status != Status::disconnected){
         ssh_disconnect(ssh);
@@ -39,7 +39,7 @@ Ssh::R Ssh::execCommand(std::string command){
     char buffer[BUFSIZE];
 
     channel = ssh_channel_new(ssh);
-    if (channel == NULL) {
+    if (channel == nullptr) {
         std::cerr << "Couldn't open channel.\n"; return R::connection;
     }
 
@@ -58,14 +58,14 @@ Ssh::R Ssh::execCommand(std::string command){
     nbytes = ssh_channel_read(channel, buffer, BUFSIZE, 0);
     // ssh_channel_read_timeout(channel, buffer, sizeof(buffer), 0, timeout);
     while (nbytes > 0) {
-        sshOut.append(buffer, nbytes);
+        sshOut.append(buffer, static_cast<unsigned int>(nbytes));
         nbytes = ssh_channel_read(channel, buffer, BUFSIZE, 0);
     }
 
     nbytes = ssh_channel_read(channel, buffer, BUFSIZE, 1);
     // ssh_channel_read_timeout(channel, buffer, sizeof(buffer), 1, timeout);
     while (nbytes > 0) {
-        sshErr.append(buffer, nbytes);
+        sshErr.append(buffer, static_cast<unsigned int>(nbytes));
         nbytes = ssh_channel_read(channel, buffer, BUFSIZE, 1);
     }
     rc = ssh_channel_is_eof(channel);
@@ -84,11 +84,11 @@ Ssh::R Ssh::sendFileToFile(std::string src, std::string dest){
     if(!srcFile){std::cerr << "Couldn't open local file for reading: "<< src << std::endl;return R::other;}
 
     sftp_file destRFile = sftp_open(sftp, dest.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0777);
-    if(destRFile==NULL){std::cerr << "Couldn't open remote file for writing: " << dest << std::endl;return R::other;}
+    if(destRFile==nullptr){std::cerr << "Couldn't open remote file for writing: " << dest << std::endl;return R::other;}
 
     /*-------------------------*/
     char buffer[SFTP_CHUNK];
-    int nwritten;
+    long nwritten;
     while (srcFile){
         srcFile.read(buffer, SFTP_CHUNK);
         nwritten = sftp_write(destRFile, buffer, srcFile.gcount());
@@ -109,12 +109,12 @@ Ssh::R Ssh::sendFileToFile(std::string src, std::string dest){
 Ssh::R Ssh::sendMemToFile(const void* mem, std::size_t size, std::string dest){
 
     sftp_file destRFile = sftp_open(sftp, dest.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0777);
-    if(destRFile==NULL){std::cerr << "Couldn't open remote file for writing: " << dest << std::endl;return R::other;}
+    if(destRFile==nullptr){std::cerr << "Couldn't open remote file for writing: " << dest << std::endl;return R::other;}
 
     /*-------------------------*/
     //char buffer[SFTP_CHUNK];
     const void* buffer = mem; std::size_t sizeLeft = size; std::size_t toWrite;
-    int nwritten;
+    long nwritten;
     while (sizeLeft != 0){
         //srcFile.read(buffer, SFTP_CHUNK);
         toWrite = (sizeLeft < SFTP_CHUNK) ? sizeLeft : SFTP_CHUNK;
@@ -153,7 +153,7 @@ Ssh::R Ssh::connect(long timeOut){
     //ssh_options_set(ssh, SSH_OPTIONS_LOG_VERBOSITY, verbosity);
     if(ssh_connect(ssh) != 0){
         std::cerr << "Connection failed: " << ssh_get_error(ssh) << "\n";
-        ssh_disconnect(ssh); ssh_free(ssh); ssh = NULL; return R::connection;
+        ssh_disconnect(ssh); ssh_free(ssh); ssh = nullptr; return R::connection;
     }
     status = Status::connected;
     return R::ok;
@@ -164,7 +164,7 @@ Ssh::R Ssh::verify(){
         return R::status;
 
     enum ssh_known_hosts_e state;
-    unsigned char *hash = NULL;
+    unsigned char *hash = nullptr;
     size_t hlen;
     ssh_key srv_pubkey;
 
@@ -183,26 +183,24 @@ Ssh::R Ssh::verify(){
     switch(state){
         case SSH_KNOWN_HOSTS_OK:
             status = Status::verified;
-            ssh_userauth_none(ssh, NULL);
+            ssh_userauth_none(ssh, nullptr);
             break; /* ok */
         case SSH_KNOWN_HOSTS_CHANGED:
             return R::security;
         case SSH_KNOWN_HOSTS_OTHER:
             return R::security;
         case SSH_KNOWN_HOSTS_NOT_FOUND:
-        case SSH_SERVER_NOT_KNOWN:
+        case SSH_KNOWN_HOSTS_UNKNOWN:
             status = Status::unknownserv;
             break;
-        case SSH_KNOWN_HOSTS_ERROR:
+        default:
             return R::other;
     }
     return R::ok;
 }
 
 Ssh::R Ssh::addKnownHost(){
-//    if(status != Status::unknownserv)
-//        return R::status;
-    if(ssh_write_knownhost(ssh)<0)
+    if(ssh_session_update_known_hosts(ssh)<0)
         return R::other;
     return R::ok;
 }
@@ -211,16 +209,16 @@ Ssh::R Ssh::accept(){
     if(status != Status::unknownserv)
         return R::status;
     status = Status::verified;
-    ssh_userauth_none(ssh, NULL);
+    ssh_userauth_none(ssh, nullptr);
     return R::ok;
 }
 
 Ssh::R Ssh::auth(){
     if(status != Status::verified)
         return R::status;
-    int method = ssh_userauth_list(ssh, NULL);
+    int method = ssh_userauth_list(ssh, nullptr);
     if(method & SSH_AUTH_METHOD_PUBLICKEY){
-        int rc = ssh_userauth_publickey_auto(ssh, NULL, NULL);
+        int rc = ssh_userauth_publickey_auto(ssh, nullptr, nullptr);
         if (rc == SSH_AUTH_ERROR) {
             std::cerr << "Authentication failed: " << ssh_get_error(ssh) << "\n";
             return R::authentication;
@@ -236,9 +234,9 @@ Ssh::R Ssh::auth(){
 Ssh::R Ssh::auth(std::string password){
     if(status != Status::verified)
         return R::status;
-    int method = ssh_userauth_list(ssh, NULL);
+    int method = ssh_userauth_list(ssh, nullptr);
     if(method & SSH_AUTH_METHOD_PASSWORD){
-        int rc = ssh_userauth_password(ssh, NULL, password.c_str());
+        int rc = ssh_userauth_password(ssh, nullptr, password.c_str());
         if (rc == SSH_AUTH_ERROR) {
             std::cerr << "Authentication failed: " << ssh_get_error(ssh) << "\n";
             return R::authentication;
@@ -258,17 +256,17 @@ Ssh::R Ssh::setupSftp(){
     sftp = sftp_new(ssh);
     if(sftp_init(sftp) != SSH_OK){
         std::cerr << "SFTP Connection not established\n";
-        sftp_free(sftp); sftp = NULL;
+        sftp_free(sftp); sftp = nullptr;
         return R::other;
     }
     return R::ok;
 }
 
 Ssh::R Ssh::disconnect(){
-    sftp_free(sftp); sftp = NULL;
+    sftp_free(sftp); sftp = nullptr;
     if(status != Status::disconnected)
         ssh_disconnect(ssh);
-    ssh_free(ssh); ssh = NULL;
+    ssh_free(ssh); ssh = nullptr;
     status = Status::disconnected;
     hash.clear();
     return R::ok;

@@ -1,5 +1,5 @@
-#ifndef _SSH_H_
-#define _SSH_H_
+#ifndef SSH_H
+#define SSH_H
 
 #include <libssh/libssh.h>
 #include <libssh/sftp.h>
@@ -63,4 +63,4 @@ private:
 };
 
 
-#endif //_SSH_H_
+#endif //SSH_H

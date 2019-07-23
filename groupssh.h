@@ -52,11 +52,9 @@ private:
     int fcSubVer;
     bool fcUploaded;
 
-    void toggleEnableAdv();
     void swapConnectButtons(bool isConnect);
     void onConnect();
     void onDisconnect();
-    void test();
 
     R loadBitstream(BitstreamSpecs bitSpecs);
 

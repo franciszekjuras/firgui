@@ -14,7 +14,7 @@ class KerPlot : public QCustomPlot{
     Q_OBJECT
 
 public:
-    KerPlot(QWidget* parent = 0);
+    KerPlot(QWidget* parent = nullptr);
     //~Plot();
 
     QSize sizeHint() const;
@@ -62,7 +62,7 @@ protected:
     void cntSetSrcKernel();
 
 public slots:
-    void checkXBounds(const QCPRange& newRange, const QCPRange& oldRange);
+    void checkXBounds(const QCPRange& newRange);
     void setKernel(std::shared_ptr<const FirKer> kernel);
     void setSrcKernel(std::shared_ptr<const FirKer> kernel);
     void setPlotType(const QString& plotType);

@@ -11,34 +11,46 @@
 
 GroupConfig::GroupConfig(QWidget *parent) : QGroupBox(tr("Configuration"),parent)
 {
-    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+//part:layout
 
-    QVBoxLayout* vBox = new QVBoxLayout;
+setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+QVBoxLayout* mainVBox = new QVBoxLayout;
+this->setLayout(mainVBox);
+//mainVBox --v
 
-    QFormLayout* bitForm = new QFormLayout;
-    bitMainCombo = new QComboBox;
-    bitMainCombo->setToolTip("Roll-off decreases qudratically with working band width.");
-    bitForm->addRow(tr("Working band width"), bitMainCombo);
-    bitSpecCombo = new QComboBox;
-    bitSpecCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-    bitSpecCombo->setToolTip(tr("Higher number of SRC blocks gives sharper rate conversion transmission on cost of reduced filter rank."));
-    QString specComboName = tr("Filter Rank") + " | " + tr("SRC blocks");
-    bitForm->addRow(specComboName, bitSpecCombo);
-    vBox->addLayout(bitForm);
+    QFormLayout* bitstreamForm = new QFormLayout;
+    mainVBox->addLayout(bitstreamForm);
+    //bitstreamForm --v
+
+        bandwidthCombo = new QComboBox;
+        bitstreamForm->addRow(tr("Working band width"), bandwidthCombo);
+        bandwidthCombo->setToolTip("Roll-off decreases qudratically with working band width.");
+
+        rankCombo = new QComboBox;
+        QString rankComboName = tr("Filter Rank") + " | " + tr("SRC blocks");
+        bitstreamForm->addRow(rankComboName, rankCombo);
+        rankCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+        rankCombo->setToolTip(tr("Higher number of SRC blocks gives sharper rate conversion transmission on cost of reduced filter rank."));
 
     QHBoxLayout* buttonHBox = new QHBoxLayout;
-    buttonHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Preferred));
-    QPushButton* loadButton = new QPushButton(tr("Load"));
-    loadButton->setDisabled(true);
-    buttonHBox->addWidget(loadButton);
-    vBox->addLayout(buttonHBox);
+    mainVBox->addLayout(buttonHBox);
+    //buttonHBox --v
 
-    this->setLayout(vBox);
+        buttonHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Preferred));
 
-    //---> Functionality <---//
+        QPushButton* loadButton = new QPushButton(tr("Load"));
+        buttonHBox->addWidget(loadButton);
+        loadButton->setDisabled(true);
 
+
+//part:function
+
+    //:this
     connect(this, &GroupConfig::enableLoad, loadButton, &QPushButton::setEnabled);
-    connect(loadButton, &QPushButton::released, this, &GroupConfig::onLoadButton);
+
+    //:loadButton
+    connect(loadButton, &QPushButton::clicked, this, &GroupConfig::onLoadButton);
+
 }
 
 void GroupConfig::onLoadButton(){
@@ -47,9 +59,10 @@ void GroupConfig::onLoadButton(){
 
 void GroupConfig::init(){
 
+//:bandwidthCombo|:rankCombo
 
-    fpgaSampFreq = 125000.;
-    emit fpgaSampFreqChanged(fpgaSampFreq);
+    fpgaSamplingFreq = 125000.;
+    emit fpgaSamplingFreqChanged(fpgaSamplingFreq);
 
     QDir bitDir("data/bitstreams");
     bitDir.setFilter(QDir::Files);
@@ -79,7 +92,7 @@ void GroupConfig::init(){
     QString key1P;
     for(const auto& bitSpec : bitSpecsV){
         auto params = bitSpec.getSpecs();
-        double nyqFreq = fpgaSampFreq/2./ static_cast<double>(params["tm"]);
+        double nyqFreq = fpgaSamplingFreq/2./ static_cast<double>(params["tm"]);
         QString key1;
         if(nyqFreq >= 1000.) key1 = QString::number(nyqFreq/1000.,'g',4)+" MHz";
         else key1 = QString::number(nyqFreq,'g',4)+" KHz";
@@ -98,33 +111,33 @@ void GroupConfig::init(){
             key2 += tr("unk.");
 
         if(key1 != key1P){
-            bitMainCombo->addItem(key1);
+            bandwidthCombo->addItem(key1);
             key1P = key1;
         }
 
         bitMap[key1][key2] = bitSpec;
     }
 
-    bitMainCombo->setCurrentIndex(-1);
-    connect(bitMainCombo, &QComboBox::currentTextChanged, this, &GroupConfig::bitMainComboChanged);
-    connect(bitSpecCombo, &QComboBox::currentTextChanged, this, &GroupConfig::bitSpecComboChanged);
-    bitMainCombo->setCurrentIndex(0);
+    bandwidthCombo->setCurrentIndex(-1);
+    connect(bandwidthCombo, &QComboBox::currentTextChanged, this, &GroupConfig::bandwidthComboChanged);
+    connect(rankCombo, &QComboBox::currentTextChanged, this, &GroupConfig::rankComboChanged);
+    bandwidthCombo->setCurrentIndex(0);
 }
 
-void GroupConfig::bitMainComboChanged(QString mainStr){
+void GroupConfig::bandwidthComboChanged(QString mainStr){
     assert(bitMap.contains(mainStr));
-    updateBitSpecCombo(mainStr);
+    updateRankCombo(mainStr);
 }
 
-void GroupConfig::updateBitSpecCombo(QString mainStr){
+void GroupConfig::updateRankCombo(QString mainStr){
     bitMainStr = mainStr;
-    bitSpecCombo->clear();
+    rankCombo->clear();
     auto specMap = bitMap.value(mainStr);
     for(auto it = specMap.cend(); it != specMap.cbegin();)
-        bitSpecCombo->addItem((--it).key());
+        rankCombo->addItem((--it).key());
 }
 
-void GroupConfig::bitSpecComboChanged(QString specStr){
+void GroupConfig::rankComboChanged(QString specStr){
     if(specStr.isEmpty()) return;
     assert(bitMap.value(bitMainStr).contains(specStr));
     crrBitstream = bitMap[bitMainStr][specStr];

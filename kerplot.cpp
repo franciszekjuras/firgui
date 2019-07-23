@@ -42,8 +42,7 @@ KerPlot::KerPlot(QWidget* parent):
 
     this->axisRect()->setRangeDrag(Qt::Horizontal);
     this->axisRect()->setRangeZoom(Qt::Horizontal);
-    connect(this->xAxis, SIGNAL(rangeChanged(const QCPRange&, const QCPRange&)),
-            this, SLOT(checkXBounds(const QCPRange&, const QCPRange&)));
+    connect(this->xAxis, static_cast<void (QCPAxis::*)(const QCPRange&)>(&QCPAxis::rangeChanged), this, &KerPlot::checkXBounds);
     this->setEnabled(false);
 
 
@@ -258,7 +257,7 @@ void KerPlot::clearTotalTrans(){
     this->graph(2)->setData(QVector<double>(),QVector<double>(),true);
 }
 
-void KerPlot::checkXBounds(const QCPRange& newRange, const QCPRange& oldRange){
+void KerPlot::checkXBounds(const QCPRange& newRange){
     if(newRange.lower < this->xRange.lower || newRange.upper > this->xRange.upper){
         if(newRange.size() > this->xRange.size()){
             this->xAxis->setRange(this->xRange);

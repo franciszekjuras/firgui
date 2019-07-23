@@ -19,128 +19,116 @@
 
 GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),parent)
 {
-    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+//part:layout
 
-    QVBoxLayout* vBox = new QVBoxLayout;
+setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+QVBoxLayout* mainVBox = new QVBoxLayout;
+this->setLayout(mainVBox);
+//mainVBox --v
 
-    //---> Specification form <---//
+    QGridLayout* specificationGrid = new QGridLayout;
+    mainVBox->addLayout(specificationGrid);
+    //specificationGrid --v
 
-    QGridLayout* specsGrid = new QGridLayout;
-    freqsLineEdit = new QLineEdit;
-    gainsLineEdit = new QLineEdit;
-    freqsLineEdit->setToolTip(tr("Space separated corner frequencies (in band range)."));
-    gainsLineEdit->setToolTip(tr("Space separated gains (1 for passband, 0 for stopband)."));
-    specsGrid->addWidget(new QLabel(tr("Frequencies")),0,0);
-    specsGrid->addWidget(freqsLineEdit, 0, 1);
+        freqsLineEdit = new QLineEdit;
+        specificationGrid->addWidget(new QLabel(tr("Frequencies")),0,0);
+        specificationGrid->addWidget(freqsLineEdit, 0, 1);
+        freqsLineEdit->setToolTip(tr("Space separated corner frequencies (in band range)."));
 
-    QComboBox* unitCombo = new QComboBox;
-    unitCombo->setFocusPolicy(Qt::ClickFocus);
-    unitCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    specsGrid->addWidget(unitCombo, 0, 2);
+        QComboBox* unitCombo = new QComboBox;
+        specificationGrid->addWidget(unitCombo, 0, 2);
+        unitCombo->setFocusPolicy(Qt::ClickFocus);
+        unitCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-    specsGrid->addWidget(new QLabel(tr("Gains")),1,0);
-    specsGrid->addWidget(gainsLineEdit, 1, 1);
-    vBox->addLayout(specsGrid);
+        gainsLineEdit = new QLineEdit;
+        specificationGrid->addWidget(new QLabel(tr("Gains")),1,0);
+        specificationGrid->addWidget(gainsLineEdit, 1, 1);
+        gainsLineEdit->setToolTip(tr("Space separated gains (1 for passband, 0 for stopband)."));
 
-    QComboBox* wndCombo = new QComboBox;
-    wndCombo->setToolTip("Different windows give various roll-off/rippling tradeoffs.");
-    specsGrid->addWidget(new QLabel(tr("Window")),2,0);
-    specsGrid->addWidget(wndCombo, 2, 1);
+        QComboBox* windowCombo = new QComboBox;
+        specificationGrid->addWidget(new QLabel(tr("Window")),2,0);
+        specificationGrid->addWidget(windowCombo, 2, 1);
+        windowCombo->setToolTip("Different windows give various roll-off/rippling tradeoffs.");
 
-    bandCombo = new QComboBox;
-    specsGrid->addWidget(new QLabel(tr("Working Band")),3,0);
-    specsGrid->addWidget(bandCombo, 3, 1);
+        bandCombo = new QComboBox;
+        specificationGrid->addWidget(new QLabel(tr("Working Band")),3,0);
+        specificationGrid->addWidget(bandCombo, 3, 1);
 
-    //---> Buttons <---//
+
     QHBoxLayout* buttonsHBox = new QHBoxLayout;
+    mainVBox->addLayout(buttonsHBox);
+    //buttonsHBox --v
 
+        QPushButton* helpButton = new QPushButton(tr("Help"));
+        buttonsHBox->addWidget(helpButton);
+        helpButton->setFocusPolicy(Qt::ClickFocus);
+        QFontMetrics fm = helpButton->fontMetrics();
+        helpButton->setMaximumWidth(fm.width(tr("Help"))+20);
 
-    QPushButton* helpButton = new QPushButton(tr("Help"));
-    helpButton->setFocusPolicy(Qt::ClickFocus);
-    QFontMetrics fm = helpButton->fontMetrics();
-    helpButton->setMaximumWidth(fm.width(tr("Help"))+20);
-    buttonsHBox->addWidget(helpButton);
+        buttonsHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Fixed));
 
-    buttonsHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Fixed));
+        waitSpin = new WaitingSpinnerWidget(nullptr, false, false);
+        buttonsHBox->addWidget(waitSpin);
+        waitSpin->setRoundness(70.0);   waitSpin->setMinimumTrailOpacity(50.0); waitSpin->setTrailFadePercentage(70.0);
+        waitSpin->setNumberOfLines(10); waitSpin->setLineLength(6);             waitSpin->setLineWidth(3);
+        waitSpin->setInnerRadius(5);    waitSpin->setRevolutionsPerSecond(2);   waitSpin->setColor(QColor(0, 150, 136));
 
-    waitSpin = new WaitingSpinnerWidget(0, false, false);
-    buttonsHBox->addWidget(waitSpin);
-    QPushButton* calcButton = new QPushButton(tr("Calculate"));
-    buttonsHBox->addWidget(calcButton);
-    QPushButton* setButton = new QPushButton(tr("Set"));
-    buttonsHBox->addWidget(setButton);
-    vBox->addLayout(buttonsHBox);
+        QPushButton* calculateButton = new QPushButton(tr("Calculate"));
+        buttonsHBox->addWidget(calculateButton);
 
+        QPushButton* setButton = new QPushButton(tr("Set"));
+        buttonsHBox->addWidget(setButton);
 
-    this->setLayout(vBox);
+//part:function
 
-
-    //---> Functionality <---//
-    waitSpin->setRoundness(70.0);
-    waitSpin->setMinimumTrailOpacity(50.0);
-    waitSpin->setTrailFadePercentage(70.0);
-    waitSpin->setNumberOfLines(10);
-    waitSpin->setLineLength(6);
-    waitSpin->setLineWidth(3);
-    waitSpin->setInnerRadius(5);
-    waitSpin->setRevolutionsPerSecond(2);
-    waitSpin->setColor(QColor(0, 150, 136));
-    //waitSpin->setColor(QColor(137, 207, 240));
-
-
-    unitMult = 1.;
-
-    connect(freqsLineEdit, &QLineEdit::returnPressed, gainsLineEdit, static_cast<void (QLineEdit::*)()>(&QLineEdit::setFocus));
-    connect(gainsLineEdit, &QLineEdit::returnPressed, calcButton, &QPushButton::click);
-
-    connect(helpButton, &QPushButton::released, this, &GroupSpecs::showHelp);
-
-    connect(calcButton, &QPushButton::released, this, &GroupSpecs::calculateKernel);
-    connect(this, &GroupSpecs::enableCalcButton, calcButton,  &QPushButton::setEnabled);
-    connect(setButton, &QPushButton::released, this, &GroupSpecs::setKernels);
+    //:this
+    connect(this, &GroupSpecs::enableCalculateButton, calculateButton,  &QPushButton::setEnabled);
     connect(this, &GroupSpecs::enableSetButton, setButton,  &QPushButton::setEnabled);
-    enableCalcButton(false); enableSetButton(false);
+//    connect(this, &GroupSpecs::srcKernelClear, [this](){srcKernelReady(false);});
+//    connect(this, &GroupSpecs::kernelClear, [this](){kernelReady(false);});
+    connect(this, &GroupSpecs::srcKernelChanged, [this](){srcKernelReady(true);});
+    connect(this, &GroupSpecs::kernelChanged, [this](){kernelReady(true);});
+    connect(this, &GroupSpecs::resetPlot, [this](){srcKernelReady(false);kernelReady(false);});
 
-    connect(this, &GroupSpecs::srcKernelClear, [=](){srcKernelReady(false);});
-    connect(this, &GroupSpecs::kernelClear, [=](){kernelReady(false);});
+    //:freqsLineEdit|:gainsLineEdit
+    connect(freqsLineEdit, &QLineEdit::returnPressed, gainsLineEdit, static_cast<void (QLineEdit::*)()>(&QLineEdit::setFocus));
+    connect(gainsLineEdit, &QLineEdit::returnPressed, calculateButton, &QPushButton::click);
 
-    connect(this, &GroupSpecs::srcKernelChanged, [=](std::shared_ptr<const FirKer> firker){srcKernelReady(true);});
-    connect(this, &GroupSpecs::kernelChanged, [=](std::shared_ptr<const FirKer> firker){kernelReady(true);});
-
-    connect(this, &GroupSpecs::resetPlot, [=](double f, int t, int b){srcKernelReady(false);kernelReady(false);});
-
+    //:unitCombo
     connect(unitCombo, &QComboBox::currentTextChanged, this, &GroupSpecs::unitChanged);
     unitCombo->addItem("kHz"); unitCombo->addItem("MHz");
 
-    connect(wndCombo, &QComboBox::currentTextChanged, this, &GroupSpecs::wndChanged);
+    //:windowCombo
+    connect(windowCombo, &QComboBox::currentTextChanged, this, &GroupSpecs::windowChanged);
     QStringList windows;
     windows << tr("None") << tr("Hamming") << tr("Blackman");
-    wndCombo->addItems(windows);
-    wndCombo->setCurrentText(tr("Hamming"));
+    windowCombo->addItems(windows);
+    windowCombo->setCurrentText(tr("Hamming"));
 
+    //:bandCombo
     connect(bandCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GroupSpecs::bandChanged);
 
+    //:helpButton|:calculateButton|:setButton
+    connect(helpButton, &QPushButton::clicked, this, &GroupSpecs::showHelp);
+    connect(calculateButton, &QPushButton::clicked, this, &GroupSpecs::calculateKernel);
+    connect(setButton, &QPushButton::clicked, this, &GroupSpecs::setKernels);
+    enableCalculateButton(false); enableSetButton(false);
 
+    //:waitSpin
     connect(&spinWatch, &BoolMapOr::valueChanged, [=](bool v){if(v)this->waitSpin->start(); else this->waitSpin->stop();});
 
-    //qRegisterMetaType< std::shared_ptr<FirKer> >("FirKer");
-//    connect(&kerCalcThread, &KernelCalcThread::started, this, [=](){this->waitSpin->start();});
-//    connect(&kerCalcThread, &KernelCalcThread::calcFinished, this, &GroupSpecs::kerCalcFinished);
-    connect(&kerCalcWatch, &QFutureWatcher<std::shared_ptr<FirKer>>::started, this, [=](){spinWatch.enable("kerCalc");});
-    connect(&kerCalcWatch, &QFutureWatcher<std::shared_ptr<FirKer>>::finished, this, &GroupSpecs::kerCalcFinished);
+    //:calculateKernelWatch
+    connect(&calculateKernelWatch, &QFutureWatcher<std::shared_ptr<FirKer>>::started, this, [=](){spinWatch.enable("calculateKernel");});
+    connect(&calculateKernelWatch, &QFutureWatcher<std::shared_ptr<FirKer>>::finished, this, &GroupSpecs::calculateKernelFinished);
 
-//    connect(&srcKerCalcThread, &KernelCalcThread::started, this, [=](){this->waitSpin->start();});
-//    connect(&srcKerCalcThread, &KernelCalcThread::calcFinished, this, &GroupSpecs::srcKerCalcFinished);
-    connect(&srcKerCalcWatch, &QFutureWatcher<std::shared_ptr<FirKer>>::started, this, [=](){spinWatch.enable("srcKerCalc");});
-    connect(&srcKerCalcWatch, &QFutureWatcher<std::shared_ptr<FirKer>>::finished, this, &GroupSpecs::srcKerCalcFinished);
-    pendCalcSrcKernel = false;
-    pendCalculateKernel = false;
-    kerLocked = false;
-    srcKerLocked = false;
-    isKernelReady = false;
-    isSrcKernelReady = false;
-    isFilterReady = false;
-    isSrcKernelLoaded = false;
+    //:calculateSrcKernelWatch
+    connect(&calculateSrcKernelWatch, &QFutureWatcher<std::shared_ptr<FirKer>>::started, this, [=](){spinWatch.enable("calculateSrcKernel");});
+    connect(&calculateSrcKernelWatch, &QFutureWatcher<std::shared_ptr<FirKer>>::finished, this, &GroupSpecs::calculateSrcKernelFinished);
+
+
+    isKernelReady = false;          isSrcKernelReady = false;
+    isFilterReady = false;          isSrcKernelLoaded = false;
+    pendingCalculateKernel = false; pendingCalculateSrcKernel = false;
 
 }
 
@@ -155,48 +143,49 @@ void GroupSpecs::showHelp(){
     QMessageBox::information(this, tr("FIR Controller -- Help"), tr("    Filter is described by specifing gains to subsequent frequency ranges in the given band (which is configurable). Outside of this band gain is always zero (nothing is passed).\nCorner frequencies should be given omitting boundary frequencies with gains matching successive ranges.\n\n    For example: with filter band from 0 to 500 kHz, filter passing signal from 0 to 200 kHz, stopping everything from 200 to 400 kHz and passing with amplitude divided by 2 from 400 to 500 kHz, can be set by giving:\n\nFrequencies: 200 400\nGains: 1 0 0.5\n\n    Note however, that overall filtering result is affected by rate conversion transmission (shown on plot) and signal may not be passed on band boundaries.\n\n    For further details read tooltips, which can be displayed by hovering the cursor over an object."),tr("Close"));
 }
 
-void GroupSpecs::wndChanged(QString wndStr){
-    if(wndStr == tr("None"))
-        crrWnd = LeastSqFirKer::Window::none;
-    else if(wndStr == tr("Hamming"))
-        crrWnd = LeastSqFirKer::Window::hamming;
-    else if(wndStr == tr("Blackman"))
-        crrWnd = LeastSqFirKer::Window::blackman;
+void GroupSpecs::windowChanged(QString windowStr){
+    if(windowStr == tr("None"))
+        currentWindow = LeastSqFirKer::Window::none;
+    else if(windowStr == tr("Hamming"))
+        currentWindow = LeastSqFirKer::Window::hamming;
+    else if(windowStr == tr("Blackman"))
+        currentWindow = LeastSqFirKer::Window::blackman;
     else
-        assert(wndStr.isEmpty());
+        assert(windowStr.isEmpty());
 }
 
 void GroupSpecs::unitChanged(QString unit){
-    double newUnitMult;
+    double newUnitMultiplier;
     if(unit == "kHz")
-        newUnitMult = 1.;
+        newUnitMultiplier = 1.;
     else if(unit == "MHz")
-        newUnitMult = 1000.;
+        newUnitMultiplier = 1000.;
     else
         assert(false);
 
     std::vector<double> freqs;
 
-    if(newUnitMult != unitMult && textToDoubles(freqsLineEdit->text().toStdString(),freqs)){
-        double ratio = unitMult / newUnitMult;
+    if(newUnitMultiplier != unitMultiplier && textToDoubles(freqsLineEdit->text().toStdString(),freqs)){
+        double ratio = unitMultiplier / newUnitMultiplier;
         QString newFreqs;
         for(auto& v : freqs){
             v *= ratio;
             newFreqs += QString::number(v) += " ";
         }
+        newFreqs.chop(1);
         freqsLineEdit->setText(newFreqs);
     }
-    unitMult = newUnitMult;
+    unitMultiplier = newUnitMultiplier;
 }
 
 void GroupSpecs::calculateKernel(){
     kernelReady(false);
-    if(kerCalcWatch.isRunning()){pendCalculateKernel = true; return;}
-    pendCalculateKernel = false;
+    if(calculateKernelWatch.isRunning()){pendingCalculateKernel = true; return;}
+    pendingCalculateKernel = false;
 
     LeastSqFirKer ker;
-    double kerSampFreq = fpgaSampFreq / static_cast<double>(t);
-    ker.setSampFreq(kerSampFreq);
+    double kerSamplingFreq = fpgaSamplingFreq / static_cast<double>(t);
+    ker.setSamplingFreq(kerSamplingFreq);
     ker.setRank(t * d);
     std::vector<double> freqs, gains;
 
@@ -207,42 +196,41 @@ void GroupSpecs::calculateKernel(){
 
     //unit conversion
     for(auto& v : freqs){
-        v *= unitMult;
+        v *= unitMultiplier;
     }
 
     int band = currentBand();
-    double kerNqFreq = kerSampFreq / 2.;
+    double kerNyquistFreq = kerSamplingFreq / 2.;
 
     for(auto& v : freqs)
-        v -= (kerNqFreq*band); //shift
+        v -= (kerNyquistFreq*band); //shift
 
     if((band%2) == 1){
         //band reversal
         for(auto& v : freqs)
-            v = kerNqFreq - v; //reversal
+            v = kerNyquistFreq - v; //reversal
 
         std::reverse(freqs.begin(),freqs.end());
         std::reverse(gains.begin(),gains.end());
     }
 
-    if(!ker.setSpecs(freqs, gains)){
+    if(!ker.setSpecification(freqs, gains)){
         int uc = QMessageBox::warning(this, tr("FIR Controller - Incorrect Specification"),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
         if(uc == 0)showHelp();
         return;
     }
-    ker.setWindow(crrWnd);
+    ker.setWindow(currentWindow);
 
     std::shared_ptr<FirKer> ker_shared = std::make_shared<LeastSqFirKer>(ker);
     QFuture<std::shared_ptr<FirKer>> fut = QtConcurrent::run([=](){ker_shared->calc(); return ker_shared;});
-    kerCalcWatch.setFuture(fut);
+    calculateKernelWatch.setFuture(fut);
 }
 
-void GroupSpecs::kerCalcFinished(){
-    spinWatch.disable("kerCalc");
-    //kerLocked = false;
-    if(pendCalculateKernel){calculateKernel();return;}
+void GroupSpecs::calculateKernelFinished(){
+    spinWatch.disable("calculateKernel");
+    if(pendingCalculateKernel){calculateKernel();return;}
 
-    std::shared_ptr<FirKer> ker = kerCalcWatch.future().result();
+    std::shared_ptr<FirKer> ker = calculateKernelWatch.future().result();
 
     if(!ker->isValid()){
         int uc = QMessageBox::warning(this, tr("FIR Controller - Incorrect Specification"),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
@@ -253,13 +241,13 @@ void GroupSpecs::kerCalcFinished(){
     emit kernelChanged(ker);
 }
 
-void GroupSpecs::calcSrcKernel(){
+void GroupSpecs::calculateSrcKernel(){
     kernelReady(false); isSrcKernelLoaded = false;
 
-    if(srcKerCalcWatch.isRunning()){
-        pendCalcSrcKernel = true; return;
+    if(calculateSrcKernelWatch.isRunning()){
+        pendingCalculateSrcKernel = true; return;
     }
-    pendCalcSrcKernel = false;
+    pendingCalculateSrcKernel = false;
     // normalized frequency specification -- to avoid double conversion
     if(t == 1) return;
 
@@ -274,6 +262,7 @@ void GroupSpecs::calcSrcKernel(){
     if((band!=0) && (band != (t-1)) && (width > .5/dT/2.)){
         qDebug() << "Band" << band << "t" << t;
         qDebug() << tr("Higher bands are not supported in this configuration");
+        QMessageBox::critical(this, tr("Fir Controller - Unexpected error."), tr("Unexpected error: cannot calculate SRC kernel for this band."));
         return;
     }
 
@@ -295,32 +284,37 @@ void GroupSpecs::calcSrcKernel(){
     }
 
     EqRippleFirKer ker;
-    ker.setSampFreq(1.);
+    ker.setSamplingFreq(1.);
     ker.setRank(srcKerRank);
 
-    if(!ker.setSpecs(freqs,gains,weights)){
-        qDebug() << "Wrong EqRipple Filter specs."; return;
+    if(!ker.setSpecification(freqs,gains,weights)){
+        QMessageBox::critical(this, tr("Fir Controller - Unexpected error."), tr("Unexpected error: wrong equiripple filter specification."));
+        qDebug() << "Wrong equiripple filter specification."; return;
     }
 
     std::shared_ptr<FirKer> ker_shared = std::make_shared<EqRippleFirKer>(ker);
     QFuture<std::shared_ptr<FirKer>> fut = QtConcurrent::run([=](){ker_shared->calc(); return ker_shared;});
-    srcKerCalcWatch.setFuture(fut);
+    calculateSrcKernelWatch.setFuture(fut);
 }
 
-void GroupSpecs::srcKerCalcFinished(){
-    spinWatch.disable("srcKerCalc");
-    if(pendCalcSrcKernel){calcSrcKernel();return;}
+void GroupSpecs::calculateSrcKernelFinished(){
+    spinWatch.disable("calculateSrcKernel");
+    if(pendingCalculateSrcKernel){calculateSrcKernel();return;}
 
 
-    std::shared_ptr<FirKer> ker = srcKerCalcWatch.future().result();
-    if(!ker->isValid()){qDebug()<<"Src kernel calculation failed.";return;}
+    std::shared_ptr<FirKer> ker = calculateSrcKernelWatch.future().result();
+    if(!ker->isValid()){
+        QMessageBox::critical(this, tr("Fir Controller - Unexpected error."), tr("Unexpected error: SRC kernel calculation failed."));
+        qDebug()<<"Src kernel calculation failed.";return;
+    }
 
     crrSrcKer = ker->getKernel();
+    //this covers situation when firpm changes kernel size
     while(crrSrcKer.size() < ker->getRank()){
         qDebug() << "Adding 0 to src kernel.";
         crrSrcKer.push_back(0.);
     }
-    ker->setSampFreq(fpgaSampFreq);
+    ker->setSamplingFreq(fpgaSamplingFreq);
     emit srcKernelChanged(ker);
 }
 
@@ -343,58 +337,40 @@ void GroupSpecs::bitstreamChanged(QMap<QString, int> specs){
     int sOld = s; s = validS ? specs["sb"] : 0;
 
     if(!validT){
-       bandCombo->clear(); enableCalcButton(false); resetPlot(fpgaSampFreq,1,0);return;
+       bandCombo->clear(); enableCalculateButton(false); resetPlot(fpgaSamplingFreq,1,0);return;
     }
-    //TODO: find better solution (to prevent clearing calculated kernel when loading bitstream)
     if(t == tOld && validS && s == sOld && validD && d == dOld)
         qDebug() << "No changes in bitstream.";
     else
         rebuild();
 
-//    if(t != tOld){
-//        rebuild(); //---> this will rebuild all kernels and plot
-//    }
-//    else{//---> if t hasn't changed -- test what must be updated
-//        if(!validS)
-//            srcKernelClear();
-//        else if(s != sOld)
-//            calcSrcKernel();
-
-//        if(!validD || d!= dOld)
-//            kernelClear();
-//    }
-
-    enableCalcButton(validD);
-
-    //---> finished
+    enableCalculateButton(validD);
 }
 
 void GroupSpecs::rebuild(){
     bandCombo->clear();
-    double bandW = fpgaSampFreq / t / 2.;
+    double bandW = fpgaSamplingFreq / t / 2.;
     QString unit(" kHz");
 
-
-    double dT = static_cast<double>(t);
     int srcKerRank = t * s;
     double width = PASSBAND_WIDTH_RATIO / static_cast<double>(srcKerRank);
-    middleBandsEn = (width < .5/dT/2.);
+    middleBandsEn = (width < .5/static_cast<double>(t)/2.);
 
-    for(double i = 0.; i < dT; ++i){
-        if((i+1)*bandW >= 1000.){
+    for(int i = 0.; i < t; ++i){
+        double d_i = static_cast<double>(i);
+        if((d_i + 1.)*bandW >= 1000.){
             bandW /= 1000.;
             unit = " MHz";
         }
-        //QString::asprintf("%+06.2f", value)
-        if(middleBandsEn || i == 0. || i == (dT -1))
-        bandCombo->addItem(QString::number(i * bandW,'g',4) + " - " + QString::number((i+1) * bandW,'g',4) + unit);
+        if(middleBandsEn || i == 0 || i == (t -1))
+        bandCombo->addItem(QString::number(d_i * bandW,'g',4) + " - " + QString::number((d_i+1) * bandW,'g',4) + unit);
     }
 }
 
 void GroupSpecs::bandChanged(int band){
     if(band < 0) return;
-    resetPlot(fpgaSampFreq, t, currentBand());
-    calcSrcKernel();
+    resetPlot(fpgaSamplingFreq, t, currentBand());
+    calculateSrcKernel();
 }
 
 void GroupSpecs::bitstreamLoaded(QMap<QString, int> specs){
@@ -405,23 +381,20 @@ void GroupSpecs::bitstreamLoaded(QMap<QString, int> specs){
 void GroupSpecs::filterReady(bool en){
     isFilterReady = en;
     enableSetButton(isFilterReady && isKernelReady && isSrcKernelReady);
-    //qDebug() << "filterReady" << isFilterReady << isKernelReady << isSrcKernelReady;
 }
 
 void GroupSpecs::kernelReady(bool en){
     isKernelReady = en;
     enableSetButton(isFilterReady && isKernelReady && isSrcKernelReady);
-    //qDebug() << "kernelReady" << isFilterReady << isKernelReady << isSrcKernelReady;
 }
 
 void GroupSpecs::srcKernelReady(bool en){
     isSrcKernelReady = en;
     enableSetButton(isFilterReady && isKernelReady && isSrcKernelReady);
-    //qDebug() << "srcKernelReady" << isFilterReady << isKernelReady << isSrcKernelReady;
 }
 
-void GroupSpecs::setFpgaSampFreq(double freq){
-    fpgaSampFreq = freq;
+void GroupSpecs::setfpgaSamplingFreq(double freq){
+    fpgaSamplingFreq = freq;
 }
 
 bool GroupSpecs::textToDoubles(const std::string& str, std::vector<double>& v){

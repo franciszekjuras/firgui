@@ -13,32 +13,30 @@ class GroupConfig : public QGroupBox
 {
     Q_OBJECT
 public:
-    explicit GroupConfig(QWidget *parent = 0);
+    explicit GroupConfig(QWidget *parent = nullptr);
 
     void init();
 
 private:
-    QComboBox* bitMainCombo;
+    QComboBox* bandwidthCombo;
     QString bitMainStr;
-    QComboBox* bitSpecCombo;
-    double fpgaSampFreq;
+    QComboBox* rankCombo;
+    double fpgaSamplingFreq;
     QMap<QString, QMap<QString,BitstreamSpecs> > bitMap;
     BitstreamSpecs crrBitstream;
 
-    void bitMainComboChanged(QString mainStr);
-    void bitSpecComboChanged(QString specStr);
-    void updateBitSpecCombo(QString mainStr);
+    void bandwidthComboChanged(QString mainStr);
+    void rankComboChanged(QString specStr);
+    void updateRankCombo(QString mainStr);
 
     void onLoadButton();
 
 signals:
     void bitstreamSelected(QMap<QString, int> specs);
-    void fpgaSampFreqChanged(double freq);
+    void fpgaSamplingFreqChanged(double freq);
 
     void enableLoad(bool en);
-    void reqLoad(BitstreamSpecs bitSpecs);
-
-public slots:
+    void reqLoad(BitstreamSpecs bitSpecs);    
 };
 
 //"  [-tm | --time-multiplexing] Time multiplexing rank\n"

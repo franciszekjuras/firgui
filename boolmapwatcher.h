@@ -15,7 +15,7 @@ private:
     void update();
 
 public:
-    explicit BoolMapOr(QObject *parent = 0);
+    explicit BoolMapOr(QObject *parent = nullptr);
 
 signals:
     void valueChanged(bool en);

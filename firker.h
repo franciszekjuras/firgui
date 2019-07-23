@@ -1,5 +1,5 @@
-#ifndef _FIRKER_H_
-#define _FIRKER_H_
+#ifndef FIRKER_H
+#define FIRKER_H
 #include <vector>
 #include <map>
 #include <functional>
@@ -15,7 +15,7 @@ public:
     //bool setFrequency();
     bool setRank(int rank);
     int getRank(); //Warninig: rank doesn't have to match ker.size()
-    bool setSampFreq(double freq);
+    bool setSamplingFreq(double freq);
     double getSampFreq() const;
     std::vector<double> transmission(int div) const;
     std::vector<double> transmission(int div, int beg, int end) const;
@@ -43,7 +43,7 @@ public:
     };
 
     LeastSqFirKer();
-    bool setSpecs(const std::vector<double>& freqs, const std::vector<double>& gains);
+    bool setSpecification(const std::vector<double>& freqs, const std::vector<double>& gains);
     void setWindow(Window wnd);
     bool calc();
 
@@ -60,7 +60,7 @@ class EqRippleFirKer : public FirKer
 {
 public:
     EqRippleFirKer();
-    bool setSpecs(const std::vector<double>& freqs, const std::vector<double>& gains, const std::vector<double>& weights);
+    bool setSpecification(const std::vector<double>& freqs, const std::vector<double>& gains, const std::vector<double>& weights);
     bool calc();
 
 protected:

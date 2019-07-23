@@ -26,7 +26,7 @@ class Animator : public QVariantAnimation {
 
 public:
     explicit Animator(QObject* target, QObject* parent = nullptr);
-    ~Animator();
+    ~Animator() override;
 
     QObject* targetObject() const;
     void setTargetObject(QObject* target);
@@ -51,7 +51,7 @@ class SelectionControl :public QAbstractButton {
 
 public:
     explicit SelectionControl(QWidget* parent = nullptr);
-    ~SelectionControl();
+    ~SelectionControl() override;
 
     Qt::CheckState checkState() const;
 
@@ -72,7 +72,7 @@ public:
     explicit Switch(QWidget* parent = nullptr);
     explicit Switch(const QString& text, QWidget* parent = nullptr);
     Switch(const QString& text, const QBrush&, QWidget* parent = nullptr);
-    ~Switch();
+    ~Switch() override;
 
     QSize sizeHint() const override;
 
