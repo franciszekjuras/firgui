@@ -72,7 +72,9 @@ this->setLayout(idHBox);
 }
 
 void GroupSsh::onDisconnect(){
+    qInfo() << "Disconnecting...";
     ssh.disconnect();
+    qInfo() << "Disconnected.";
     nfyConnected(false);
 }
 
@@ -81,6 +83,7 @@ void GroupSsh::onConnect(){
 
     fcUploaded = false;
     connectButton->setDisabled(true);
+    qInfo() << "Connecting...";
     waitSpin->start();
     QFuture<R> fut = QtConcurrent::run([=](){return this->connectToRP(rpMac);});
     connectWatch.setFuture(fut);
@@ -98,21 +101,21 @@ GroupSsh::R GroupSsh::connectToRP(std::string rpMac){
     ssh.setUser(user);
     ssh.setHost(host);
     if(ssh.getStatus() != Ssh::Status::disconnected){
-        qDebug() << "Last session wasn't closed."; return R::other;
+        qCritical() << "Last session wasn't closed."; return R::other;
     }
     if(ssh.connect(SSH_TIMEOUT) != Ssh::R::ok){
-        qDebug() << "No connection."; return R::connection;
+        qInfo() << "No connection."; return R::connection;
     }
     if(ssh.verify() != Ssh::R::ok){
         ssh.addKnownHost();
         ssh.verify();
     }
     if(ssh.getStatus() == Ssh::Status::unknownserv){
-        qDebug() << "Accepting:" << QString::fromStdString(ssh.getHash());
+        qInfo() << "Accepting:" << QString::fromStdString(ssh.getHash());
         ssh.accept();
     }
     if(ssh.getStatus() != Ssh::Status::verified){
-        qDebug() << "Verification error."; ssh.disconnect(); return R::other;
+        qCritical() << "Verification error."; ssh.disconnect(); return R::other;
     }
     return R::ok;
 }
@@ -121,12 +124,14 @@ void GroupSsh::connectToRPFinished(){
     R status = connectWatch.future().result();
 
     if(status == R::ok){
+        qInfo() << "Connected.";
         std::string pass;
         #ifndef COMD
         pass = "root";
         #else
         pass = QInputDialog::getText(this, tr("Authentication") ,tr("Password"), QLineEdit::Password).toStdString();
         #endif
+        qInfo() << "Authenticating...";
         QFuture<R> fut = QtConcurrent::run([=](){return this->authenticateRP(pass);});
         authWatch.setFuture(fut);
         return;
@@ -136,11 +141,13 @@ void GroupSsh::connectToRPFinished(){
     connectButton->setEnabled(true);
 
     if(status == R::other){
-        QMessageBox::critical(this, tr("Fir Controller - Connection error"), tr("Unexpected error occured while connecting."));
+        qCritical() << "Unexpected error occured while connecting.";
+        QMessageBox::critical(this, tr("Fir Controller"), tr("Unexpected error occured while connecting."));
         return;
     }
     if(status == R::connection){
-        QMessageBox::warning(this, tr("Fir Controller - Connection error"), tr("Connection with Red Pitaya could not be established. Check if:\n- Red Pitaya is powered on,\n- all cables are attached,\n- proper ID was entered."));
+        qInfo() << "Connection with Red Pitaya could not be established.";
+        QMessageBox::warning(this, tr("Fir Controller"), tr("Connection with Red Pitaya could not be established. Check if:\n- Red Pitaya is powered on,\n- all cables are attached,\n- proper ID was entered."));
         return;
     }
 }
@@ -149,9 +156,9 @@ GroupSsh::R GroupSsh::authenticateRP(std::string pass){
     if(ssh.auth(pass) != Ssh::R::ok){
         ssh.disconnect(); return R::auth;
     }
-    qDebug() << "Connection established.";
+    qInfo() << "Authenticated.";
     if(ssh.setupSftp() != Ssh::R::ok){
-        qDebug() << "Sftp initialization error."; ssh.disconnect(); return R::other;
+        qCritical() << "Sftp initialization error."; ssh.disconnect(); return R::other;
     }
     return R::ok;
 }
@@ -162,15 +169,16 @@ void GroupSsh::authenticateRPFinished(){
 
     switch(status){
     case R::ok:
-        qDebug() << "ok";
+        qInfo() << "Authenticated.";
         nfyConnected(true);
         break;
     case R::auth:
-        QMessageBox::critical(this, tr("Fir Controller - Authentication error"), tr("Authentication failed. Maybe someone changed root password on RedPitaya?. If problem persists try flashing fresh system on RedPitaya SD card."));
+        qCritical() << "Authentication failed";
+        QMessageBox::critical(this, tr("Fir Controller"), tr("Authentication failed. Maybe someone changed root password on RedPitaya?. If problem persists try flashing fresh system on RedPitaya SD card."));
         break;
     case R::other:
-        QMessageBox::critical(this, tr("Fir Controller - Authentication error"), tr("Unexpected error occured during authentication."));
-        //sthWrong();
+        qCritical() << "Unexpected error occured during authentication.";
+        QMessageBox::critical(this, tr("Fir Controller"), tr("Unexpected error occured during authentication."));
         break;
     default: ;
     }
@@ -194,14 +202,15 @@ GroupSsh::R GroupSsh::uploadFirCtrl(const BitstreamSpecs& bitSpecs){
     fcFileName.append("_*");
 
     QDir rpDir("data/redpitaya");
-    qDebug() << "redpitaya dir exists:"<< rpDir.exists();
+    if(!rpDir.exists())
+        qCritical() << "\"data/redpitaya\" directory doesn't exist.";
     QFileInfoList fcFiles = rpDir.entryInfoList(QStringList(fcFileName), QDir::Files, QDir::Name);
     if(fcFiles.isEmpty()){
-        qDebug()<< "No matching firctrl found.";
+        qCritical()<< "No matching firctrl found.";
         return R::other;
     }
     QFileInfo fcFile = fcFiles.back();
-    qDebug() << fcFile.filePath();
+    qInfo() << "Sending firctrl from path:" << fcFile.filePath();
 
     Ssh::R r = ssh.sendFileToFile(fcFile.filePath().toStdString(),"/usr/local/bin/firctrl");
     if(r != Ssh::R::ok){
@@ -214,7 +223,7 @@ GroupSsh::R GroupSsh::uploadFirCtrl(const BitstreamSpecs& bitSpecs){
     }
     fcMajVer = mV;
     fcSubVer = subDec;
-    qDebug() << "firctrl successfully sent.";
+    qInfo() << "firctrl successfully sent.";
     return R::ok;
 
 }
@@ -229,17 +238,17 @@ void GroupSsh::onLoad(BitstreamSpecs bitSpecs){
 
     switch(status){
     case R::ok:
-        qDebug() << "ok";
+        qInfo() << "Bitstream successfully loaded";
         nfyBitstreamLoaded(bitSpecs.getSpecs());
         break;
     case R::connection:
-        qDebug() << "Connection lost.";
+        qWarning() << "Connection lost.";
         onDisconnect();
-        QMessageBox::critical(this, tr("Fir Controller - Connection lost."), tr("Connection lost. Try connecting again."));
+        QMessageBox::critical(this, tr("Fir Controller"), tr("Connection lost. Try connecting again."));
         break;
     default:
-        qDebug() << "Unexpected error occured during bitstream loading.";
-        QMessageBox::critical(this, tr("Fir Controller - Unexpected error."), tr("Unexpected error occured when loading bitstream."));
+        qCritical() << "Unexpected error occured during bitstream loading.";
+        QMessageBox::critical(this, tr("Fir Controller"), tr("Unexpected error occured when loading bitstream."));
         break;
     }
 }
@@ -255,8 +264,11 @@ GroupSsh::R GroupSsh::loadBitstream(BitstreamSpecs bitSpecs){
         return upfcstat;
 
     QFileInfo lconfFI("data/redpitaya/lconf");
-    if(!lconfFI.exists() || !lconfFI.isFile())
+    if(!lconfFI.exists() || !lconfFI.isFile()){
+        qCritical() << "lconf not found";
         return R::other;
+    }
+    qInfo() << "Uploading lconf...";
     Ssh::R lcstat = ssh.sendFileToFile(lconfFI.filePath().toStdString(),"/usr/local/bin/lconf");
     if(lcstat != Ssh::R::ok){
         switch (lcstat) {
@@ -266,6 +278,7 @@ GroupSsh::R GroupSsh::loadBitstream(BitstreamSpecs bitSpecs){
             return R::other;
         }
     }
+    qInfo() << "lconf uploaded.";
 
 #endif //COMD
     Ssh::R stat = ssh.execCommand("echo"); //check connection
@@ -277,24 +290,24 @@ GroupSsh::R GroupSsh::loadBitstream(BitstreamSpecs bitSpecs){
     default:
         return R::other;
     }
-    qDebug() << "Uploading bitstream:" << QString::fromStdString(bitPath);
+    qInfo() << "Uploading bitstream:" << QString::fromStdString(bitPath);
     stat = ssh.sendFileToFile(bitPath,"/tmp/bitstream.bin");
     if(stat == Ssh::R::ok){
         //TODO: check sha1sum of uploaded bitstream
 #ifdef COMD
-        stat = ssh.execCommand(".local/bin/lconf /tmp/bitstream.bin && printf \"ok\" || printf \"error\"");
+        stat = ssh.execCommand(".local/bin/lconf /tmp/bitstream.bin && printf \"ok\"");
 #else
-        stat = ssh.execCommand("lconf /tmp/bitstream.bin && printf \"ok\" || printf \"error\"");
+        stat = ssh.execCommand("lconf /tmp/bitstream.bin && printf \"ok\"");
 #endif
 
         if(stat == Ssh::R::ok){
             QString rpOut = QString::fromStdString(ssh.getSshOut());
             QString rpErr = QString::fromStdString(ssh.getSshErr());
-            qDebug() << "o:" << rpOut;
-            qDebug() << "e:" << rpErr;
+            qInfo() << "RP out:" << rpOut;
+            qInfo() << "RP err:" << rpErr;
             if(rpOut != "ok"){
                 QApplication::restoreOverrideCursor();
-                QMessageBox::critical(this, tr("Fir Controller - RedPitaya error."), tr("RedPitaya returned error:\n") + rpErr);
+                qCritical() << "RedPitaya returned error:" << rpErr;
                 return R::other;
             }
             return R::ok;
@@ -311,7 +324,7 @@ void GroupSsh::loadSrcKernel(std::vector<double> crrSrcKer){
 
     Ssh::R stat = ssh.execCommand("echo"); //check connection
     if(stat == Ssh::R::ok){
-        qDebug() << "Uploading src kernel...";
+        qInfo() << "Uploading src kernel...";
         stat = ssh.sendMemToFile(static_cast<void*>(crrSrcKer.data()), crrSrcKer.size()*sizeof(double), "/tmp/srcker.dat");
         //local copy
         std::ofstream ofp("srcker.dat", std::ios::out | std::ios::binary);
@@ -320,18 +333,18 @@ void GroupSsh::loadSrcKernel(std::vector<double> crrSrcKer){
     QApplication::restoreOverrideCursor();
 
     if(stat == Ssh::R::ok){
-        qDebug() << "ok";
+        qInfo() << "SRC kernel uploaded.";
         return;
     }
     if(stat == Ssh::R::connection){
-        qDebug() << "Connection lost.";
-        QMessageBox::critical(this, tr("Fir Controller - Connection lost."), tr("Connection lost. Try connecting again."));
+        qWarning() << "Connection lost.";
+        QMessageBox::warning(this, tr("Fir Controller"), tr("Connection lost. Try connecting again."));
         onDisconnect();
         return;
     }
     //other:
-    QMessageBox::critical(this, tr("Fir Controller - Unexpected error."), tr("Unexpected error occured when loading SRC kernel."));
-    qDebug() << "Unexpected error occured during src kernel loading.";
+    qCritical() << "Unexpected error occured during src kernel loading.";
+    QMessageBox::critical(this, tr("Fir Controller"), tr("Unexpected error occured when loading SRC kernel."));
 }
 
 void GroupSsh::loadKernel(std::vector<double> crrKer){
@@ -344,28 +357,46 @@ void GroupSsh::loadKernel(std::vector<double> crrKer){
         return; //this covers situation when connection brakes during loadSrcKernel
     }           //but groupspecs doesn't know that and calls loadKernel anyway
     if(stat == Ssh::R::ok){
-        qDebug() << "Uploading kernel...";
+        qInfo() << "Uploading kernel...";
         stat = ssh.sendMemToFile(static_cast<void*>(crrKer.data()), crrKer.size()*sizeof(double), "/tmp/firker.dat");
         //local copy
         std::ofstream ofp("firker.dat", std::ios::out | std::ios::binary);
         ofp.write(reinterpret_cast<const char*>(crrKer.data()), crrKer.size() * sizeof(crrKer[0]));ofp.close();
     }
     if(stat == Ssh::R::ok){
-        qDebug() << "ok";
+        qInfo() << "Kernel uploaded.";
+        qInfo() << "Loading coefficients...";
 #ifdef COMD
-        stat = ssh.execCommand(".local/bin/firctrl --load");
+        stat = ssh.execCommand(".local/bin/firctrl --load && printf \"ok\"");
 #else
         stat = ssh.execCommand("firctrl --load");
 #endif
         if(stat == Ssh::R::ok){
-            qDebug() << "o:" << QString::fromStdString(ssh.getSshOut());
-            qDebug() << "e:" << QString::fromStdString(ssh.getSshErr());
+            QString rpOut = QString::fromStdString(ssh.getSshOut());
+            QString rpErr = QString::fromStdString(ssh.getSshErr());
+            qInfo() << "RP out:" << rpOut;
+            qInfo() << "RP err:" << rpErr;
+            if(rpOut == "ok"){
+                qInfo() << "Coefficients loaded.";
+                qInfo() << "Enabling filter...";
 #ifdef COMD
-            stat = ssh.execCommand(".local/bin/firctrl --enable");
+                stat = ssh.execCommand(".local/bin/firctrl --enable && printf \"ok\"");
 #else
-            stat = ssh.execCommand("firctrl --enable");
+                stat = ssh.execCommand("firctrl --enable && printf \"ok\"");
 #endif
-            stat = ssh.execCommand("firctrl --enable");
+                if(stat == Ssh::R::ok){
+                    rpOut = QString::fromStdString(ssh.getSshOut());
+                    rpErr = QString::fromStdString(ssh.getSshErr());
+                    qInfo() << "RP out:" << rpOut;
+                    qInfo() << "RP err:" << rpErr;
+                    if(rpOut == "ok")
+                        qInfo() << "Coefficients loaded.";
+                }
+            }
+            if(rpOut != "ok"){
+                qCritical() << "RedPitaya returned error:" << rpErr;
+                stat = Ssh::R::other;
+            }
         }
     }
     QApplication::restoreOverrideCursor();
@@ -374,13 +405,13 @@ void GroupSsh::loadKernel(std::vector<double> crrKer){
         return;
     }
     if(stat == Ssh::R::connection){
-        qDebug() << "Connection lost.";
-        QMessageBox::critical(this, tr("Fir Controller - Connection lost."), tr("Connection lost. Try connecting again."));
+        qWarning() << "Connection lost.";
+        QMessageBox::warning(this, tr("Fir Controller"), tr("Connection lost. Try connecting again."));
         onDisconnect();
         return;
     }
-    QMessageBox::critical(this, tr("Fir Controller - Unexpected error."), tr("Unexpected error occured when loading filter kernel."));
-    qDebug() << "Unexpected error occured during kernel loading.";
+    QMessageBox::critical(this, tr("Fir Controller"), tr("Unexpected error occured when loading filter kernel."));
+    qCritical() << "Unexpected error occured during kernel loading.";
 }
 
 void GroupSsh::swapConnectButtons(bool connected){

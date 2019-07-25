@@ -28,8 +28,10 @@ void logToFile(QtMsgType type, const QMessageLogContext &context, const QString 
         break;
     case QtFatalMsg:
         logfile << datetime.toStdString() <<  " [Fatal] " << msg.toStdString() << "\n";
+        logfile.flush();
         abort();
   }
+  logfile.flush();
 }
 
 
@@ -38,11 +40,12 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     logfile.open("log.txt", std::ofstream::out);
-    qInstallMessageHandler(logToFile);
+    if (logfile)
+        qInstallMessageHandler(logToFile);
 
     app.setWindowIcon(QIcon(":data/icon.png"));
 
-    qDebug() << "libssh: " << ssh_version(0);
+    qInfo() << "libssh:" << ssh_version(0);
 
     Window window;
     QRect wRect = QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter,window.size(),app.desktop()->availableGeometry());

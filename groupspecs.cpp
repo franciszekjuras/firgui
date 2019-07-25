@@ -191,6 +191,9 @@ void GroupSpecs::calculateKernel(){
 
     if(!textToDoubles(freqsLineEdit->text().toStdString(),freqs) ||
         !textToDoubles(gainsLineEdit->text().toStdString(),gains)){
+        qWarning() << "Incorrect filter specification.\nFreqs:" << freqsLineEdit->text() << "\nGains:" << gainsLineEdit->text();
+        int uc = QMessageBox::warning(this, tr("FIR Controller"),tr("Could not parse filter specification. Try changing commas to dots. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
+        if(uc == 0)showHelp();
         return;
     }
 
@@ -215,13 +218,15 @@ void GroupSpecs::calculateKernel(){
     }
 
     if(!ker.setSpecification(freqs, gains)){
-        int uc = QMessageBox::warning(this, tr("FIR Controller - Incorrect Specification"),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
+        qWarning() << "Incorrect filter specification.\nFreqs:" << freqsLineEdit->text() << "\nGains:" << gainsLineEdit->text();
+        int uc = QMessageBox::warning(this, tr("FIR Controller"),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
         if(uc == 0)showHelp();
         return;
     }
     ker.setWindow(currentWindow);
 
     std::shared_ptr<FirKer> ker_shared = std::make_shared<LeastSqFirKer>(ker);
+    qInfo() << "Starting kernel calculation.\nFreqs:" << freqsLineEdit->text() << "\nGains:" << gainsLineEdit->text();
     QFuture<std::shared_ptr<FirKer>> fut = QtConcurrent::run([=](){ker_shared->calc(); return ker_shared;});
     calculateKernelWatch.setFuture(fut);
 }
@@ -233,10 +238,13 @@ void GroupSpecs::calculateKernelFinished(){
     std::shared_ptr<FirKer> ker = calculateKernelWatch.future().result();
 
     if(!ker->isValid()){
-        int uc = QMessageBox::warning(this, tr("FIR Controller - Incorrect Specification"),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
+        qWarning() << "Kernel calculation failed because of incorrect specification.";
+        int uc = QMessageBox::warning(this, tr("FIR Controller"),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
         if(uc == 0)showHelp();
         return;
     }
+
+    qInfo() << "Filter kernel calculated.";
     crrKer = ker->getKernel();
     emit kernelChanged(ker);
 }
@@ -260,9 +268,8 @@ void GroupSpecs::calculateSrcKernel(){
     double stopBandWeight = 10.;
 
     if((band!=0) && (band != (t-1)) && (width > .5/dT/2.)){
-        qDebug() << "Band" << band << "t" << t;
-        qDebug() << tr("Higher bands are not supported in this configuration");
-        QMessageBox::critical(this, tr("Fir Controller - Unexpected error."), tr("Unexpected error: cannot calculate SRC kernel for this band."));
+        qCritical() << "Higher bands are not supported in this configuration. Band:" << band << " t:" << t;
+        QMessageBox::critical(this, tr("Fir Controller"), tr("Unexpected error: cannot calculate SRC kernel for this band."));
         return;
     }
 
@@ -272,8 +279,11 @@ void GroupSpecs::calculateSrcKernel(){
         freqs.push_back(.5/dT*dband + width); // max frequency
         weights.push_back(stopBandWeight);
     }
-    else if(width > .5/dT) return;
-
+    else if(width > .5/dT) {
+        qCritical() << "SRC kernel rank too low.";
+        QMessageBox::critical(this, tr("Fir Controller"), tr("This configuration is not supported with this SRC kernel specification."));
+        return;
+    }
     gains.push_back(1); gains.push_back(1);
     weights.push_back(1.);
 
@@ -288,11 +298,13 @@ void GroupSpecs::calculateSrcKernel(){
     ker.setRank(srcKerRank);
 
     if(!ker.setSpecification(freqs,gains,weights)){
-        QMessageBox::critical(this, tr("Fir Controller - Unexpected error."), tr("Unexpected error: wrong equiripple filter specification."));
-        qDebug() << "Wrong equiripple filter specification."; return;
+        qCritical() << "Wrong equiripple filter specification.";
+        QMessageBox::critical(this, tr("Fir Controller."), tr("Unexpected error: wrong equiripple filter specification."));
+        return;
     }
 
     std::shared_ptr<FirKer> ker_shared = std::make_shared<EqRippleFirKer>(ker);
+    qInfo() << "Starting SRC kernel calculation.";
     QFuture<std::shared_ptr<FirKer>> fut = QtConcurrent::run([=](){ker_shared->calc(); return ker_shared;});
     calculateSrcKernelWatch.setFuture(fut);
 }
@@ -304,29 +316,37 @@ void GroupSpecs::calculateSrcKernelFinished(){
 
     std::shared_ptr<FirKer> ker = calculateSrcKernelWatch.future().result();
     if(!ker->isValid()){
-        QMessageBox::critical(this, tr("Fir Controller - Unexpected error."), tr("Unexpected error: SRC kernel calculation failed."));
-        qDebug()<<"Src kernel calculation failed.";return;
+        qCritical() << "Src kernel calculation failed.";
+        QMessageBox::critical(this, tr("Fir Controller."), tr("Unexpected error: SRC kernel calculation failed."));
+        return;
     }
 
+    qInfo() << "SRC kernel calculated.";
     crrSrcKer = ker->getKernel();
     //this covers situation when firpm changes kernel size
     while(crrSrcKer.size() < ker->getRank()){
-        qDebug() << "Adding 0 to src kernel.";
+        qInfo() << "Adding 0 to src kernel.";
         crrSrcKer.push_back(0.);
     }
+
     ker->setSamplingFreq(fpgaSamplingFreq);
     emit srcKernelChanged(ker);
 }
 
 void GroupSpecs::setKernels(){
+    qInfo() << "Set clicked.";
     if(!isSrcKernelLoaded)
         reqLoadSrcKernel(crrSrcKer);
+    else
+        qInfo() << "SRC kernel already loaded.";
     isSrcKernelLoaded = true;
     reqLoadKernel(crrKer);
 }
 
 void GroupSpecs::bitstreamChanged(QMap<QString, int> specs){
     filterReady(false);
+
+    qInfo() << "Bitstream changed:" << specs;
 
     bool validT = (specs.contains("tm") && specs["tm"] > 0);
     bool validD = (specs.contains("fb") && specs["fb"] > 0);
@@ -340,7 +360,7 @@ void GroupSpecs::bitstreamChanged(QMap<QString, int> specs){
        bandCombo->clear(); enableCalculateButton(false); resetPlot(fpgaSamplingFreq,1,0);return;
     }
     if(t == tOld && validS && s == sOld && validD && d == dOld)
-        qDebug() << "No changes in bitstream.";
+        qInfo() << "No changes in bitstream.";
     else
         rebuild();
 
@@ -348,6 +368,7 @@ void GroupSpecs::bitstreamChanged(QMap<QString, int> specs){
 }
 
 void GroupSpecs::rebuild(){
+    qInfo() << "Rebuilding band combo.";
     bandCombo->clear();
     double bandW = fpgaSamplingFreq / t / 2.;
     QString unit(" kHz");
@@ -369,11 +390,13 @@ void GroupSpecs::rebuild(){
 
 void GroupSpecs::bandChanged(int band){
     if(band < 0) return;
+    qInfo() << "Band changed to " << band;
     resetPlot(fpgaSamplingFreq, t, currentBand());
     calculateSrcKernel();
 }
 
 void GroupSpecs::bitstreamLoaded(QMap<QString, int> specs){
+    qInfo() << "Bitstream loaded:" << specs;
     bitstreamChanged(specs);
     filterReady(true);
 }

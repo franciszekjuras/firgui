@@ -54,6 +54,7 @@ this->setLayout(mainVBox);
 }
 
 void GroupConfig::onLoadButton(){
+    qInfo() << "Load clicked";
     reqLoad(crrBitstream);
 }
 
@@ -75,6 +76,13 @@ void GroupConfig::init(){
         if(bitSpec.isValid() && bitSpec.getSpecs().contains("tm"))
             bitSpecsV.push_back(bitSpec);
     }
+
+    if(bitSpecsV.empty()){
+        qCritical() << "No valid bitstreams found.";
+        QMessageBox::critical(this, tr("Fir Controller"), tr("No valid bitstreams found. Possible reasons:\n- executable file was moved or distributed without \"data\" folder,\n- application wasn't launched from directory where executable is placed."));
+        return;
+    }
+
 
     auto bitSortF = [](const BitstreamSpecs& a, const BitstreamSpecs& b){
         int atm = a.getSpecs().value("tm",0);
@@ -126,6 +134,7 @@ void GroupConfig::init(){
 
 void GroupConfig::bandwidthComboChanged(QString mainStr){
     assert(bitMap.contains(mainStr));
+    qInfo() << "Bandwidth combo changed to:" << mainStr;
     updateRankCombo(mainStr);
 }
 
@@ -140,6 +149,7 @@ void GroupConfig::updateRankCombo(QString mainStr){
 void GroupConfig::rankComboChanged(QString specStr){
     if(specStr.isEmpty()) return;
     assert(bitMap.value(bitMainStr).contains(specStr));
+    qInfo() << "Rank combo changed to:" << specStr;
     crrBitstream = bitMap[bitMainStr][specStr];
     emit bitstreamSelected(crrBitstream.getSpecs());
 }
