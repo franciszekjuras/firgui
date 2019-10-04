@@ -3,16 +3,17 @@
 ######################################################################
 
 TEMPLATE = app
-TARGET = firgui
+TARGET = "FIR Controller"
 CONFIG += c++14
 
+DEFINES += WORKDIR_STARTUP_CHECK
 #Debugging defines
 linux: DEFINES += COMD
 linux: DEFINES += USERD=\"\\\"franciszek\\\"\"
 
 DEFINES += _USE_MATH_DEFINES
 DEFINES += SSH_TIMEOUT=3L
-QT += widgets core printsupport concurrent
+QT += widgets core printsupport concurrent network
 RESOURCES += \
     data/data.qrc
 
@@ -37,13 +38,15 @@ DEPENDPATH += $$PWD/win32/include
 }
 
 win32{
-VERSION = 1.1.0
-QMAKE_TARGET_PRODUCT = "Fir Controller"
+VERSION = 1.1.0.1
+QMAKE_TARGET_PRODUCT = "FIR Controller"
 QMAKE_TARGET_DESCRIPTION = "Controller for FIR filter based on Red Pitaya board."
 }
 
 # Input
 HEADERS += \
+    boxupdate.h \
+    cautoupdatergithub.h \
     window.h \
     groupssh.h \
     qcustomplot.h \
@@ -58,6 +61,8 @@ HEADERS += \
     switch.h \
     ssh.h
 SOURCES += main.cpp \
+    boxupdate.cpp \
+    cautoupdatergithub.cpp \
     window.cpp \
     groupssh.cpp \
     qcustomplot.cpp \

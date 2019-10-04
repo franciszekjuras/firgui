@@ -79,7 +79,7 @@ void GroupConfig::init(){
 
     if(bitSpecsV.empty()){
         qCritical() << "No valid bitstreams found.";
-        QMessageBox::critical(this, tr("Fir Controller"), tr("No valid bitstreams found. Possible reasons:\n- executable file was moved or distributed without \"data\" folder,\n- application wasn't launched from directory where executable is placed."));
+        QMessageBox::critical(this, tr("FIR Controller"), tr("No valid bitstreams found. Possible reasons:\n- executable file was moved or distributed without \"data\" folder,\n- application wasn't launched from directory where executable is placed."));
         return;
     }
 

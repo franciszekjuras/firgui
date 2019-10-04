@@ -269,7 +269,7 @@ void GroupSpecs::calculateSrcKernel(){
 
     if((band!=0) && (band != (t-1)) && (width > .5/dT/2.)){
         qCritical() << "Higher bands are not supported in this configuration. Band:" << band << " t:" << t;
-        QMessageBox::critical(this, tr("Fir Controller"), tr("Unexpected error: cannot calculate SRC kernel for this band."));
+        QMessageBox::critical(this, tr("FIR Controller"), tr("Unexpected error: cannot calculate SRC kernel for this band."));
         return;
     }
 
@@ -281,7 +281,7 @@ void GroupSpecs::calculateSrcKernel(){
     }
     else if(width > .5/dT) {
         qCritical() << "SRC kernel rank too low.";
-        QMessageBox::critical(this, tr("Fir Controller"), tr("This configuration is not supported with this SRC kernel specification."));
+        QMessageBox::critical(this, tr("FIR Controller"), tr("This configuration is not supported with this SRC kernel specification."));
         return;
     }
     gains.push_back(1); gains.push_back(1);
@@ -299,7 +299,7 @@ void GroupSpecs::calculateSrcKernel(){
 
     if(!ker.setSpecification(freqs,gains,weights)){
         qCritical() << "Wrong equiripple filter specification.";
-        QMessageBox::critical(this, tr("Fir Controller."), tr("Unexpected error: wrong equiripple filter specification."));
+        QMessageBox::critical(this, tr("FIR Controller"), tr("Unexpected error: wrong equiripple filter specification."));
         return;
     }
 
@@ -317,7 +317,7 @@ void GroupSpecs::calculateSrcKernelFinished(){
     std::shared_ptr<FirKer> ker = calculateSrcKernelWatch.future().result();
     if(!ker->isValid()){
         qCritical() << "Src kernel calculation failed.";
-        QMessageBox::critical(this, tr("Fir Controller."), tr("Unexpected error: SRC kernel calculation failed."));
+        QMessageBox::critical(this, tr("FIR Controller"), tr("Unexpected error: SRC kernel calculation failed."));
         return;
     }
 

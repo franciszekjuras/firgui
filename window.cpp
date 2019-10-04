@@ -6,6 +6,7 @@
 #include "groupspecs.h"
 #include "kerplot.h"
 #include "switch.h"
+#include "boxupdate.h"
 
 Window::Window(QWidget *parent)
     : QMainWindow(parent)
@@ -38,6 +39,9 @@ centralWidget->setLayout(mainHBox);
         groupSsh->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Fixed);
 
         lVBox->addItem(new QSpacerItem(0,0,QSizePolicy::Preferred, QSizePolicy::Expanding));
+
+        BoxUpdate* boxUpdate = new BoxUpdate;
+        lVBox->addWidget(boxUpdate);
 
         QWidget* lbotWid = new QWidget;
         lVBox->addWidget(lbotWid);
@@ -139,6 +143,8 @@ centralWidget->setLayout(mainHBox);
     auto sh = this->sizeHint();
     resize(sh.width(), sh.height());
     setWindowTitle(tr("FIR Controller"));
+
+
 
 }
 
