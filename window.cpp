@@ -56,7 +56,7 @@ centralWidget->setLayout(mainHBox);
 
             lbotHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Preferred));
 
-            lbotHBox->addWidget(new QLabel("v1.1.0 rc1"));
+            lbotHBox->addWidget(new QLabel(QString("v") + VERSIONSTRING));
 
 
     QWidget* rWid = new QWidget;

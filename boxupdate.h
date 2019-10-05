@@ -17,6 +17,7 @@ public:
 private:
     QLabel* updateLabel;
     QPushButton* downloadButton;
+    QPushButton* updateFailedMoreButton;
     QLabel* downloadLabel;
     QProgressBar* downloadProgress;
 
@@ -26,6 +27,7 @@ private:
     void onUpdateDownloadFinished();
     void onUpdateError(QString errorMessage);
     void onDownloadUpdate();
+    void onUpdateFailedMore();
     void onArchiveUnpacked(int exitCode, QProcess::ExitStatus exitStatus);
     bool prepareEnvironment();
     bool allowPreReleases;

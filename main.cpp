@@ -74,14 +74,10 @@ int main(int argc, char *argv[])
 #endif
                     return 0;
                 }
-                else{
-                    QMessageBox::critical(nullptr, "FIR Controller", "Update could not be applied.");
-                }
+                else{QMessageBox::critical(nullptr, "FIR Controller", "Update could not be applied.");}
             }
         }
-        else{
-            QMessageBox::critical(nullptr, "FIR Controller", "Update could not be applied.");
-        }
+        else{QMessageBox::critical(nullptr, "FIR Controller", "Update could not be applied.");}
     }
 
     logfile.open("log.txt", std::ofstream::out);

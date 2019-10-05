@@ -16,6 +16,9 @@ BoxUpdate::BoxUpdate(QWidget *parent) : QWidget(parent)
         downloadButton = new QPushButton(tr("Download"));
         updateHBox->addWidget(downloadButton);
 
+        updateFailedMoreButton = new QPushButton(tr("OK"));
+        updateHBox->addWidget(updateFailedMoreButton);
+
         updateHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding,QSizePolicy::Fixed));
 
         downloadLabel = new QLabel();
@@ -31,18 +34,35 @@ BoxUpdate::BoxUpdate(QWidget *parent) : QWidget(parent)
 
         updateLabel->hide();
         downloadButton->hide();
+        updateFailedMoreButton->hide();
         downloadLabel->hide();
         downloadProgress->hide();
 
 //function:
-    allowPreReleases = false;
-    updater = new CAutoUpdaterGithub("https://github.com/franciszekjuras/firgui","1.0.3");
+    allowPreReleases = true;
+    updater = new CAutoUpdaterGithub(GITHUBREPO, VERSIONSTRING);
     connect(updater, &CAutoUpdaterGithub::updateAvailable, this, &BoxUpdate::onUpdateAvailable);
     connect(updater, &CAutoUpdaterGithub::downloadProgress, this, &BoxUpdate::onDownloadProgress);
     connect(updater, &CAutoUpdaterGithub::updateDownloadFinished, this, &BoxUpdate::onUpdateDownloadFinished);
     connect(updater, &CAutoUpdaterGithub::updateError, this, &BoxUpdate::onUpdateError);
     connect(downloadButton, &QPushButton::clicked, this, &BoxUpdate::onDownloadUpdate);
-    QTimer::singleShot(5000, updater, &CAutoUpdaterGithub::checkForUpdates);
+    connect(updateFailedMoreButton, &QPushButton::clicked, this, &BoxUpdate::onUpdateFailedMore);
+
+    QDir cdir; bool lastUpdateFailed = false;
+    if(cdir.exists("updatestatus")){
+        QFile uplog("updatestatus");
+        QString uplogText = uplog.readAll();
+        uplog.close();
+        if(uplogText.left(2).compare("ok", Qt::CaseInsensitive)!=0)
+            lastUpdateFailed = true;
+    }
+    if(lastUpdateFailed){
+        updateLabel->setText("Recent update failed.");
+        updateLabel->show();
+        updateFailedMoreButton->show();
+    }
+    else
+        QTimer::singleShot(5000, updater, &CAutoUpdaterGithub::checkForUpdates);
 }
 
 bool BoxUpdate::prepareEnvironment(){
@@ -194,4 +214,11 @@ void BoxUpdate::onUpdateError(QString errorMessage){
     downloadProgress->hide();
     downloadLabel->hide();
     updateLabel->setText("Update failed.");
+}
+
+void BoxUpdate::onUpdateFailedMore(){
+    QFile::remove("updatestatus");
+    updateLabel->hide();
+    updateFailedMoreButton->hide();
+    QTimer::singleShot(5000, updater, &CAutoUpdaterGithub::checkForUpdates);
 }
