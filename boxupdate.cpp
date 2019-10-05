@@ -39,7 +39,12 @@ BoxUpdate::BoxUpdate(QWidget *parent) : QWidget(parent)
         downloadProgress->hide();
 
 //function:
+#ifdef IS_PRERELEASE
     allowPreReleases = true;
+#else
+    allowPreReleases = false;
+#endif
+
     updater = new CAutoUpdaterGithub(GITHUBREPO, VERSIONSTRING);
     connect(updater, &CAutoUpdaterGithub::updateAvailable, this, &BoxUpdate::onUpdateAvailable);
     connect(updater, &CAutoUpdaterGithub::downloadProgress, this, &BoxUpdate::onDownloadProgress);
@@ -139,7 +144,7 @@ void BoxUpdate::onUpdateAvailable(CAutoUpdaterGithub::ChangeLog changelog){
         qDebug() << it.versionString;
     }
     for(auto it : changelog){
-        if(allowPreReleases || !it.versionString.contains("rc")){
+        if(allowPreReleases || !it.versionString.contains("beta")){
             proposedUpdate = it;
             updateLabel->setText(tr("Update available: v") + it.versionString);
             updateLabel->show();

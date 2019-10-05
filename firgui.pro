@@ -38,7 +38,8 @@ DEPENDPATH += $$PWD/win32/include
 }
 
 DEFINES += GITHUBREPO=\"\\\"https://github.com/franciszekjuras/firgui\\\"\"
-DEFINES += VERSIONSTRING=\"\\\"1.1.9rc1\\\"\"
+DEFINES += VERSIONSTRING=\"\\\"1.1.9-beta.1\\\"\"
+DEFINES += IS_PRERELEASE
 win32{
 VERSION = 1.1.9.1
 QMAKE_TARGET_PRODUCT = "FIR Controller"
