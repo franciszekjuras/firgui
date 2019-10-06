@@ -40,9 +40,9 @@ BoxUpdate::BoxUpdate(QWidget *parent) : QWidget(parent)
 
 //function:
 #ifdef IS_PRERELEASE
-    allowPreReleases = true;
+    updateToPreReleases = true;
 #else
-    allowPreReleases = false;
+    updateToPreReleases = false;
 #endif
 
     updater = new CAutoUpdaterGithub(GITHUBREPO, VERSIONSTRING);
@@ -144,7 +144,7 @@ void BoxUpdate::onUpdateAvailable(CAutoUpdaterGithub::ChangeLog changelog){
         qDebug() << it.versionString;
     }
     for(auto it : changelog){
-        if(allowPreReleases || !it.versionString.contains("beta")){
+        if(updateToPreReleases == it.versionString.contains("beta")){
             proposedUpdate = it;
             updateLabel->setText(tr("Update available: v") + it.versionString);
             updateLabel->show();

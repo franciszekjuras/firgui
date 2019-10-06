@@ -30,7 +30,7 @@ private:
     void onUpdateFailedMore();
     void onArchiveUnpacked(int exitCode, QProcess::ExitStatus exitStatus);
     bool prepareEnvironment();
-    bool allowPreReleases;
+    bool updateToPreReleases;
     CAutoUpdaterGithub::VersionEntry proposedUpdate;
 
 signals:

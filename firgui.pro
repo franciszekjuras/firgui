@@ -38,10 +38,10 @@ DEPENDPATH += $$PWD/win32/include
 }
 
 DEFINES += GITHUBREPO=\"\\\"https://github.com/franciszekjuras/firgui\\\"\"
-DEFINES += VERSIONSTRING=\"\\\"1.1.9-beta.1\\\"\"
+DEFINES += VERSIONSTRING=\"\\\"1.2.0-beta\\\"\"
 DEFINES += IS_PRERELEASE
 win32{
-VERSION = 1.1.9.1
+VERSION = 1.2.0.0
 QMAKE_TARGET_PRODUCT = "FIR Controller"
 QMAKE_TARGET_DESCRIPTION = "Controller for FIR filter based on Red Pitaya board."
 }
