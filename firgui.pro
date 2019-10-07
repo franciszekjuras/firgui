@@ -48,7 +48,7 @@ __TARGET_PRODUCT = "FIR Controller"
 DEFINES += WINDOW_TITLE=\"\\\"$${__TARGET_PRODUCT}\\\"\"
 VERSION = 1.2.1
 win32{
-QMAKE_TARGET_PRODUCT = __TARGET_PRODUCT
+QMAKE_TARGET_PRODUCT = $${__TARGET_PRODUCT}
 QMAKE_TARGET_COMPANY = "Franciszek Juras"
 QMAKE_TARGET_DESCRIPTION = "Controller for FIR filter based on Red Pitaya board."
 }
