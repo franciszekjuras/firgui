@@ -55,7 +55,7 @@ BoxUpdate::BoxUpdate(QWidget *parent) : QWidget(parent)
 
     QDir cdir; bool lastUpdateFailed = false;
     if(cdir.exists("updatestatus")){
-        QFile uplog("updatestatus");
+        QFile uplog("updatestatus"); uplog.open(QIODevice::ReadOnly);
         QString uplogText = uplog.readAll();
         uplog.close();
         if(uplogText.left(2).compare("ok", Qt::CaseInsensitive)!=0)

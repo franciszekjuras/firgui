@@ -140,7 +140,7 @@ void GroupSpecs::handleConnect(bool is){
 }
 
 void GroupSpecs::showHelp(){
-    QMessageBox::information(this, tr("FIR Controller -- Help"), tr("    Filter is described by specifing gains to subsequent frequency ranges in the given band (which is configurable). Outside of this band gain is always zero (nothing is passed).\nCorner frequencies should be given omitting boundary frequencies with gains matching successive ranges.\n\n    For example: with filter band from 0 to 500 kHz, filter passing signal from 0 to 200 kHz, stopping everything from 200 to 400 kHz and passing with amplitude divided by 2 from 400 to 500 kHz, can be set by giving:\n\nFrequencies: 200 400\nGains: 1 0 0.5\n\n    Note however, that overall filtering result is affected by rate conversion transmission (shown on plot) and signal may not be passed on band boundaries.\n\n    For further details read tooltips, which can be displayed by hovering the cursor over an object."),tr("Close"));
+    QMessageBox::information(this, tr(WINDOW_TITLE), tr("    Filter is described by specifing gains to subsequent frequency ranges in the given band (which is configurable). Outside of this band gain is always zero (nothing is passed).\nCorner frequencies should be given omitting boundary frequencies with gains matching successive ranges.\n\n    For example: with filter band from 0 to 500 kHz, filter passing signal from 0 to 200 kHz, stopping everything from 200 to 400 kHz and passing with amplitude divided by 2 from 400 to 500 kHz, can be set by giving:\n\nFrequencies: 200 400\nGains: 1 0 0.5\n\n    Note however, that overall filtering result is affected by rate conversion transmission (shown on plot) and signal may not be passed on band boundaries.\n\n    For further details read tooltips, which can be displayed by hovering the cursor over an object."),tr("Close"));
 }
 
 void GroupSpecs::windowChanged(QString windowStr){
@@ -192,7 +192,7 @@ void GroupSpecs::calculateKernel(){
     if(!textToDoubles(freqsLineEdit->text().toStdString(),freqs) ||
         !textToDoubles(gainsLineEdit->text().toStdString(),gains)){
         qWarning() << "Incorrect filter specification.\nFreqs:" << freqsLineEdit->text() << "\nGains:" << gainsLineEdit->text();
-        int uc = QMessageBox::warning(this, tr("FIR Controller"),tr("Could not parse filter specification. Try changing commas to dots. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
+        int uc = QMessageBox::warning(this, tr(WINDOW_TITLE),tr("Could not parse filter specification. Try changing commas to dots. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
         if(uc == 0)showHelp();
         return;
     }
@@ -219,7 +219,7 @@ void GroupSpecs::calculateKernel(){
 
     if(!ker.setSpecification(freqs, gains)){
         qWarning() << "Incorrect filter specification.\nFreqs:" << freqsLineEdit->text() << "\nGains:" << gainsLineEdit->text();
-        int uc = QMessageBox::warning(this, tr("FIR Controller"),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
+        int uc = QMessageBox::warning(this, tr(WINDOW_TITLE),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
         if(uc == 0)showHelp();
         return;
     }
@@ -239,7 +239,7 @@ void GroupSpecs::calculateKernelFinished(){
 
     if(!ker->isValid()){
         qWarning() << "Kernel calculation failed because of incorrect specification.";
-        int uc = QMessageBox::warning(this, tr("FIR Controller"),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
+        int uc = QMessageBox::warning(this, tr(WINDOW_TITLE),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
         if(uc == 0)showHelp();
         return;
     }
@@ -269,7 +269,7 @@ void GroupSpecs::calculateSrcKernel(){
 
     if((band!=0) && (band != (t-1)) && (width > .5/dT/2.)){
         qCritical() << "Higher bands are not supported in this configuration. Band:" << band << " t:" << t;
-        QMessageBox::critical(this, tr("FIR Controller"), tr("Unexpected error: cannot calculate SRC kernel for this band."));
+        QMessageBox::critical(this, tr(WINDOW_TITLE), tr("Unexpected error: cannot calculate SRC kernel for this band."));
         return;
     }
 
@@ -281,7 +281,7 @@ void GroupSpecs::calculateSrcKernel(){
     }
     else if(width > .5/dT) {
         qCritical() << "SRC kernel rank too low.";
-        QMessageBox::critical(this, tr("FIR Controller"), tr("This configuration is not supported with this SRC kernel specification."));
+        QMessageBox::critical(this, tr(WINDOW_TITLE), tr("This configuration is not supported with this SRC kernel specification."));
         return;
     }
     gains.push_back(1); gains.push_back(1);
@@ -299,7 +299,7 @@ void GroupSpecs::calculateSrcKernel(){
 
     if(!ker.setSpecification(freqs,gains,weights)){
         qCritical() << "Wrong equiripple filter specification.";
-        QMessageBox::critical(this, tr("FIR Controller"), tr("Unexpected error: wrong equiripple filter specification."));
+        QMessageBox::critical(this, tr(WINDOW_TITLE), tr("Unexpected error: wrong equiripple filter specification."));
         return;
     }
 
@@ -317,7 +317,7 @@ void GroupSpecs::calculateSrcKernelFinished(){
     std::shared_ptr<FirKer> ker = calculateSrcKernelWatch.future().result();
     if(!ker->isValid()){
         qCritical() << "Src kernel calculation failed.";
-        QMessageBox::critical(this, tr("FIR Controller"), tr("Unexpected error: SRC kernel calculation failed."));
+        QMessageBox::critical(this, tr(WINDOW_TITLE), tr("Unexpected error: SRC kernel calculation failed."));
         return;
     }
 

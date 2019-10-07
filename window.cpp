@@ -142,7 +142,7 @@ centralWidget->setLayout(mainHBox);
     //:this
     auto sh = this->sizeHint();
     resize(sh.width(), sh.height());
-    setWindowTitle(tr("FIR Controller"));
+    setWindowTitle(tr(WINDOW_TITLE));
 
 
 

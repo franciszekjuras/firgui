@@ -142,12 +142,12 @@ void GroupSsh::connectToRPFinished(){
 
     if(status == R::other){
         qCritical() << "Unexpected error occured while connecting.";
-        QMessageBox::critical(this, tr("FIR Controller"), tr("Unexpected error occured while connecting."));
+        QMessageBox::critical(this, tr(WINDOW_TITLE), tr("Unexpected error occured while connecting."));
         return;
     }
     if(status == R::connection){
         qInfo() << "Connection with Red Pitaya could not be established.";
-        QMessageBox::warning(this, tr("FIR Controller"), tr("Connection with Red Pitaya could not be established. Check if:\n- Red Pitaya is powered on,\n- all cables are attached,\n- proper ID was entered."));
+        QMessageBox::warning(this, tr(WINDOW_TITLE), tr("Connection with Red Pitaya could not be established. Check if:\n- Red Pitaya is powered on,\n- all cables are attached,\n- proper ID was entered."));
         return;
     }
 }
@@ -174,11 +174,11 @@ void GroupSsh::authenticateRPFinished(){
         break;
     case R::auth:
         qCritical() << "Authentication failed";
-        QMessageBox::critical(this, tr("FIR Controller"), tr("Authentication failed. Maybe someone changed root password on RedPitaya?. If problem persists try flashing fresh system on RedPitaya SD card."));
+        QMessageBox::critical(this, tr(WINDOW_TITLE), tr("Authentication failed. Maybe someone changed root password on RedPitaya?. If problem persists try flashing fresh system on RedPitaya SD card."));
         break;
     case R::other:
         qCritical() << "Unexpected error occured during authentication.";
-        QMessageBox::critical(this, tr("FIR Controller"), tr("Unexpected error occured during authentication."));
+        QMessageBox::critical(this, tr(WINDOW_TITLE), tr("Unexpected error occured during authentication."));
         break;
     default: ;
     }
@@ -244,11 +244,11 @@ void GroupSsh::onLoad(BitstreamSpecs bitSpecs){
     case R::connection:
         qWarning() << "Connection lost.";
         onDisconnect();
-        QMessageBox::critical(this, tr("FIR Controller"), tr("Connection lost. Try connecting again."));
+        QMessageBox::critical(this, tr(WINDOW_TITLE), tr("Connection lost. Try connecting again."));
         break;
     default:
         qCritical() << "Unexpected error occured during bitstream loading.";
-        QMessageBox::critical(this, tr("FIR Controller"), tr("Unexpected error occured when loading bitstream."));
+        QMessageBox::critical(this, tr(WINDOW_TITLE), tr("Unexpected error occured when loading bitstream."));
         break;
     }
 }
@@ -338,13 +338,13 @@ void GroupSsh::loadSrcKernel(std::vector<double> crrSrcKer){
     }
     if(stat == Ssh::R::connection){
         qWarning() << "Connection lost.";
-        QMessageBox::warning(this, tr("FIR Controller"), tr("Connection lost. Try connecting again."));
+        QMessageBox::warning(this, tr(WINDOW_TITLE), tr("Connection lost. Try connecting again."));
         onDisconnect();
         return;
     }
     //other:
     qCritical() << "Unexpected error occured during src kernel loading.";
-    QMessageBox::critical(this, tr("FIR Controller"), tr("Unexpected error occured when loading SRC kernel."));
+    QMessageBox::critical(this, tr(WINDOW_TITLE), tr("Unexpected error occured when loading SRC kernel."));
 }
 
 void GroupSsh::loadKernel(std::vector<double> crrKer){
@@ -406,11 +406,11 @@ void GroupSsh::loadKernel(std::vector<double> crrKer){
     }
     if(stat == Ssh::R::connection){
         qWarning() << "Connection lost.";
-        QMessageBox::warning(this, tr("FIR Controller"), tr("Connection lost. Try connecting again."));
+        QMessageBox::warning(this, tr(WINDOW_TITLE), tr("Connection lost. Try connecting again."));
         onDisconnect();
         return;
     }
-    QMessageBox::critical(this, tr("FIR Controller"), tr("Unexpected error occured when loading filter kernel."));
+    QMessageBox::critical(this, tr(WINDOW_TITLE), tr("Unexpected error occured when loading filter kernel."));
     qCritical() << "Unexpected error occured during kernel loading.";
 }
 
