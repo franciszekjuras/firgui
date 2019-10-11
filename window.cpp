@@ -50,7 +50,6 @@ centralWidget->setLayout(mainHBox);
 
             Switch* showTooltipSwitch = new Switch(tr("Show Tooltips"));
             lbotHBox->addWidget(showTooltipSwitch);
-            showTooltipSwitch->animateClick(0);
             showTooltipSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
             showTooltipSwitch->setFocusPolicy(Qt::ClickFocus);
 
@@ -122,8 +121,10 @@ centralWidget->setLayout(mainHBox);
     connect(groupSsh, &GroupSsh::nfyConnected, groupSpecs, &GroupSpecs::handleConnect);
     connect(groupSsh, &GroupSsh::nfyBitstreamLoaded, groupSpecs, &GroupSpecs::bitstreamLoaded);
 
+
     //:showTooltipSwitch
     connect(showTooltipSwitch, &Switch::toggled, this, &Window::setTooltipsVisible);
+    showTooltipSwitch->animateClick(0);
 
     //:plotTypeCombo
     plotTypeCombo->addItem(tr("Amplitude Plot"));
