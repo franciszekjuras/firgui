@@ -102,6 +102,18 @@ bool BoxUpdate::prepareEnvironment(){
         {qCritical() << "Cannot copy updater libraries."; return false;}
     if(!QFile::copy("styles/qwindowsvistastyle.dll", "update/updater/styles/qwindowsvistastyle.dll"))
         {qCritical() << "Cannot copy updater libraries."; return false;}
+    //Visual C++ Runtime
+    if(!QFile::copy(QString("msvcp") + MSVISUALDLLSUFIX + ".dll",
+                    QString("update/updater/msvcp") + MSVISUALDLLSUFIX + ".dll"))
+        {qCritical() << "Cannot copy updater libraries."; return false;}
+    if(!QFile::copy(QString("vcomp") + MSVISUALDLLSUFIX + ".dll",
+                    QString("update/updater/vcomp") + MSVISUALDLLSUFIX + ".dll"))
+        {qCritical() << "Cannot copy updater libraries."; return false;}
+    if(!QFile::copy(QString("vcruntime") + MSVISUALDLLSUFIX + ".dll",
+                    QString("update/updater/vcruntime") + MSVISUALDLLSUFIX + ".dll"))
+        {qCritical() << "Cannot copy updater libraries."; return false;}
+
+    //7-zip executable
     if(!cdir.exists("7za.exe"))
         {qCritical() << "Cannot find 7zip executable."; return false;}
 #else

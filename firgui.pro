@@ -35,18 +35,23 @@ DEFINES += WIN32_LEAN_AND_MEAN
 LIBS += -L$$PWD/win32/lib/ -lssh
 INCLUDEPATH += $$PWD/win32/include
 DEPENDPATH += $$PWD/win32/include
+
+#As of 2019 for Microsoft Visual Studio 2015-2019 runtime libraries sufix is 140.
+#Make sure that you update this sufix appropriately if you use newer compilers
+#Otherwise updater won't work!
+DEFINES += MSVISUALDLLSUFIX=\"\\\"140\\\"\"
 }
 
 DEFINES += GITHUBREPO=\"\\\"https://github.com/franciszekjuras/firgui\\\"\"
-DEFINES += VERSIONSTRING=\"\\\"1.2.1-beta\\\"\"
+DEFINES += VERSIONSTRING=\"\\\"1.2.2-beta\\\"\"
 DEFINES += IS_PRERELEASE
+VERSION = 1.2.2
 contains(DEFINES, IS_PRERELEASE){
 __TARGET_PRODUCT = "FIR Controller (beta)"
 } else {
 __TARGET_PRODUCT = "FIR Controller"
 }
 DEFINES += WINDOW_TITLE=\"\\\"$${__TARGET_PRODUCT}\\\"\"
-VERSION = 1.2.1
 win32{
 QMAKE_TARGET_PRODUCT = $${__TARGET_PRODUCT}
 QMAKE_TARGET_COMPANY = "Franciszek Juras"
