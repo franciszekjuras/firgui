@@ -16,8 +16,11 @@
 class QLineEdit;
 class QComboBox;
 class WaitingSpinnerWidget;
-
+#ifdef _WIN32
+class GroupSpecs : public QWidget
+#else
 class GroupSpecs : public QGroupBox
+#endif
 {
     Q_OBJECT
 public:

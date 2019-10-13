@@ -43,13 +43,19 @@ DEFINES += MSVISUALDLLSUFIX=\"\\\"140\\\"\"
 }
 
 DEFINES += GITHUBREPO=\"\\\"https://github.com/franciszekjuras/firgui\\\"\"
-DEFINES += VERSIONSTRING=\"\\\"1.2.2-beta\\\"\"
+#Version specific setting
+DEFINES += VERSIONSTRING=\"\\\"1.2.3-dev\\\"\"
+DEFINES += IS_DEV
 DEFINES += IS_PRERELEASE
-VERSION = 1.2.2
-contains(DEFINES, IS_PRERELEASE){
-__TARGET_PRODUCT = "FIR Controller (beta)"
+VERSION = 1.2.3
+contains(DEFINES, IS_DEV){
+__TARGET_PRODUCT = "FIR Controller (dev)"
 } else {
-__TARGET_PRODUCT = "FIR Controller"
+    contains(DEFINES, IS_PRERELEASE){
+    __TARGET_PRODUCT = "FIR Controller (beta)"
+    } else{
+    __TARGET_PRODUCT = "FIR Controller"
+    }
 }
 DEFINES += WINDOW_TITLE=\"\\\"$${__TARGET_PRODUCT}\\\"\"
 win32{
@@ -62,6 +68,8 @@ QMAKE_TARGET_DESCRIPTION = "Controller for FIR filter based on Red Pitaya board.
 HEADERS += \
     boxupdate.h \
     cautoupdatergithub.h \
+    clickablelabel.h \
+    delegate.h \
     window.h \
     groupssh.h \
     qcustomplot.h \
@@ -74,10 +82,12 @@ HEADERS += \
     boolmapwatcher.h \
     style.h \
     switch.h \
-    ssh.h
+    ssh.h \
+    xcolor.h
 SOURCES += main.cpp \
     boxupdate.cpp \
     cautoupdatergithub.cpp \
+    clickablelabel.cpp \
     window.cpp \
     groupssh.cpp \
     qcustomplot.cpp \
@@ -94,4 +104,5 @@ SOURCES += main.cpp \
     cheby.cpp \
     eigenvalue.cpp \
     pm.cpp \
-    ssh.cpp
+    ssh.cpp \
+    xcolor.cpp

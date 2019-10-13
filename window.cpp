@@ -7,6 +7,10 @@
 #include "kerplot.h"
 #include "switch.h"
 #include "boxupdate.h"
+#ifdef _WIN32
+#include "delegate.h"
+#endif
+#include "clickablelabel.h"
 
 Window::Window(QWidget *parent)
     : QMainWindow(parent)
@@ -40,8 +44,8 @@ centralWidget->setLayout(mainHBox);
 
         lVBox->addItem(new QSpacerItem(0,0,QSizePolicy::Preferred, QSizePolicy::Expanding));
 
-        BoxUpdate* boxUpdate = new BoxUpdate;
-        lVBox->addWidget(boxUpdate);
+//        BoxUpdate* boxUpdate = new BoxUpdate;
+//        lVBox->addWidget(boxUpdate);
 
         QWidget* lbotWid = new QWidget;
         lVBox->addWidget(lbotWid);
@@ -49,9 +53,29 @@ centralWidget->setLayout(mainHBox);
         lbotWid->setLayout(lbotHBox);
 
             Switch* showTooltipSwitch = new Switch(tr("Show Tooltips"));
-            lbotHBox->addWidget(showTooltipSwitch);
+            //lbotHBox->addWidget(showTooltipSwitch);
             showTooltipSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
             showTooltipSwitch->setFocusPolicy(Qt::ClickFocus);
+
+
+            //lbotHBox->addItem(new QSpacerItem(5,0,QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
+
+            ClickableLabel* decrText = new ClickableLabel();
+            decrText->setText("<p><small>A<sup>―</sup></small></p>");
+            lbotHBox->addWidget(decrText);
+            connect(decrText, &ClickableLabel::clicked, [=](){
+                QFont appFont = QApplication::font();
+                if(appFont.pointSize()>5)
+                    {appFont.setPointSize(appFont.pointSize()-1);}
+                QApplication::setFont(appFont);});
+
+            ClickableLabel* incrText = new ClickableLabel();
+            incrText->setText("<p><big>A<sup>+</sup></big></p>");
+            lbotHBox->addWidget(incrText);
+            connect(incrText, &ClickableLabel::clicked, [=](){
+                QFont appFont = QApplication::font();
+                appFont.setPointSize(appFont.pointSize()+1);
+                QApplication::setFont(appFont);});
 
             lbotHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Preferred));
 
@@ -74,12 +98,12 @@ centralWidget->setLayout(mainHBox);
         plCtrlHBox->setContentsMargins(0,0,0,0);
         //plCtrlHBox --v
 
-            Switch* firTransShowSwitch = new Switch(tr("Filter transmission"),QBrush(QColor(132,186,91)));
+            Switch* firTransShowSwitch = new Switch(tr("Filter transmission"),QBrush(QColor(255, 119, 0)));
             plCtrlHBox->addWidget(firTransShowSwitch);
             firTransShowSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
             firTransShowSwitch->setFocusPolicy(Qt::ClickFocus);
 
-            Switch* srcTransShowSwitch = new Switch(tr("Rate conversion trans."),QBrush(QColor(249, 124, 14)));
+            Switch* srcTransShowSwitch = new Switch(tr("Rate conversion trans."),QBrush(QColor(132,186,91)));
             plCtrlHBox->addWidget(srcTransShowSwitch);
             srcTransShowSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
             srcTransShowSwitch->setFocusPolicy(Qt::ClickFocus);
@@ -91,7 +115,10 @@ centralWidget->setLayout(mainHBox);
 
             plCtrlHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Expanding));
 
-            QComboBox* plotTypeCombo = new QComboBox;
+            QComboBox* plotTypeCombo = new QComboBox;            
+#ifdef _WIN32
+        plotTypeCombo->view()->setItemDelegate(new PopupItemDelegate(plotTypeCombo));
+#endif
             plCtrlHBox->addWidget(plotTypeCombo);
             plotTypeCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 

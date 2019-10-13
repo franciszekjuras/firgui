@@ -152,6 +152,9 @@ Switch::Switch(QWidget* parent) : SelectionControl(parent) {
 
 Switch::Switch(const QString& text, QWidget* parent) : Switch(parent) {
     setText(text);
+    style.thumbOnBrush = QColor(0,120,215);
+    style.trackOnBrush = QColor(0,120,215);
+
 }
 
 Switch::Switch(const QString& text, const QBrush& brush, QWidget* parent) : Switch(text, parent) {
@@ -205,7 +208,7 @@ void Switch::paintEvent(QPaintEvent *) {
         if (text().isEmpty())
             return;
         p.setOpacity(1.0);
-        p.setPen(palette().color(QPalette::Active, QPalette::ButtonText));
+        p.setPen(palette().color(QPalette::ButtonText));
         p.setFont(font());
         p.drawText(_textRect, Qt::AlignLeft | Qt::AlignVCenter | Qt::TextShowMnemonic, text());
     } else {

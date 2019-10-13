@@ -8,6 +8,34 @@
 #include <cassert>
 #include "groupconfig.h"
 #include "bitstreamspecs.h"
+#ifdef _WIN32
+#include "delegate.h"
+#endif
+#include "xcolor.h"
+
+#ifdef _WIN32
+
+GroupConfig::GroupConfig(QWidget *parent) : QWidget(parent)
+{
+//part:layout
+QVBoxLayout* groupVBox = new QVBoxLayout;
+this->setLayout(groupVBox);
+
+QLabel* titleLabel = new QLabel(QString("<big>") + tr("Configuration") + "</big>");
+titleLabel->setContentsMargins(5,0,0,5);
+groupVBox->addWidget(titleLabel);
+QPalette pal;
+pal.setColor(titleLabel->foregroundRole(), XColor::changeHslLigthness(pal.windowText().color(),60));
+titleLabel->setPalette(pal);
+
+QWidget* groupContent = new QWidget;
+groupVBox->addWidget(groupContent);
+
+//setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+QVBoxLayout* mainVBox = new QVBoxLayout;
+mainVBox->setContentsMargins(0,0,0,0);
+groupContent->setLayout(mainVBox);
+#else
 
 GroupConfig::GroupConfig(QWidget *parent) : QGroupBox(tr("Configuration"),parent)
 {
@@ -16,6 +44,7 @@ GroupConfig::GroupConfig(QWidget *parent) : QGroupBox(tr("Configuration"),parent
 setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 QVBoxLayout* mainVBox = new QVBoxLayout;
 this->setLayout(mainVBox);
+#endif
 //mainVBox --v
 
     QFormLayout* bitstreamForm = new QFormLayout;
@@ -23,10 +52,16 @@ this->setLayout(mainVBox);
     //bitstreamForm --v
 
         bandwidthCombo = new QComboBox;
+#ifdef _WIN32
+        bandwidthCombo->view()->setItemDelegate(new PopupItemDelegate(bandwidthCombo));
+#endif
         bitstreamForm->addRow(tr("Working band width"), bandwidthCombo);
         bandwidthCombo->setToolTip("Roll-off decreases qudratically with working band width.");
 
         rankCombo = new QComboBox;
+#ifdef _WIN32
+        rankCombo->view()->setItemDelegate(new PopupItemDelegate(rankCombo));
+#endif
         QString rankComboName = tr("Filter Rank") + " | " + tr("SRC blocks");
         bitstreamForm->addRow(rankComboName, rankCombo);
         rankCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);

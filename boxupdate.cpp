@@ -31,7 +31,7 @@ BoxUpdate::BoxUpdate(QWidget *parent) : QWidget(parent)
 
         this->setFixedHeight(this->sizeHint().height());
 
-
+        this->hide();
         updateLabel->hide();
         downloadButton->hide();
         updateFailedMoreButton->hide();
@@ -62,6 +62,7 @@ BoxUpdate::BoxUpdate(QWidget *parent) : QWidget(parent)
             lastUpdateFailed = true;
     }
     if(lastUpdateFailed){
+        this->show();
         updateLabel->setText("Recent update failed.");
         updateLabel->show();
         updateFailedMoreButton->show();
@@ -157,6 +158,7 @@ void BoxUpdate::onUpdateAvailable(CAutoUpdaterGithub::ChangeLog changelog){
     }
     for(auto it : changelog){
         if(updateToPreReleases == it.versionString.contains("beta")){
+            this->show();
             proposedUpdate = it;
             updateLabel->setText(tr("Update available: v") + it.versionString);
             updateLabel->show();

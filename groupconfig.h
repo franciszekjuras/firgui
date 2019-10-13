@@ -8,8 +8,11 @@
 #include "bitstreamspecs.h"
 
 class QComboBox;
-
+#ifdef WIN32
+class GroupConfig : public QWidget
+#else
 class GroupConfig : public QGroupBox
+#endif
 {
     Q_OBJECT
 public:

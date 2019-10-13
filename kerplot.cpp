@@ -23,12 +23,12 @@ KerPlot::KerPlot(QWidget* parent):
     waitSpin->setRoundness(70.0);
     waitSpin->setMinimumTrailOpacity(50.0);
     waitSpin->setTrailFadePercentage(70.0);
-    waitSpin->setNumberOfLines(10);
+    waitSpin->setNumberOfLines(24);
     waitSpin->setLineLength(6 * sizeMult);
     waitSpin->setLineWidth(3 * sizeMult);
     waitSpin->setInnerRadius(5 * sizeMult);
     waitSpin->setRevolutionsPerSecond(2);
-    waitSpin->setColor(QColor(0, 150, 136));
+    waitSpin->setColor(QApplication::palette().highlight().color());
 
     connect(&spinWatch, &BoolMapOr::valueChanged, [=](bool v){if(v)this->waitSpin->start(); else this->waitSpin->stop();});
 
@@ -47,11 +47,11 @@ KerPlot::KerPlot(QWidget* parent):
 
 
     this->addGraph();
-    auto pen = QPen(QColor(249, 124, 14));
+    auto pen = QPen(QColor(132,186,91));
     pen.setWidth(1);
     this->graph(0)->setPen(pen);
     this->addGraph();    
-    pen = QPen(QColor(132,186,91));
+    pen = QPen(QColor(255, 119, 0));
     pen.setWidth(1);
     this->graph(1)->setPen(pen);
     this->addGraph();
@@ -87,16 +87,9 @@ KerPlot::KerPlot(QWidget* parent):
     this->xAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
     this->yAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
 
-    QFont lbFont = this->font();
-    if(lbFont.pointSize()>0){
-        lbFont.setPointSize(lbFont.pointSize()+1);
-        this->xAxis->setLabelFont(lbFont);
-        this->yAxis->setLabelFont(lbFont);
-    }
-
     this->xAxis->setLabelColor(Qt::white);
     this->yAxis->setLabelColor(Qt::white);
-    this->setBackground(QColor(35, 45, 55));
+    this->setBackground(QColor(0, 43, 54));
 }
 
 void KerPlot::setKernel(std::shared_ptr<const FirKer> kernel){

@@ -17,13 +17,18 @@
 
 class IMLineEdit : public QLineEdit{
     Q_OBJECT
-private:
-    void focusInEvent(QFocusEvent *e){ QLineEdit::focusInEvent(e);
-    QTimer::singleShot(0, this, [=](){setCursorPosition(0);} ); }
+public:
+    IMLineEdit(QWidget* parent = nullptr): QLineEdit(parent) {
+        connect(this, &QLineEdit::cursorPositionChanged, [=](int oldP, int newP){if(newP > text().length()){setCursorPosition(text().length());}});
+    }
 };
 
 
+#ifdef _WIN32
+class GroupSsh : public QWidget
+#else
 class GroupSsh : public QGroupBox
+#endif
 {
     Q_OBJECT
 

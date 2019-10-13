@@ -12,8 +12,32 @@
 #include <QMessageBox>
 #include "groupssh.h"
 #include "switch.h"
+#include "xcolor.h"
 
+#ifdef _WIN32
+GroupSsh::GroupSsh(QWidget *parent) :QWidget(parent)
+{
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
+//part:layout
+
+QVBoxLayout* groupVBox = new QVBoxLayout;
+this->setLayout(groupVBox);
+
+QLabel* titleLabel = new QLabel(QString("<big>") + tr("Connection") + "</big>");
+titleLabel->setContentsMargins(5,0,0,5);
+groupVBox->addWidget(titleLabel);
+QPalette pal;
+pal.setColor(titleLabel->foregroundRole(), XColor::changeHslLigthness(pal.windowText().color(),60));
+titleLabel->setPalette(pal);
+
+QWidget* groupContent = new QWidget;
+groupVBox->addWidget(groupContent);
+
+QHBoxLayout* idHBox = new QHBoxLayout;
+idHBox->setContentsMargins(0,0,0,0);
+groupContent->setLayout(idHBox);
+#else
 GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("Connection"),parent)
 {
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
@@ -22,6 +46,7 @@ GroupSsh::GroupSsh(QWidget *parent) :QGroupBox(tr("Connection"),parent)
 
 QHBoxLayout* idHBox = new QHBoxLayout;
 this->setLayout(idHBox);
+#endif
 //idHBox --v
 
     QLabel* idLabel = new QLabel(tr("ID"));
@@ -32,7 +57,7 @@ this->setLayout(idHBox);
     idHBox->addWidget(idLineEdit);
     idLineEdit->setToolTip(tr("Last 6 symbols of Red Pitaya MAC adrress (see WLAN connector)"));
     idLineEdit->setInputMask("HHHHHH");
-    idLineEdit->setFixedWidth(this->fontMetrics().width("HHHHHH") + 10);
+    idLineEdit->setFixedWidth(this->fontMetrics().horizontalAdvance("HHHHHH") + 10);
 
     connectButton = new QPushButton(tr("Connect"));
     idHBox->addWidget(connectButton);
@@ -46,8 +71,9 @@ this->setLayout(idHBox);
     waitSpin = new WaitingSpinnerWidget(nullptr, false, false);
     idHBox->addWidget(waitSpin);
     waitSpin->setRoundness(70.0);   waitSpin->setMinimumTrailOpacity(50.0); waitSpin->setTrailFadePercentage(70.0);
-    waitSpin->setNumberOfLines(10); waitSpin->setLineLength(6);             waitSpin->setLineWidth(3);
-    waitSpin->setInnerRadius(5);    waitSpin->setRevolutionsPerSecond(2);   waitSpin->setColor(QColor(0, 150, 136));
+    waitSpin->setNumberOfLines(24); waitSpin->setLineLength(6);             waitSpin->setLineWidth(3);
+    waitSpin->setInnerRadius(5);    waitSpin->setRevolutionsPerSecond(2);
+    waitSpin->setColor(QApplication::palette().highlight().color());
 
     idHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding,QSizePolicy::Fixed));
 

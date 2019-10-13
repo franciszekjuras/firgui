@@ -13,10 +13,37 @@
 #include "groupspecs.h"
 #include "firker.h"
 #include "waitingspinnerwidget.h"
+#ifdef _WIN32
+#include "delegate.h"
+#endif
+#include "clickablelabel.h"
+#include "xcolor.h"
 
 #define PASSBAND_WIDTH_RATIO 4.11 // magic numbers for .1% rippling in passband
                                   // and -80 dB (.01%) attenuation in stopband
+#ifdef _WIN32
+GroupSpecs::GroupSpecs(QWidget *parent) :QWidget(parent)
+{
+//part:layout
 
+QVBoxLayout* groupVBox = new QVBoxLayout;
+this->setLayout(groupVBox);
+
+QLabel* titleLabel = new QLabel(QString("<big>") + tr("Filter specification") + "</big>");
+titleLabel->setContentsMargins(5,0,0,5);
+groupVBox->addWidget(titleLabel);
+QPalette pal;
+pal.setColor(titleLabel->foregroundRole(), XColor::changeHslLigthness(pal.windowText().color(),60));
+titleLabel->setPalette(pal);
+
+QWidget* groupContent = new QWidget;
+groupVBox->addWidget(groupContent);
+
+//setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+QVBoxLayout* mainVBox = new QVBoxLayout;
+mainVBox->setContentsMargins(0,0,0,0);
+groupContent->setLayout(mainVBox);
+#else
 GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),parent)
 {
 //part:layout
@@ -24,6 +51,7 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QGroupBox(tr("Filter specification"),pa
 setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 QVBoxLayout* mainVBox = new QVBoxLayout;
 this->setLayout(mainVBox);
+#endif
 //mainVBox --v
 
     QGridLayout* specificationGrid = new QGridLayout;
@@ -36,6 +64,9 @@ this->setLayout(mainVBox);
         freqsLineEdit->setToolTip(tr("Space separated corner frequencies (in band range)."));
 
         QComboBox* unitCombo = new QComboBox;
+#ifdef _WIN32
+        unitCombo->view()->setItemDelegate(new PopupItemDelegate(unitCombo));
+#endif
         specificationGrid->addWidget(unitCombo, 0, 2);
         unitCombo->setFocusPolicy(Qt::ClickFocus);
         unitCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -46,11 +77,17 @@ this->setLayout(mainVBox);
         gainsLineEdit->setToolTip(tr("Space separated gains (1 for passband, 0 for stopband)."));
 
         QComboBox* windowCombo = new QComboBox;
+#ifdef _WIN32
+        windowCombo->view()->setItemDelegate(new PopupItemDelegate(windowCombo));
+#endif
         specificationGrid->addWidget(new QLabel(tr("Window")),2,0);
         specificationGrid->addWidget(windowCombo, 2, 1);
         windowCombo->setToolTip("Different windows give various roll-off/rippling tradeoffs.");
 
         bandCombo = new QComboBox;
+#ifdef _WIN32
+        bandCombo->view()->setItemDelegate(new PopupItemDelegate(bandCombo));
+#endif
         specificationGrid->addWidget(new QLabel(tr("Working Band")),3,0);
         specificationGrid->addWidget(bandCombo, 3, 1);
 
@@ -59,19 +96,17 @@ this->setLayout(mainVBox);
     mainVBox->addLayout(buttonsHBox);
     //buttonsHBox --v
 
-        QPushButton* helpButton = new QPushButton(tr("Help"));
-        buttonsHBox->addWidget(helpButton);
-        helpButton->setFocusPolicy(Qt::ClickFocus);
-        QFontMetrics fm = helpButton->fontMetrics();
-        helpButton->setMaximumWidth(fm.width(tr("Help"))+20);
+        ClickableLabel* helpClickLabel = new ClickableLabel(tr("Help"));
+        buttonsHBox->addWidget(helpClickLabel);
 
         buttonsHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Fixed));
 
         waitSpin = new WaitingSpinnerWidget(nullptr, false, false);
         buttonsHBox->addWidget(waitSpin);
         waitSpin->setRoundness(70.0);   waitSpin->setMinimumTrailOpacity(50.0); waitSpin->setTrailFadePercentage(70.0);
-        waitSpin->setNumberOfLines(10); waitSpin->setLineLength(6);             waitSpin->setLineWidth(3);
-        waitSpin->setInnerRadius(5);    waitSpin->setRevolutionsPerSecond(2);   waitSpin->setColor(QColor(0, 150, 136));
+        waitSpin->setNumberOfLines(24); waitSpin->setLineLength(6);             waitSpin->setLineWidth(3);
+        waitSpin->setInnerRadius(5);    waitSpin->setRevolutionsPerSecond(2);
+        waitSpin->setColor(QApplication::palette().highlight().color());
 
         QPushButton* calculateButton = new QPushButton(tr("Calculate"));
         buttonsHBox->addWidget(calculateButton);
@@ -93,7 +128,20 @@ this->setLayout(mainVBox);
     //:freqsLineEdit|:gainsLineEdit
     connect(freqsLineEdit, &QLineEdit::returnPressed, gainsLineEdit, static_cast<void (QLineEdit::*)()>(&QLineEdit::setFocus));
     connect(gainsLineEdit, &QLineEdit::returnPressed, calculateButton, &QPushButton::click);
-
+    connect(freqsLineEdit, &QLineEdit::textChanged, [=](QString text){ QString oldText = text; text.replace(',','.');
+        if(text!=oldText){
+            int cp = freqsLineEdit->cursorPosition();
+            freqsLineEdit->setText(text);
+            freqsLineEdit->setCursorPosition(cp);
+        }
+    });
+    connect(gainsLineEdit, &QLineEdit::textChanged, [=](QString text){ QString oldText = text; text.replace(',','.');
+        if(text!=oldText){
+            int cp = gainsLineEdit->cursorPosition();
+            gainsLineEdit->setText(text);
+            gainsLineEdit->setCursorPosition(cp);
+        }
+    });
     //:unitCombo
     connect(unitCombo, &QComboBox::currentTextChanged, this, &GroupSpecs::unitChanged);
     unitCombo->addItem("kHz"); unitCombo->addItem("MHz");
@@ -108,8 +156,8 @@ this->setLayout(mainVBox);
     //:bandCombo
     connect(bandCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GroupSpecs::bandChanged);
 
-    //:helpButton|:calculateButton|:setButton
-    connect(helpButton, &QPushButton::clicked, this, &GroupSpecs::showHelp);
+    //:helpClickLabel|:calculateButton|:setButton
+    connect(helpClickLabel, &ClickableLabel::clicked, this, &GroupSpecs::showHelp);
     connect(calculateButton, &QPushButton::clicked, this, &GroupSpecs::calculateKernel);
     connect(setButton, &QPushButton::clicked, this, &GroupSpecs::setKernels);
     enableCalculateButton(false); enableSetButton(false);
