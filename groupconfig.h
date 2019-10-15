@@ -34,12 +34,15 @@ private:
 
     void onLoadButton();
 
+    bool eventFilter(QObject* obj, QEvent* event);
+
 signals:
     void bitstreamSelected(QMap<QString, int> specs);
     void fpgaSamplingFreqChanged(double freq);
 
     void enableLoad(bool en);
-    void reqLoad(BitstreamSpecs bitSpecs);    
+    void reqLoad(BitstreamSpecs bitSpecs);
+    void updatePalette();
 };
 
 //"  [-tm | --time-multiplexing] Time multiplexing rank\n"

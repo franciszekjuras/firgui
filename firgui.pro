@@ -43,21 +43,28 @@ DEFINES += MSVISUALDLLSUFIX=\"\\\"140\\\"\"
 }
 
 DEFINES += GITHUBREPO=\"\\\"https://github.com/franciszekjuras/firgui\\\"\"
-#Version specific setting
-DEFINES += VERSIONSTRING=\"\\\"1.2.3-dev\\\"\"
-DEFINES += IS_DEV
+#Make sure to update!!!
+#DEFINES += IS_DEV
 DEFINES += IS_PRERELEASE
-VERSION = 1.2.3
+VERSION = 1.3.1
+#End of updates
+
+DEFINES += VERSIONSTRING=\"\\\"$${VERSION}\\\"\"
 contains(DEFINES, IS_DEV){
 __TARGET_PRODUCT = "FIR Controller (dev)"
+DEFINES += VERSIONTYPE=\"\\\"-dev\\\"\"
 } else {
     contains(DEFINES, IS_PRERELEASE){
     __TARGET_PRODUCT = "FIR Controller (beta)"
+    DEFINES += VERSIONTYPE=\"\\\"-beta\\\"\"
     } else{
     __TARGET_PRODUCT = "FIR Controller"
+    DEFINES += VERSIONTYPE=\"\\\"\\\"\"
     }
 }
 DEFINES += WINDOW_TITLE=\"\\\"$${__TARGET_PRODUCT}\\\"\"
+DEFINES += SETTINGSKEY=\"\\\"FIRController\\\"\"
+
 win32{
 QMAKE_TARGET_PRODUCT = $${__TARGET_PRODUCT}
 QMAKE_TARGET_COMPANY = "Franciszek Juras"

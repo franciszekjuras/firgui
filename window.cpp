@@ -11,10 +11,12 @@
 #include "delegate.h"
 #endif
 #include "clickablelabel.h"
+#include "xcolor.h"
 
-Window::Window(QWidget *parent)
+Window::Window(bool darkTheme, QWidget *parent)
     : QMainWindow(parent)
 {
+    isDarkTheme = darkTheme;
 //part:layout
 
 QWidget *centralWidget = new QWidget();
@@ -44,8 +46,8 @@ centralWidget->setLayout(mainHBox);
 
         lVBox->addItem(new QSpacerItem(0,0,QSizePolicy::Preferred, QSizePolicy::Expanding));
 
-//        BoxUpdate* boxUpdate = new BoxUpdate;
-//        lVBox->addWidget(boxUpdate);
+        BoxUpdate* boxUpdate = new BoxUpdate;
+        lVBox->addWidget(boxUpdate);
 
         QWidget* lbotWid = new QWidget;
         lVBox->addWidget(lbotWid);
@@ -77,9 +79,16 @@ centralWidget->setLayout(mainHBox);
                 appFont.setPointSize(appFont.pointSize()+1);
                 QApplication::setFont(appFont);});
 
-            lbotHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Preferred));
+#ifdef _WIN32
+            Switch* themeSwitch = new Switch(tr("Dark theme"));
+            lbotHBox->addWidget(themeSwitch);
+            themeSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+            themeSwitch->setFocusPolicy(Qt::ClickFocus);
+#endif
 
-            lbotHBox->addWidget(new QLabel(QString("v") + VERSIONSTRING));
+            lbotHBox->addItem(new QSpacerItem(15,0,QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
+
+            lbotHBox->addWidget(new QLabel(QString("v") + VERSIONSTRING + VERSIONTYPE));
 
 
     QWidget* rWid = new QWidget;
@@ -117,7 +126,7 @@ centralWidget->setLayout(mainHBox);
 
             QComboBox* plotTypeCombo = new QComboBox;            
 #ifdef _WIN32
-        plotTypeCombo->view()->setItemDelegate(new PopupItemDelegate(plotTypeCombo));
+            plotTypeCombo->view()->setItemDelegate(new PopupItemDelegate(plotTypeCombo));
 #endif
             plCtrlHBox->addWidget(plotTypeCombo);
             plotTypeCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -125,6 +134,7 @@ centralWidget->setLayout(mainHBox);
     KerPlot* kerPlot = new KerPlot;
     rVBox->addWidget(kerPlot);
     kerPlot->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
+
 
 //part:funtion
 
@@ -153,6 +163,13 @@ centralWidget->setLayout(mainHBox);
     connect(showTooltipSwitch, &Switch::toggled, this, &Window::setTooltipsVisible);
     showTooltipSwitch->animateClick(0);
 
+#ifdef _WIN32
+    //:themeSwitch
+    connect(themeSwitch, &Switch::toggled, this, &Window::setDarkTheme);
+    if(isDarkTheme)
+        themeSwitch->animateClick();
+#endif //_WIN32
+
     //:plotTypeCombo
     plotTypeCombo->addItem(tr("Amplitude Plot"));
     plotTypeCombo->addItem(tr("Bode Plot"));
@@ -172,8 +189,46 @@ centralWidget->setLayout(mainHBox);
     resize(sh.width(), sh.height());
     setWindowTitle(tr(WINDOW_TITLE));
 
+    groupSpecs->setFocus();
 
+}
 
+void Window::setDarkTheme(bool darkTheme){
+    if(isDarkTheme == darkTheme)
+        return;
+    isDarkTheme = darkTheme;
+    QPalette palette;
+    QPalette dialPal = qApp->palette("QDialog");
+    if(darkTheme){
+        palette.setColor(QPalette::Window, XColor::base03);
+        palette.setColor(QPalette::WindowText, XColor::base2);
+        palette.setColor(QPalette::Text, XColor::base02);
+        palette.setColor(QPalette::ButtonText, XColor::base02);
+
+        palette.setColor(QPalette::Inactive, QPalette::WindowText, XColor::base1);
+        palette.setColor(QPalette::Disabled,QPalette::ButtonText, XColor::base01);
+
+        QSettings appSet;
+        appSet.setValue("view/darkTheme",true);
+    }
+    else{ //light theme
+
+        QColor backColor = XColor::base3;
+        palette.setColor(QPalette::Window, backColor);
+        QColor forgrColor = XColor::base02;
+        palette.setColor(QPalette::WindowText, forgrColor);
+        palette.setColor(QPalette::Text, forgrColor);
+        palette.setColor(QPalette::ButtonText, forgrColor);
+
+        palette.setColor(QPalette::Inactive, QPalette::WindowText, XColor::base01);
+        palette.setColor(QPalette::Disabled,QPalette::ButtonText, XColor::base1);
+
+        QSettings appSet;
+        appSet.setValue("view/darkTheme", false);
+    } //light theme end
+
+    qApp->setPalette(palette);
+    //qApp->setPalette(dialPal, "QDialog");
 }
 
 void Window::setTooltipsVisible(bool v){

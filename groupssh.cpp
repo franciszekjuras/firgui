@@ -28,8 +28,13 @@ QLabel* titleLabel = new QLabel(QString("<big>") + tr("Connection") + "</big>");
 titleLabel->setContentsMargins(5,0,0,5);
 groupVBox->addWidget(titleLabel);
 QPalette pal;
-pal.setColor(titleLabel->foregroundRole(), XColor::changeHslLigthness(pal.windowText().color(),60));
+pal.setColor(titleLabel->foregroundRole(),pal.color(QPalette::Inactive, QPalette::WindowText));
 titleLabel->setPalette(pal);
+connect(this, &GroupSsh::updatePalette, [=](){QPalette pal;
+    pal.setColor(titleLabel->foregroundRole(),pal.color(QPalette::Inactive, QPalette::WindowText));
+    titleLabel->setPalette(pal);});
+qApp->installEventFilter(this);
+//neccessary to keep up with palette changes
 
 QWidget* groupContent = new QWidget;
 groupVBox->addWidget(groupContent);
@@ -449,4 +454,12 @@ void GroupSsh::swapConnectButtons(bool connected){
         disconnectButton->setVisible(false);
         connectButton->setVisible(true);
     }
+}
+
+bool GroupSsh::eventFilter(QObject* obj, QEvent* event){
+    if (event->type() == QEvent::PaletteChange && obj == this)
+        updatePalette();
+
+
+    return QWidget::eventFilter(obj, event);
 }

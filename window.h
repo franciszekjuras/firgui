@@ -10,9 +10,12 @@ class Window : public QMainWindow
     Q_OBJECT
 
 public:
-    Window(QWidget *parent = nullptr);
+    Window(bool darkTheme = false, QWidget *parent = nullptr);
+
+    void setDarkTheme(bool darkTheme);
 
 private:
+    bool isDarkTheme;
     void setTooltipsVisible(bool v);
     bool eventFilter(QObject* obj, QEvent* event);
 };

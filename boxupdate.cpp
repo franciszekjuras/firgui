@@ -13,13 +13,14 @@ BoxUpdate::BoxUpdate(QWidget *parent) : QWidget(parent)
         updateLabel = new QLabel;
         updateHBox->addWidget(updateLabel);
 
+        updateHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding,QSizePolicy::Fixed));
+
         downloadButton = new QPushButton(tr("Download"));
         updateHBox->addWidget(downloadButton);
 
         updateFailedMoreButton = new QPushButton(tr("OK"));
         updateHBox->addWidget(updateFailedMoreButton);
 
-        updateHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding,QSizePolicy::Fixed));
 
         downloadLabel = new QLabel();
         downloadLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -45,7 +46,7 @@ BoxUpdate::BoxUpdate(QWidget *parent) : QWidget(parent)
     updateToPreReleases = false;
 #endif
 
-    updater = new CAutoUpdaterGithub(GITHUBREPO, VERSIONSTRING);
+    updater = new CAutoUpdaterGithub(GITHUBREPO, QString(VERSIONSTRING) + VERSIONTYPE);
     connect(updater, &CAutoUpdaterGithub::updateAvailable, this, &BoxUpdate::onUpdateAvailable);
     connect(updater, &CAutoUpdaterGithub::downloadProgress, this, &BoxUpdate::onDownloadProgress);
     connect(updater, &CAutoUpdaterGithub::updateDownloadFinished, this, &BoxUpdate::onUpdateDownloadFinished);

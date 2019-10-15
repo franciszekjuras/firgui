@@ -17,6 +17,7 @@
 
 GroupConfig::GroupConfig(QWidget *parent) : QWidget(parent)
 {
+
 //part:layout
 QVBoxLayout* groupVBox = new QVBoxLayout;
 this->setLayout(groupVBox);
@@ -25,13 +26,17 @@ QLabel* titleLabel = new QLabel(QString("<big>") + tr("Configuration") + "</big>
 titleLabel->setContentsMargins(5,0,0,5);
 groupVBox->addWidget(titleLabel);
 QPalette pal;
-pal.setColor(titleLabel->foregroundRole(), XColor::changeHslLigthness(pal.windowText().color(),60));
+pal.setColor(titleLabel->foregroundRole(),pal.color(QPalette::Inactive, QPalette::WindowText));
 titleLabel->setPalette(pal);
+connect(this, &GroupConfig::updatePalette, [=](){QPalette pal;
+    pal.setColor(titleLabel->foregroundRole(),pal.color(QPalette::Inactive, QPalette::WindowText));
+    titleLabel->setPalette(pal);});
+qApp->installEventFilter(this);
+//neccessary to keep up with palette changes
 
 QWidget* groupContent = new QWidget;
 groupVBox->addWidget(groupContent);
 
-//setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 QVBoxLayout* mainVBox = new QVBoxLayout;
 mainVBox->setContentsMargins(0,0,0,0);
 groupContent->setLayout(mainVBox);
@@ -56,6 +61,8 @@ this->setLayout(mainVBox);
         bandwidthCombo->view()->setItemDelegate(new PopupItemDelegate(bandwidthCombo));
 #endif
         bitstreamForm->addRow(tr("Working band width"), bandwidthCombo);
+        bandwidthCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+        bandwidthCombo->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
         bandwidthCombo->setToolTip("Roll-off decreases qudratically with working band width.");
 
         rankCombo = new QComboBox;
@@ -65,6 +72,7 @@ this->setLayout(mainVBox);
         QString rankComboName = tr("Filter Rank") + " | " + tr("SRC blocks");
         bitstreamForm->addRow(rankComboName, rankCombo);
         rankCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+        rankCombo->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
         rankCombo->setToolTip(tr("Higher number of SRC blocks gives sharper rate conversion transmission on cost of reduced filter rank."));
 
     QHBoxLayout* buttonHBox = new QHBoxLayout;
@@ -187,4 +195,12 @@ void GroupConfig::rankComboChanged(QString specStr){
     qInfo() << "Rank combo changed to:" << specStr;
     crrBitstream = bitMap[bitMainStr][specStr];
     emit bitstreamSelected(crrBitstream.getSpecs());
+}
+
+bool GroupConfig::eventFilter(QObject* obj, QEvent* event){
+    if (event->type() == QEvent::PaletteChange && obj == this)
+        updatePalette();
+
+
+    return QWidget::eventFilter(obj, event);
 }

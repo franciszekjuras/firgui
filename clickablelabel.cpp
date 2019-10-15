@@ -10,13 +10,17 @@ ClickableLabel::ClickableLabel(const QString& label, QWidget* parent, Qt::Window
 }
 
 void ClickableLabel::init(){
+    normPal = this->palette();
+    hoverPal = this->palette();
     int h, s, l; QColor col;
     normPal.color(QPalette::Highlight).getHsl(&h,&s,&l);
     qDebug() << "lightness" << l;
     col.setHsl(h,s,110);
-    normPal.setColor(this->foregroundRole(), col);
+    //normPal.setColor(this->foregroundRole(), col);
+    normPal.setColor(this->foregroundRole(), normPal.color(QPalette::Active,QPalette::Highlight));
     col.setHsl(h,s,140);
-    hoverPal.setColor(this->foregroundRole(),col);
+    //hoverPal.setColor(this->foregroundRole(),col);
+    hoverPal.setColor(this->foregroundRole(), normPal.color(QPalette::Inactive,QPalette::Highlight));
     this->setPalette(normPal);
 
     this->setMargin(4);

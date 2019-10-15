@@ -182,6 +182,8 @@ void KerPlot::setPlotType(const QString& plotType){
 
 void KerPlot::amplitudePlot(){
     this->yAxis->setLabel(tr("Amplitude"));
+    this->yAxis->setTickLabelColor(QColor(0,0,0));
+    this->yAxis->setTickLabelColor(QColor(255,255,255));
 
     assert(freqs.size() == transmission.size());
     this->graph(1)->setData(freqs,transmission,true);

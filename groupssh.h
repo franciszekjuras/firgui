@@ -69,9 +69,13 @@ private:
     void authenticateRPFinished();
     R uploadFirCtrl(const BitstreamSpecs& bitSpecs);
 
+
+    bool eventFilter(QObject* obj, QEvent* event);
+
 signals:
     void nfyBitstreamLoaded(QMap<QString, int> specs);
     void nfyConnected(bool is);
+    void updatePalette();
 
 public slots:
     void onLoad(BitstreamSpecs bitSpecs);

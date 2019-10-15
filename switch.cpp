@@ -129,10 +129,10 @@ void Switch::init() {
     thumbBrushAnimation->setStartValue(colorFromOpacity(style.thumbOffBrush, style.thumbOffOpacity));
     thumbBrushAnimation->setEndValue(colorFromOpacity(style.thumbOffBrush, style.thumbOffOpacity));
     /* set standard palettes */
-    auto p = palette();
+//    auto p = palette();
 //    p.setColor(QPalette::Active, QPalette::ButtonText, style.textColor);
 //    p.setColor(QPalette::Disabled, QPalette::ButtonText, style.textColor);
-    setPalette(p);
+//    setPalette(p);
     setSizePolicy(QSizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Fixed));
 }
 
@@ -152,9 +152,8 @@ Switch::Switch(QWidget* parent) : SelectionControl(parent) {
 
 Switch::Switch(const QString& text, QWidget* parent) : Switch(parent) {
     setText(text);
-    style.thumbOnBrush = QColor(0,120,215);
-    style.trackOnBrush = QColor(0,120,215);
-
+    style.thumbOnBrush = palette().color(QPalette::Highlight);
+    style.trackOnBrush = palette().color(QPalette::Inactive, QPalette::Highlight);
 }
 
 Switch::Switch(const QString& text, const QBrush& brush, QWidget* parent) : Switch(text, parent) {
@@ -208,7 +207,7 @@ void Switch::paintEvent(QPaintEvent *) {
         if (text().isEmpty())
             return;
         p.setOpacity(1.0);
-        p.setPen(palette().color(QPalette::ButtonText));
+        p.setPen(palette().color(QPalette::WindowText));
         p.setFont(font());
         p.drawText(_textRect, Qt::AlignLeft | Qt::AlignVCenter | Qt::TextShowMnemonic, text());
     } else {

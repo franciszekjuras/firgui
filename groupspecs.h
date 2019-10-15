@@ -65,6 +65,8 @@ private:
     void showHelp();
     int currentBand();
 
+    bool eventFilter(QObject* obj, QEvent* event);
+
 public slots:
     void calculateKernel();
     void setKernels();
@@ -85,7 +87,7 @@ signals:
     void reqLoadSrcKernel(std::vector<double> crrSrcKer);
     void reqLoadKernel(std::vector<double> crrKer);
 
-
+    void updatePalette();
 };
 
 #endif // GROUPSPECS_H

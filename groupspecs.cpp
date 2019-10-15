@@ -33,8 +33,13 @@ QLabel* titleLabel = new QLabel(QString("<big>") + tr("Filter specification") + 
 titleLabel->setContentsMargins(5,0,0,5);
 groupVBox->addWidget(titleLabel);
 QPalette pal;
-pal.setColor(titleLabel->foregroundRole(), XColor::changeHslLigthness(pal.windowText().color(),60));
+pal.setColor(titleLabel->foregroundRole(),pal.color(QPalette::Inactive, QPalette::WindowText));
 titleLabel->setPalette(pal);
+connect(this, &GroupSpecs::updatePalette, [=](){QPalette pal;
+    pal.setColor(titleLabel->foregroundRole(),pal.color(QPalette::Inactive, QPalette::WindowText));
+    titleLabel->setPalette(pal);});
+qApp->installEventFilter(this);
+//neccessary to keep up with palette changes
 
 QWidget* groupContent = new QWidget;
 groupVBox->addWidget(groupContent);
@@ -81,15 +86,19 @@ this->setLayout(mainVBox);
         windowCombo->view()->setItemDelegate(new PopupItemDelegate(windowCombo));
 #endif
         specificationGrid->addWidget(new QLabel(tr("Window")),2,0);
-        specificationGrid->addWidget(windowCombo, 2, 1);
+        specificationGrid->addWidget(windowCombo, 2, 1,1,2);
         windowCombo->setToolTip("Different windows give various roll-off/rippling tradeoffs.");
+        windowCombo->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+        windowCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
 
         bandCombo = new QComboBox;
 #ifdef _WIN32
         bandCombo->view()->setItemDelegate(new PopupItemDelegate(bandCombo));
 #endif
         specificationGrid->addWidget(new QLabel(tr("Working Band")),3,0);
-        specificationGrid->addWidget(bandCombo, 3, 1);
+        specificationGrid->addWidget(bandCombo, 3, 1, 1, 2);
+        bandCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+        bandCombo->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
 
 
     QHBoxLayout* buttonsHBox = new QHBoxLayout;
@@ -485,4 +494,12 @@ int GroupSpecs::currentBand(){
     int band = bandCombo->currentIndex(); assert (band >= 0); assert (band < t);
     if(!middleBandsEn && (band == 1)) band = t - 1;
     return band;
+}
+
+bool GroupSpecs::eventFilter(QObject* obj, QEvent* event){
+    if (event->type() == QEvent::PaletteChange && obj == this)
+        updatePalette();
+
+
+    return QWidget::eventFilter(obj, event);
 }

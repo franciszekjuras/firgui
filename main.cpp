@@ -13,8 +13,8 @@
 #include <QScreen>
 #include "window.h"
 #include <libssh/libssh.h>
-
 #include <fstream>
+#include "xcolor.h"
 
 std::ofstream logfile;
 
@@ -46,14 +46,18 @@ int main(int argc, char *argv[])
 {
 
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QCoreApplication::setOrganizationName(SETTINGSKEY);
+    QCoreApplication::setApplicationName(SETTINGSKEY);
+
     QApplication app(argc, argv);
+
     app.setWindowIcon(QIcon(":data/icon.png"));
 #ifdef _WIN32
     //     Font not looking good with scaling on high dpi
     //     TODO: test with Full HD monitor
     QFont appFont = QApplication::font();
     if(appFont.pointSizeF() > 0.)
-        appFont.setPointSize(appFont.pointSize()+1);
+        appFont.setPointSize(appFont.pointSize()+2);
     QApplication::setFont(appFont);
 #endif
 
@@ -110,38 +114,70 @@ int main(int argc, char *argv[])
 
 #ifdef _WIN32
     QPalette palette;
-    QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",QSettings::NativeFormat);
-    QSettings dwmSettings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\DWM",QSettings::NativeFormat);
-    unsigned int accent = dwmSettings.value("AccentColor", 0).value<unsigned int>();
-    if(accent != 0){
-        int accentR = (accent & 0xffu);int accentG = (accent & 0xff00u) >> 8;int accentB = (accent & 0xff0000u) >> 16;
-        QColor accentColor =  QColor(accentR, accentG, accentB);
-        int accH, accS, accL; accentColor.getHsl(&accH,&accS,&accL);
-        //int acclight = accentColor.lightness();
-        //if(acclight<150) accentColor = accentColor.lighter((200-acclight+100)*150/225);//magic equation
-//        QColor highlightColor; highlightColor.setHsl(accH,accS,220);
-//        palette.setColor(QPalette::Highlight,highlightColor);
-        //For some reason setting Highlight or highlight text color on palette hides ugly frame on combo boxes,
-        //though doesn't affect its color in any way.
-        palette.setColor(QPalette::Highlight, QColor(38, 139, 210));
+    QPalette dialPal;
 
-        //int backLight = palette.color(QPalette::Window).lightness();
-        QColor backColor; backColor.setRgb(253, 246, 227);
-        palette.setColor(QPalette::Window, backColor);
-        QColor forgrColor; forgrColor.setRgb(0, 43, 54);
-        palette.setColor(QPalette::WindowText, forgrColor);
-        palette.setColor(QPalette::Text, forgrColor);
-        palette.setColor(QPalette::ButtonText, forgrColor);
-        palette.setColor(QPalette::Disabled,QPalette::ButtonText, QColor(88, 110, 117));
+    //checking dark theme
+    QSettings appSet;
+    bool isDarkTheme = false;
+    if(!appSet.contains("view/darkTheme")){
+        QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",QSettings::NativeFormat);
+        isDarkTheme = (settings.value("AppsUseLightTheme",1)==0);
+    }else {
+        isDarkTheme = appSet.value("view/darkTheme").toBool();
     }
+
+    //checking accent color
+    QSettings dwmSettings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\DWM",QSettings::NativeFormat);
+    unsigned int accent = dwmSettings.value("AccentColor", 0).value<unsigned int>(); int accentR = (accent & 0xffu);int accentG = (accent & 0xff00u) >> 8;int accentB = (accent & 0xff0000u) >> 16;
+    QColor accentColor =  QColor(accentR, accentG, accentB);
+
+    QColor solarAccent = XColor::getSolarizedAccent(accentColor);
+
+    //For some reason setting Highlight or highlight text color on palette hides ugly frame on combo boxes,
+    //though doesn't affect its color in any way.
+    //highlight (accent) - same for both themes
+    palette.setColor(QPalette::Highlight, solarAccent); //this should depend on accent color
+    palette.setColor(QPalette::Inactive, QPalette::Highlight, solarAccent.lighter(130));
+
+    if(isDarkTheme){ //dark theme
+        //background
+        palette.setColor(QPalette::Window, XColor::base03);
+        //foreground
+        palette.setColor(QPalette::WindowText, XColor::base2);
+        palette.setColor(QPalette::Text, XColor::base02);
+        palette.setColor(QPalette::ButtonText, XColor::base02);
+
+        //extra foreground
+        palette.setColor(QPalette::Inactive, QPalette::WindowText, XColor::base1);
+        palette.setColor(QPalette::Disabled,QPalette::ButtonText, XColor::base01);
+    }
+    else{ //light theme
+
+        //background
+        palette.setColor(QPalette::Window, XColor::base3);
+        //foreground
+        palette.setColor(QPalette::WindowText, XColor::base02);
+        palette.setColor(QPalette::Text, XColor::base02);
+        palette.setColor(QPalette::ButtonText, XColor::base02);
+
+        //extra foreground
+        palette.setColor(QPalette::Inactive, QPalette::WindowText, XColor::base01);
+        palette.setColor(QPalette::Disabled,QPalette::ButtonText, XColor::base1);
+
+    } //light theme end
 
     qApp->setPalette(palette);
-    if(settings.value("AppsUseLightTheme",1)==0){
-        //if dark theme
-    }
 
-#endif //_WIN32
-    Window window;
+    //becouse palette doesn't effect dialog background, always set light theme for dialogs
+//    dialPal.setColor(QPalette::Window, XColor::base3); //currently doesn't work, but just in case...
+//    dialPal.setColor(QPalette::WindowText, XColor::base02);
+//    qApp->setPalette(dialPal, "QDialog");
+
+    Window window(isDarkTheme);
+#else //LINUX
+    Window window(isDarkTheme);
+#endif
+
     int scrN = app.desktop()->screenNumber(&window);
     if(scrN >= 0){
         QScreen *screen = QGuiApplication::screens().at(scrN);
