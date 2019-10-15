@@ -228,7 +228,7 @@ void Window::setDarkTheme(bool darkTheme){
     } //light theme end
 
     qApp->setPalette(palette);
-    //qApp->setPalette(dialPal, "QDialog");
+    qApp->setPalette(dialPal, "QDialog");
 }
 
 void Window::setTooltipsVisible(bool v){

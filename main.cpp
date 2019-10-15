@@ -169,9 +169,9 @@ int main(int argc, char *argv[])
     qApp->setPalette(palette);
 
     //becouse palette doesn't effect dialog background, always set light theme for dialogs
-//    dialPal.setColor(QPalette::Window, XColor::base3); //currently doesn't work, but just in case...
-//    dialPal.setColor(QPalette::WindowText, XColor::base02);
-//    qApp->setPalette(dialPal, "QDialog");
+    dialPal.setColor(QPalette::Window, XColor::base3); //currently doesn't work, but just in case...
+    dialPal.setColor(QPalette::WindowText, XColor::base02);
+    qApp->setPalette(dialPal, "QDialog");
 
     Window window(isDarkTheme);
 #else //LINUX
