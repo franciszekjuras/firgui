@@ -62,13 +62,24 @@ centralWidget->setLayout(mainHBox);
 
             //lbotHBox->addItem(new QSpacerItem(5,0,QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
 
+
             ClickableLabel* decrText = new ClickableLabel();
             decrText->setText("<p><small>A<sup>―</sup></small></p>");
             lbotHBox->addWidget(decrText);
             connect(decrText, &ClickableLabel::clicked, [=](){
                 QFont appFont = QApplication::font();
-                if(appFont.pointSize()>5)
+                if(appFont.pointSize()>7)
                     {appFont.setPointSize(appFont.pointSize()-1);}
+                QSettings fontSet; fontSet.setValue("view/fontSize",appFont.pointSize());
+                QApplication::setFont(appFont);});
+
+            ClickableLabel* resetText = new ClickableLabel();
+            resetText->setText("<p>A<sup>0</sup></p>");//A<sup>0</sup></p>");
+            lbotHBox->addWidget(resetText);
+            connect(resetText, &ClickableLabel::clicked, [=](){
+                QFont appFont = QApplication::font();
+                if(defaultFontSize > 0){appFont.setPointSize(defaultFontSize);}
+                QSettings fontSet; fontSet.setValue("view/fontSize",appFont.pointSize());
                 QApplication::setFont(appFont);});
 
             ClickableLabel* incrText = new ClickableLabel();
@@ -76,7 +87,9 @@ centralWidget->setLayout(mainHBox);
             lbotHBox->addWidget(incrText);
             connect(incrText, &ClickableLabel::clicked, [=](){
                 QFont appFont = QApplication::font();
-                appFont.setPointSize(appFont.pointSize()+1);
+                if(appFont.pointSize()>0){
+                    appFont.setPointSize(appFont.pointSize()+1);}
+                QSettings fontSet; fontSet.setValue("view/fontSize",appFont.pointSize());
                 QApplication::setFont(appFont);});
 
 #ifdef _WIN32
@@ -173,6 +186,7 @@ centralWidget->setLayout(mainHBox);
     //:plotTypeCombo
     plotTypeCombo->addItem(tr("Amplitude Plot"));
     plotTypeCombo->addItem(tr("Bode Plot"));
+    plotTypeCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect(plotTypeCombo, &QComboBox::currentTextChanged, kerPlot, &KerPlot::setPlotType);
     plotTypeCombo->setCurrentIndex(-1);plotTypeCombo->setCurrentIndex(0);
 

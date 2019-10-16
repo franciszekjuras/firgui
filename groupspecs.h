@@ -43,6 +43,8 @@ private:
 
     int t, d, s;
 
+    double roiL, roiR;
+
     bool isKernelReady;
     bool isFilterReady;
     bool isSrcKernelReady;
@@ -77,7 +79,7 @@ public slots:
     void handleConnect(bool is);
 
 signals:
-    void kernelChanged(std::shared_ptr<const FirKer> ker);
+    void kernelChanged(std::shared_ptr<const FirKer> ker, double roiL, double roiR);
 //    void kernelClear();
     void srcKernelChanged(std::shared_ptr<const FirKer> ker);
 //    void srcKernelClear();

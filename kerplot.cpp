@@ -36,9 +36,9 @@ KerPlot::KerPlot(QWidget* parent):
     connect(&kerTransWatch, &QFutureWatcher<std::vector<double>>::finished, this, &KerPlot::cntSetKernel);
     connect(&kerTransWatch, &QFutureWatcher<std::vector<double>>::started, this, [=](){spinWatch.enable("kerTrans");});
 
-    connect(&srcKerTransWatch, &QFutureWatcher<std::vector<double>>::finished, this, [=](){spinWatch.disable("kerTrans");});
+    connect(&srcKerTransWatch, &QFutureWatcher<std::vector<double>>::finished, this, [=](){spinWatch.disable("srcKerTrans");});
     connect(&srcKerTransWatch, &QFutureWatcher<std::vector<double>>::finished, this, &KerPlot::cntSetSrcKernel);
-    connect(&srcKerTransWatch, &QFutureWatcher<std::vector<double>>::started, this, [=](){spinWatch.enable("kerTrans");});
+    connect(&srcKerTransWatch, &QFutureWatcher<std::vector<double>>::started, this, [=](){spinWatch.enable("srcKerTrans");});
 
     this->axisRect()->setRangeDrag(Qt::Horizontal);
     this->axisRect()->setRangeZoom(Qt::Horizontal);
@@ -92,10 +92,12 @@ KerPlot::KerPlot(QWidget* parent):
     this->setBackground(QColor(0, 43, 54));
 }
 
-void KerPlot::setKernel(std::shared_ptr<const FirKer> kernel){
+void KerPlot::setKernel(std::shared_ptr<const FirKer> kernel, double roiL, double roiR){
     QFuture<std::vector<double> > fut = QtConcurrent::run([=](){return kernel->transmission(plotDiv);});
     kerTransWatch.setFuture(fut);
     plotClearedMeanwhile = false;
+    if(roiL < roiR)
+        this->xAxis->setRange(roiL/unitMult, roiR/unitMult);
 }
 
 void KerPlot::cntSetKernel(){
@@ -278,9 +280,12 @@ void KerPlot::setFreqs(double freq, int t, int band){
 
     if(rBandLimit/2. > 5000.){
         rBandLimit /= 1000.; lBandLimit /= 1000.; nqFreq/=1000.;
+        unitMult = 1000.;
         this->xAxis->setLabel(tr("Frequency, MHz"));
-    }else
-        this->xAxis->setLabel(tr("Frequency, kHz"));
+    }else{
+        unitMult = 1.;
+        this->xAxis->setLabel(tr("Frequency, kHz"));        
+    }
 
     this->xRange = QCPRange(lBandLimit, rBandLimit);
     this->xAxis->setRange(xRange);

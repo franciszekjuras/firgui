@@ -48,6 +48,7 @@ protected:
     bool srcPlotClearedMeanwhile;
     WaitingSpinnerWidget* waitSpin;    
     BoolMapOr spinWatch;
+    double unitMult;
 
     void amplitudePlot();
     void bodePlot();
@@ -63,7 +64,7 @@ protected:
 
 public slots:
     void checkXBounds(const QCPRange& newRange);
-    void setKernel(std::shared_ptr<const FirKer> kernel);
+    void setKernel(std::shared_ptr<const FirKer> kernel, double roiL, double roiR);
     void setSrcKernel(std::shared_ptr<const FirKer> kernel);
     void setPlotType(const QString& plotType);
     void resetPlot(double freq, int t, int band);

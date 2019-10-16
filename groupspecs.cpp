@@ -259,6 +259,14 @@ void GroupSpecs::calculateKernel(){
         v *= unitMultiplier;
     }
 
+    //ROI calculation
+    qDebug() << "t" << t << "d" << d;
+    double roiConst = 800000.; int roiDiv = t*t*d;
+    double roiExt = qMax((roiConst/roiDiv), (freqs.back() - freqs.front())*0.3);
+        roiL = freqs.front() - roiExt;
+        roiR = freqs.back() + roiExt;
+    //end
+
     int band = currentBand();
     double kerNyquistFreq = kerSamplingFreq / 2.;
 
@@ -303,7 +311,7 @@ void GroupSpecs::calculateKernelFinished(){
 
     qInfo() << "Filter kernel calculated.";
     crrKer = ker->getKernel();
-    emit kernelChanged(ker);
+    emit kernelChanged(ker, roiL, roiR);
 }
 
 void GroupSpecs::calculateSrcKernel(){

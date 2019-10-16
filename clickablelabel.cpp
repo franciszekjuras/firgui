@@ -23,7 +23,7 @@ void ClickableLabel::init(){
     hoverPal.setColor(this->foregroundRole(), normPal.color(QPalette::Inactive,QPalette::Highlight));
     this->setPalette(normPal);
 
-    this->setMargin(4);
+    this->setMargin(2);
 }
 
 ClickableLabel::~ClickableLabel() {}

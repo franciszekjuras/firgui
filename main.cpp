@@ -56,8 +56,16 @@ int main(int argc, char *argv[])
     //     Font not looking good with scaling on high dpi
     //     TODO: test with Full HD monitor
     QFont appFont = QApplication::font();
-    if(appFont.pointSizeF() > 0.)
-        appFont.setPointSize(appFont.pointSize()+2);
+    int defaultPointSize = -1;
+    if(appFont.pointSize() > 0){
+        defaultPointSize = appFont.pointSize() + 1;
+        QSettings fontSet;
+        int fontPointSize = fontSet.value("view/fontSize", 0).toInt();
+        if(fontPointSize <= 0)
+            fontPointSize =  defaultPointSize;
+        appFont.setPointSize(fontPointSize);
+        fontSet.setValue("view/fontSize",appFont.pointSize());
+    }
     QApplication::setFont(appFont);
 #endif
 
@@ -174,8 +182,9 @@ int main(int argc, char *argv[])
     qApp->setPalette(dialPal, "QDialog");
 
     Window window(isDarkTheme);
+    window.defaultFontSize = defaultPointSize;
 #else //LINUX
-    Window window(isDarkTheme);
+    Window window;
 #endif
 
     int scrN = app.desktop()->screenNumber(&window);

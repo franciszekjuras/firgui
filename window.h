@@ -14,6 +14,8 @@ public:
 
     void setDarkTheme(bool darkTheme);
 
+    int defaultFontSize;
+
 private:
     bool isDarkTheme;
     void setTooltipsVisible(bool v);
