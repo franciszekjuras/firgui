@@ -127,12 +127,16 @@ int main(int argc, char *argv[])
     //checking dark theme
     QSettings appSet;
     bool isDarkTheme = false;
-    if(!appSet.contains("view/darkTheme")){
-        QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",QSettings::NativeFormat);
-        isDarkTheme = (settings.value("AppsUseLightTheme",1)==0);
+    QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",QSettings::NativeFormat);
+    bool sysDarkTheme = (settings.value("AppsUseLightTheme",1)==0);
+    bool lastSysDarkTheme = appSet.value("view/lastSysDarkTheme",sysDarkTheme).toBool();
+    if(!appSet.contains("view/darkTheme") || (lastSysDarkTheme != sysDarkTheme)){
+        isDarkTheme = sysDarkTheme;
+        appSet.setValue("view/darkTheme",sysDarkTheme);
     }else {
         isDarkTheme = appSet.value("view/darkTheme").toBool();
     }
+    appSet.setValue("view/lastSysDarkTheme",sysDarkTheme);
 
     //checking accent color
     QSettings dwmSettings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\DWM",QSettings::NativeFormat);
