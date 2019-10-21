@@ -33,7 +33,6 @@ private:
     void updateRankCombo(QString mainStr);
 
     void onLoadButton();
-
     bool eventFilter(QObject* obj, QEvent* event);
 
 signals:
@@ -43,6 +42,7 @@ signals:
     void enableLoad(bool en);
     void reqLoad(BitstreamSpecs bitSpecs);
     void updatePalette();
+    void showHelp();
 };
 
 //"  [-tm | --time-multiplexing] Time multiplexing rank\n"

@@ -44,9 +44,9 @@ DEFINES += MSVISUALDLLSUFIX=\"\\\"140\\\"\"
 
 DEFINES += GITHUBREPO=\"\\\"https://github.com/franciszekjuras/firgui\\\"\"
 #Make sure to update!!!
-#DEFINES += IS_DEV
+DEFINES += IS_DEV
 DEFINES += IS_PRERELEASE
-VERSION = 1.3.2
+VERSION = 1.3.3
 #End of updates
 
 DEFINES += VERSIONSTRING=\"\\\"$${VERSION}\\\"\"
@@ -75,7 +75,7 @@ QMAKE_TARGET_DESCRIPTION = "Controller for FIR filter based on Red Pitaya board.
 HEADERS += \
     boxupdate.h \
     cautoupdatergithub.h \
-    clickablelabel.h \
+    clicklabel.h \
     delegate.h \
     window.h \
     groupssh.h \
@@ -94,7 +94,7 @@ HEADERS += \
 SOURCES += main.cpp \
     boxupdate.cpp \
     cautoupdatergithub.cpp \
-    clickablelabel.cpp \
+    clicklabel.cpp \
     window.cpp \
     groupssh.cpp \
     qcustomplot.cpp \

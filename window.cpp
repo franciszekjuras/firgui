@@ -10,8 +10,9 @@
 #ifdef _WIN32
 #include "delegate.h"
 #endif
-#include "clickablelabel.h"
+#include "clicklabel.h"
 #include "xcolor.h"
+#include "QTextBrowser"
 
 Window::Window(bool darkTheme, QWidget *parent)
     : QMainWindow(parent)
@@ -32,13 +33,17 @@ centralWidget->setLayout(mainHBox);
     lWid->setLayout(lVBox);
     lVBox->setContentsMargins(0,0,0,0);
 
-        GroupSpecs* groupSpecs = new GroupSpecs;
-        lVBox->addWidget(groupSpecs);
-        groupSpecs->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Fixed);
+        ClickLabel* introClickLabel = new ClickLabel(tr("Get Started"));
+        introClickLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        lVBox->addWidget(introClickLabel);
 
         GroupConfig* groupConfig = new GroupConfig;
         lVBox->addWidget(groupConfig);
         groupConfig->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Fixed);
+
+        GroupSpecs* groupSpecs = new GroupSpecs;
+        lVBox->addWidget(groupSpecs);
+        groupSpecs->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Fixed);
 
         GroupSsh* groupSsh = new GroupSsh;
         lVBox->addWidget(groupSsh);
@@ -63,29 +68,29 @@ centralWidget->setLayout(mainHBox);
             //lbotHBox->addItem(new QSpacerItem(5,0,QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
 
 
-            ClickableLabel* decrText = new ClickableLabel();
+            ClickLabel* decrText = new ClickLabel();
             decrText->setText("<p><small>A<sup>―</sup></small></p>");
             lbotHBox->addWidget(decrText);
-            connect(decrText, &ClickableLabel::clicked, [=](){
+            connect(decrText, &ClickLabel::clicked, [=](){
                 QFont appFont = QApplication::font();
                 if(appFont.pointSize()>7)
                     {appFont.setPointSize(appFont.pointSize()-1);}
                 QSettings fontSet; fontSet.setValue("view/fontSize",appFont.pointSize());
                 QApplication::setFont(appFont);});
 
-            ClickableLabel* resetText = new ClickableLabel();
+            ClickLabel* resetText = new ClickLabel();
             resetText->setText("<p>A<sup>0</sup></p>");//A<sup>0</sup></p>");
             lbotHBox->addWidget(resetText);
-            connect(resetText, &ClickableLabel::clicked, [=](){
+            connect(resetText, &ClickLabel::clicked, [=](){
                 QFont appFont = QApplication::font();
                 if(defaultFontSize > 0){appFont.setPointSize(defaultFontSize);}
                 QSettings fontSet; fontSet.setValue("view/fontSize",appFont.pointSize());
                 QApplication::setFont(appFont);});
 
-            ClickableLabel* incrText = new ClickableLabel();
+            ClickLabel* incrText = new ClickLabel();
             incrText->setText("<p><big>A<sup>+</sup></big></p>");
             lbotHBox->addWidget(incrText);
-            connect(incrText, &ClickableLabel::clicked, [=](){
+            connect(incrText, &ClickLabel::clicked, [=](){
                 QFont appFont = QApplication::font();
                 if(appFont.pointSize()>0){
                     appFont.setPointSize(appFont.pointSize()+1);}
@@ -112,6 +117,33 @@ centralWidget->setLayout(mainHBox);
     rVBox->setContentsMargins(0,0,0,0);
     //rVBox --v
 
+/*
+        QWidget* plPropWid = new QWidget;
+        rVBox->addWidget(plPropWid);
+        plPropWid->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+        QHBoxLayout* plPropHBox = new QHBoxLayout;
+        plPropWid->setLayout(plPropHBox);
+        plPropHBox->setContentsMargins(0,0,0,0);
+        //plPropHBox --v
+
+            QComboBox* plotTypeCombo = new QComboBox;
+#ifdef _WIN32
+            plotTypeCombo->view()->setItemDelegate(new PopupItemDelegate(plotTypeCombo));
+#endif
+            plPropHBox->addWidget(plotTypeCombo);
+            plotTypeCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+            QComboBox* plotPerfCombo = new QComboBox;
+#ifdef _WIN32
+            plotPerfCombo->view()->setItemDelegate(new PopupItemDelegate(plotPerfCombo));
+#endif
+            plPropHBox->addWidget(plotPerfCombo);
+            plotPerfCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+            plPropHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Expanding));
+
+*/
+
         QWidget* plCtrlWid = new QWidget;
         rVBox->addWidget(plCtrlWid);
         plCtrlWid->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
@@ -137,39 +169,53 @@ centralWidget->setLayout(mainHBox);
 
             plCtrlHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Expanding));
 
-            QComboBox* plotTypeCombo = new QComboBox;            
+
+            ClickLabel* helpClickLabel = new ClickLabel("<big>?</big>");
+            plCtrlHBox->addWidget(helpClickLabel);
+
+
+            QComboBox* plotTypeCombo = new QComboBox;
 #ifdef _WIN32
             plotTypeCombo->view()->setItemDelegate(new PopupItemDelegate(plotTypeCombo));
 #endif
             plCtrlHBox->addWidget(plotTypeCombo);
             plotTypeCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
+
+
     KerPlot* kerPlot = new KerPlot;
     rVBox->addWidget(kerPlot);
     kerPlot->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
 
 
+    helpBrowser = new QTextBrowser;
+    int n10width = this->fontMetrics().horizontalAdvance("nnnnnnnnnn");
+    helpBrowser->resize(n10width*7, n10width*7);
+    helpBrowser->setWindowTitle(tr(WINDOW_TITLE));
+    helpBrowser->setAttribute(Qt::WA_QuitOnClose, false);
+
 //part:funtion
 
     //:groupSpecs
     connect(groupSpecs, &GroupSpecs::kernelChanged, kerPlot, &KerPlot::setKernel);
-//    connect(groupSpecs, &GroupSpecs::kernelClear, kerPlot, &KerPlot::clearKernel);
     connect(groupSpecs, &GroupSpecs::srcKernelChanged, kerPlot, &KerPlot::setSrcKernel);
-//    connect(groupSpecs, &GroupSpecs::srcKernelClear, kerPlot, &KerPlot::clearSrcKernel);
     connect(groupSpecs, &GroupSpecs::resetPlot, kerPlot, &KerPlot::resetPlot);
     connect(groupSpecs, &GroupSpecs::reqLoadSrcKernel, groupSsh, &GroupSsh::loadSrcKernel);
     connect(groupSpecs, &GroupSpecs::reqLoadKernel, groupSsh, &GroupSsh::loadKernel);
+    connect(groupSpecs, &GroupSpecs::showHelp, [=](){showHelp("sec.specs");});
 
     //:groupConfig
     connect(groupConfig, &GroupConfig::bitstreamSelected, groupSpecs, &GroupSpecs::bitstreamChanged);
     connect(groupConfig, &GroupConfig::fpgaSamplingFreqChanged, groupSpecs, &GroupSpecs::setfpgaSamplingFreq);
     connect(groupConfig, &GroupConfig::reqLoad, groupSsh, &GroupSsh::onLoad);
+    connect(groupConfig, &GroupConfig::showHelp, [=](){showHelp("sec.conf");});
     groupConfig->init();
 
     //:groupSsh
     connect(groupSsh, &GroupSsh::nfyConnected, groupConfig, &GroupConfig::enableLoad);
     connect(groupSsh, &GroupSsh::nfyConnected, groupSpecs, &GroupSpecs::handleConnect);
     connect(groupSsh, &GroupSsh::nfyBitstreamLoaded, groupSpecs, &GroupSpecs::bitstreamLoaded);
+    connect(groupSsh, &GroupSsh::showHelp, [=](){showHelp("sec.connect");});
 
 
     //:showTooltipSwitch
@@ -183,12 +229,23 @@ centralWidget->setLayout(mainHBox);
         themeSwitch->animateClick();
 #endif //_WIN32
 
+    //:helpClickLabel | :introClickLabel
+    connect(helpClickLabel, &ClickLabel::clicked, [=](){showHelp("sec.plot");});
+    connect(introClickLabel, &ClickLabel::clicked, [=](){showHelp("sec.intro");});
+
     //:plotTypeCombo
     plotTypeCombo->addItem(tr("Amplitude Plot"));
     plotTypeCombo->addItem(tr("Bode Plot"));
     plotTypeCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect(plotTypeCombo, &QComboBox::currentTextChanged, kerPlot, &KerPlot::setPlotType);
     plotTypeCombo->setCurrentIndex(-1);plotTypeCombo->setCurrentIndex(0);
+
+    //:plotPerfCombo
+//    plotPerfCombo->addItem(tr("High performance"));
+//    plotPerfCombo->addItem(tr("High quality"));
+//    plotPerfCombo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//    connect(plotPerfCombo, &QComboBox::currentTextChanged, kerPlot, &KerPlot::setPlotPerf);
+//    plotTypeCombo->setCurrentIndex(-1);plotTypeCombo->setCurrentIndex(0);
 
     //:srcTransShowSwitch|:firTransShowSwitch|:totalTransShowSwitch
     connect(srcTransShowSwitch, &Switch::toggled, kerPlot, &KerPlot::toggleSrcTransPlot);
@@ -250,6 +307,12 @@ void Window::setTooltipsVisible(bool v){
         qApp->removeEventFilter(this);
     else
         qApp->installEventFilter(this);
+}
+
+void Window::showHelp(const QString& anchor){
+    helpBrowser->setSource(QString("help.html#")+ anchor);
+    helpBrowser->show();
+    helpBrowser->activateWindow();
 }
 
 bool Window::eventFilter(QObject* obj, QEvent* event){

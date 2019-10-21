@@ -16,7 +16,7 @@
 #ifdef _WIN32
 #include "delegate.h"
 #endif
-#include "clickablelabel.h"
+#include "clicklabel.h"
 #include "xcolor.h"
 
 #define PASSBAND_WIDTH_RATIO 4.11 // magic numbers for .1% rippling in passband
@@ -105,7 +105,7 @@ this->setLayout(mainVBox);
     mainVBox->addLayout(buttonsHBox);
     //buttonsHBox --v
 
-        ClickableLabel* helpClickLabel = new ClickableLabel(tr("Help"));
+        ClickLabel* helpClickLabel = new ClickLabel("<big>?</big>");
         buttonsHBox->addWidget(helpClickLabel);
 
         buttonsHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Fixed));
@@ -166,7 +166,7 @@ this->setLayout(mainVBox);
     connect(bandCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &GroupSpecs::bandChanged);
 
     //:helpClickLabel|:calculateButton|:setButton
-    connect(helpClickLabel, &ClickableLabel::clicked, this, &GroupSpecs::showHelp);
+    connect(helpClickLabel, &ClickLabel::clicked, this, &GroupSpecs::showHelp);
     connect(calculateButton, &QPushButton::clicked, this, &GroupSpecs::calculateKernel);
     connect(setButton, &QPushButton::clicked, this, &GroupSpecs::setKernels);
     enableCalculateButton(false); enableSetButton(false);
@@ -194,10 +194,6 @@ void GroupSpecs::handleConnect(bool is){
         filterReady(false);
         isSrcKernelLoaded = false;
     }
-}
-
-void GroupSpecs::showHelp(){
-    QMessageBox::information(this, tr(WINDOW_TITLE), tr("    Filter is described by specifing gains to subsequent frequency ranges in the given band (which is configurable). Outside of this band gain is always zero (nothing is passed).\nCorner frequencies should be given omitting boundary frequencies with gains matching successive ranges.\n\n    For example: with filter band from 0 to 500 kHz, filter passing signal from 0 to 200 kHz, stopping everything from 200 to 400 kHz and passing with amplitude divided by 2 from 400 to 500 kHz, can be set by giving:\n\nFrequencies: 200 400\nGains: 1 0 0.5\n\n    Note however, that overall filtering result is affected by rate conversion transmission (shown on plot) and signal may not be passed on band boundaries.\n\n    For further details read tooltips, which can be displayed by hovering the cursor over an object."),tr("Close"));
 }
 
 void GroupSpecs::windowChanged(QString windowStr){
@@ -260,11 +256,15 @@ void GroupSpecs::calculateKernel(){
     }
 
     //ROI calculation
-    qDebug() << "t" << t << "d" << d;
-    double roiConst = 800000.; int roiDiv = t*t*d;
-    double roiExt = qMax((roiConst/roiDiv), (freqs.back() - freqs.front())*0.3);
-        roiL = freqs.front() - roiExt;
-        roiR = freqs.back() + roiExt;
+    if(freqs.size() > 0){
+        qDebug() << "t" << t << "d" << d;
+        double roiConst = 800000.; int roiDiv = t*t*d;
+        double roiExt = qMax((roiConst/roiDiv), (freqs.back() - freqs.front())*0.3);
+            roiL = freqs.front() - roiExt;
+            roiR = freqs.back() + roiExt;
+    } else{
+        roiL = 0.; roiR = 0.;
+    }
     //end
 
     int band = currentBand();

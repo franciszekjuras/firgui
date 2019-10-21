@@ -11,6 +11,15 @@ QColor XColor::changeHslLigthness(const QColor& col, int l){
     return rcol;
 }
 
+QColor XColor::changeHslSaturation(const QColor& col, int s){
+    if(s < 0) s = 0;
+    else if (s > 255) s = 255;
+    int h, s2, l;
+    col.getHsl(&h,&s2,&l);
+    QColor rcol;
+    rcol.setHsl(h,s,l);
+    return rcol;
+}
 
 QColor XColor::getSolarizedAccent(const QColor& col){
     if(!col.isValid()){

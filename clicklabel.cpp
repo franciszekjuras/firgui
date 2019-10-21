@@ -1,15 +1,15 @@
-#include "clickablelabel.h"
+#include "clicklabel.h"
 #include <QDebug>
 
-ClickableLabel::ClickableLabel(QWidget* parent, Qt::WindowFlags f): QLabel(parent) {
+ClickLabel::ClickLabel(QWidget* parent, Qt::WindowFlags f): QLabel(parent) {
    init();
 }
 
-ClickableLabel::ClickableLabel(const QString& label, QWidget* parent, Qt::WindowFlags f): QLabel(label, parent) {
+ClickLabel::ClickLabel(const QString& label, QWidget* parent, Qt::WindowFlags f): QLabel(label, parent) {
     init();
 }
 
-void ClickableLabel::init(){
+void ClickLabel::init(){
     normPal = this->palette();
     hoverPal = this->palette();
     int h, s, l; QColor col;
@@ -26,16 +26,14 @@ void ClickableLabel::init(){
     this->setMargin(2);
 }
 
-ClickableLabel::~ClickableLabel() {}
-
-void ClickableLabel::mousePressEvent(QMouseEvent* event) {
+void ClickLabel::mousePressEvent(QMouseEvent* event) {
     emit clicked();
 }
 
-void ClickableLabel::enterEvent(QEvent *event) {
+void ClickLabel::enterEvent(QEvent *event) {
     this->setPalette(hoverPal);
 }
 
-void ClickableLabel::leaveEvent(QEvent *event) {
+void ClickLabel::leaveEvent(QEvent *event) {
     this->setPalette(normPal);
 }

@@ -64,7 +64,6 @@ private:
     void windowChanged(QString windowStr);
     void bandChanged(int band);
     void unitChanged(QString unit);
-    void showHelp();
     int currentBand();
 
     bool eventFilter(QObject* obj, QEvent* event);
@@ -88,6 +87,7 @@ signals:
     void resetPlot(double freq, int t, int band);
     void reqLoadSrcKernel(std::vector<double> crrSrcKer);
     void reqLoadKernel(std::vector<double> crrKer);
+    void showHelp();
 
     void updatePalette();
 };

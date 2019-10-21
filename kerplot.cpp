@@ -15,7 +15,6 @@
 KerPlot::KerPlot(QWidget* parent):
     QCustomPlot(parent)
 {
-    //this->setOpenGl(true);
 
     waitSpin = new WaitingSpinnerWidget(this, true, true);
 
@@ -29,6 +28,10 @@ KerPlot::KerPlot(QWidget* parent):
     waitSpin->setInnerRadius(5 * sizeMult);
     waitSpin->setRevolutionsPerSecond(2);
     waitSpin->setColor(QApplication::palette().highlight().color());
+
+    perfModeTimer.setSingleShot(true);
+    perfModeTimeoutMS = 500;
+    connect(&perfModeTimer, &QTimer::timeout, this, &KerPlot::exitPerfMode);
 
     connect(&spinWatch, &BoolMapOr::valueChanged, [=](bool v){if(v)this->waitSpin->start(); else this->waitSpin->stop();});
 
@@ -45,18 +48,18 @@ KerPlot::KerPlot(QWidget* parent):
     connect(this->xAxis, static_cast<void (QCPAxis::*)(const QCPRange&)>(&QCPAxis::rangeChanged), this, &KerPlot::checkXBounds);
     this->setEnabled(false);
 
-
+    penWidth = 2.;
     this->addGraph();
     auto pen = QPen(QColor(132,186,91));
-    pen.setWidth(1);
+    pen.setWidthF(penWidth);
     this->graph(0)->setPen(pen);
     this->addGraph();    
     pen = QPen(QColor(255, 119, 0));
-    pen.setWidth(1);
+    pen.setWidthF(penWidth);
     this->graph(1)->setPen(pen);
     this->addGraph();
     pen = QPen(QColor(114,147,203));
-    pen.setWidth(1);
+    pen.setWidthF(penWidth);
     this->graph(2)->setPen(pen);
 
     this->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
@@ -182,6 +185,43 @@ void KerPlot::setPlotType(const QString& plotType){
     }
 }
 
+void KerPlot::enterPerfMode(){
+    perfModeTimer.start(perfModeTimeoutMS);
+    for(int i = 0; i < 3; ++i){
+        auto pen = graph(i)->pen();
+        pen.setWidthF(1.);
+        graph(i)->setPen(pen);
+    }
+}
+
+void KerPlot::exitPerfMode(){
+    for(int i = 0; i < 3; ++i){
+        auto pen = graph(i)->pen();
+        pen.setWidthF(penWidth);
+        graph(i)->setPen(pen);
+    }
+    replot();
+}
+
+//void KerPlot::setPlotPerf(const QString& plotPerf){
+//    if(plotPerf == tr("High performance")){
+//        for(int i = 0; i < 3; ++i){
+//            auto pen = graph(i)->pen();
+//            pen.setWidth(1);
+//            graph(i)->setPen(pen);
+//        }
+//        replot();
+//    }
+//    else if(plotPerf == tr("High quality")){
+//        for(int i = 0; i < 3; ++i){
+//            auto pen = graph(i)->pen();
+//            pen.setWidth(3);
+//            graph(i)->setPen(pen);
+//        }
+//        replot();
+//    }
+//}
+
 void KerPlot::amplitudePlot(){
     this->yAxis->setLabel(tr("Amplitude"));
     this->yAxis->setTickLabelColor(QColor(0,0,0));
@@ -266,6 +306,7 @@ void KerPlot::checkXBounds(const QCPRange& newRange){
             this->xAxis->setRange(xRange.upper - newRange.size(), xRange.upper);
         }
     }
+    enterPerfMode();
 }
 
 void KerPlot::setFreqs(double freq, int t, int band){

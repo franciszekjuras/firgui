@@ -44,7 +44,7 @@ void logToFile(QtMsgType type, const QMessageLogContext &context, const QString 
 
 int main(int argc, char *argv[])
 {
-
+    QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QCoreApplication::setOrganizationName(SETTINGSKEY);
     QCoreApplication::setApplicationName(SETTINGSKEY);

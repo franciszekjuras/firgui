@@ -12,6 +12,7 @@
 #include "delegate.h"
 #endif
 #include "xcolor.h"
+#include "clicklabel.h"
 
 #ifdef _WIN32
 
@@ -79,6 +80,9 @@ this->setLayout(mainVBox);
     mainVBox->addLayout(buttonHBox);
     //buttonHBox --v
 
+        ClickLabel* helpClickLabel = new ClickLabel("<big>?</big>");
+        buttonHBox->addWidget(helpClickLabel);
+
         buttonHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Preferred));
 
         QPushButton* loadButton = new QPushButton(tr("Load"));
@@ -90,6 +94,9 @@ this->setLayout(mainVBox);
 
     //:this
     connect(this, &GroupConfig::enableLoad, loadButton, &QPushButton::setEnabled);
+
+    //:helpClickLabel
+    connect(helpClickLabel, &ClickLabel::clicked, this, &GroupConfig::showHelp);
 
     //:loadButton
     connect(loadButton, &QPushButton::clicked, this, &GroupConfig::onLoadButton);

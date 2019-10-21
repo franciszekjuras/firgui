@@ -4,6 +4,7 @@
 #include <QVector>
 #include <QString>
 #include <QFutureWatcher>
+#include <QTimer>
 #include <memory>
 #include "qcustomplot.h"
 #include "firker.h"
@@ -49,6 +50,9 @@ protected:
     WaitingSpinnerWidget* waitSpin;    
     BoolMapOr spinWatch;
     double unitMult;
+    QTimer perfModeTimer;
+    double penWidth;
+    int perfModeTimeoutMS;
 
     void amplitudePlot();
     void bodePlot();
@@ -58,6 +62,8 @@ protected:
     void totalAmplTrans();
     void totalBodeTrans();
     void clearTotalTrans();
+    void exitPerfMode();
+    void enterPerfMode();
 
     void cntSetKernel();
     void cntSetSrcKernel();
@@ -67,6 +73,7 @@ public slots:
     void setKernel(std::shared_ptr<const FirKer> kernel, double roiL, double roiR);
     void setSrcKernel(std::shared_ptr<const FirKer> kernel);
     void setPlotType(const QString& plotType);
+    //void setPlotPerf(const QString& plotType);
     void resetPlot(double freq, int t, int band);
     void clearKernel();
     void clearSrcKernel();

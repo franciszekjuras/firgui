@@ -5,6 +5,7 @@
 namespace XColor {
 
 QColor changeHslLigthness(const QColor& col, int l);
+QColor changeHslSaturation(const QColor& col, int s);
 QColor getSolarizedAccent(const QColor& col);
 
 const QColor base03 = QColor(0, 43, 54);

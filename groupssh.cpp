@@ -13,6 +13,7 @@
 #include "groupssh.h"
 #include "switch.h"
 #include "xcolor.h"
+#include "clicklabel.h"
 
 #ifdef _WIN32
 GroupSsh::GroupSsh(QWidget *parent) :QWidget(parent)
@@ -82,6 +83,9 @@ this->setLayout(idHBox);
 
     idHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding,QSizePolicy::Fixed));
 
+    ClickLabel* helpClickLabel = new ClickLabel("<big>?</big>");
+    idHBox->addWidget(helpClickLabel);
+
 //part:function
 
     //:idLineEdit
@@ -98,6 +102,9 @@ this->setLayout(idHBox);
     //:connectWatch|authWatch
     connect(&connectWatch, &QFutureWatcher<R>::finished, this, &GroupSsh::connectToRPFinished);
     connect(&authWatch, &QFutureWatcher<R>::finished, this, &GroupSsh::authenticateRPFinished);
+
+    //:helpClickLabel
+    connect(helpClickLabel, &ClickLabel::clicked, this, &GroupSsh::showHelp);
 
     fcUploaded = false;
 }
