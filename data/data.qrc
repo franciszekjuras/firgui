@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/data">
         <file>icon.png</file>
+        <file>help.html</file>
     </qresource>
+    <qresource prefix="/"/>
 </RCC>

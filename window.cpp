@@ -310,7 +310,7 @@ void Window::setTooltipsVisible(bool v){
 }
 
 void Window::showHelp(const QString& anchor){
-    helpBrowser->setSource(QString("help.html#")+ anchor);
+    helpBrowser->setSource(QString("qrc:/data/help.html#")+ anchor);
     helpBrowser->show();
     helpBrowser->activateWindow();
 }

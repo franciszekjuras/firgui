@@ -1,0 +1,95 @@
+<html>
+<head>
+	<style>
+a    {color: #268bd2; text-decoration: none;}
+body {background-color: #fdf6e3;}
+h3   {color: #586e75; font-weight: normal; font-size: x-large; margin-left: 0em;}
+h2   {color: #657b83; font-weight: normal; font-size: xx-large; margin-left: 2em; margin-top: 2em; margin-bottom: 1em;}
+p    {color: #073642;}
+div  {margin: 2em;}
+	</style>
+}
+</head>
+<body>
+
+<br>
+<div>
+<A name="top"><H2>Table of Contents</H2></A>
+<p><big><A href="#sec.intro">Getting started</A><BR>
+<A href="#sec.conf">Configuring device</A><BR>
+<A href="#sec.specs">Specifing filter</A><BR>
+<A href="#sec.connect">Connecting to device</A><BR>
+<A href="#sec.plot">Understanding plots</A></big></p>
+
+<A name="sec.intro"><H2>Getting started</H2></A>
+
+<H3>Introduction</H3>
+
+<p>With FIR Controller you can configure and control a Red Pitaya board to act as a versatile frequency domain filter of analog signal from kHz to MHz range.</p>
+
+<p>Filter is configured by loading a parametric FIR (finite impulse response) filter design onto the FPGA circuit that resides on the board. To achieve highest possible performance you can choose from different designs based on your needs. Without going into detail, the choice of parameters is a matter of trade-off between frequency range (called band) in which filter can operate and its performance, where, in simple terms, performance of the filter is given by the frequency delta between the frequencies where filter passes a signal (pass-band) and stops a signal (stop-band).</p>
+
+<p>After a board is configured with filter design of choice, you can control operation of filter. This is done by specifying filter transmission function, which is a function of frequency with values corresponding to filter gain. This function has typically (and in our case) constant values over finite number of frequency ranges (bands). As previously mentioned, frequency range (band) where transmission function is equal to 1 is called pass-band and when is equal to 0 is called stop-band. However, transmission function can have any non-negative values. If its value (gain) is in the range from 0 to 1, signal is attenuated. If gain is bigger then 1, signal is amplified.</p>
+
+<p>An actual transmission function of filter is only an approximation of specified transmission function. How good is this approximation depends on filter performance. You can inspect an actual transmission function on the plots.</p>
+
+<p>To test different filter configurations and design transmission functions you don't have to connect to Red Pitaya. Rest of this section will quickly get you through basic steps to fully configure and specify filter and inspect the resulting transmission. More thorough explanation of particular steps is covered in next sections. You can also access appropriate section directly from application by clicking on question marks (<b><A>?</A></b>) near respective controls.
+
+<H3>Workflow guide</H3>
+
+<p>The application window is divide into to parts. On the left side reside all controls responsible for setting up a filter, while on the right side you can inspect created filter. The left side is further divided into three groups, corresponding to the three steps necessary to create a working filter: configuration, specification and connection. While specification must be done after configuration, connection to Red Pitaya can be established in any moment. In this example we will follow the steps in the top-down order.</p>
+
+<p>The most important setting of the configuration group is "Working band width". This setting determines the width of frequency range in which filter will operate and also its performance (the lower the better). Outside of this range transmission function (gain) will be always 0. Try setting this value to "500 kHz". You will notice, that in the specification group value of "Working band" changed to "0 - 500 kHz". You may wonder what is the difference between this settings? Forget for a moment about other controls in specification group and click on "working band" selection. You will see consequent ranges: "0 - 500 kHz", "500 - 1000 kHz", "1000 - 1500 kHz", and so on. Thanks to this option, if you are working with a high frequency signal, but with relatively narrow frequency spectrum, you can still use high performance filter configurations. To give you some numbers, if your signal frequency spectrum was in the range between 2.2 and 2.3 MHz, normally you would set "working band width" to 2.5 MHz. With possibility to choose higher band multiple you can set "Working band width" to 0.5 MHz which translates to 25 times increase in filter performance! The other control in configuration group can be left default. If you want to learn more about device configuration <a href="#sec.conf">go here.</a></p>
+ 
+<p>After choosing configuration, let's move on to specification group. Set "working band" to "0 - 500 kHz" for now. Leave the "window" control default and focus on "frequencies" and "gains" input fields. As mentioned before, transmission function is described by finite number of ranges with constant gain values. The simplest way to define such function is to specify (corner) frequencies at which it transitions from one gain to another and gain values for respective bands. Let's say we want a filter which blocks signal up to 200 kHz, passes it unchanged for frequencies from 200 to 210 kHz and decreases its amplitude by a factor of two from 210 to 500 kHz. In that case we need to set "frequencies" to "200 210" (kHz) and gains to "0 1 0.5". Note that you shouldn't enter band edge frequencies (0 and 500 kHz in this case), as there are set implicitly.</p>
+
+<p>If you now hit "Calculate" button, you will see that orange line appeared on a plot on the right side that closely resembles specified transmission function.</p>
+
+<p><A href="#top">Top</A></p>
+
+<A name="sec.conf"><H2>Configuring device</H2></A>
+
+<p>Donec a euismod velit. Vestibulum pulvinar egestas nisl in mattis. Praesent sit amet est ut elit malesuada congue. Donec elementum dui feugiat lacus rutrum, quis semper lacus dignissim. Nullam nec nisi orci. Aliquam molestie, sapien ac porttitor sagittis, risus ante efficitur turpis, at varius enim ante ac dolor. Mauris sollicitudin euismod magna, eu elementum quam ullamcorper fermentum. Morbi pellentesque pulvinar turpis ac scelerisque. Maecenas vel dui vitae metus eleifend congue sit amet quis arcu. Fusce scelerisque tempor egestas. Cras iaculis justo quis mauris fringilla, a varius nisl sagittis. Proin elit risus, aliquam in mollis sed, faucibus ut dolor. Praesent aliquet sem iaculis rutrum dignissim. Duis suscipit dapibus turpis, vel vehicula enim. Etiam condimentum ligula massa, auctor laoreet mi vulputate in. </p>
+
+<p>Suspendisse molestie ex mauris, vel egestas eros convallis at. Mauris nec eros est. Curabitur mollis est ligula, nec efficitur ex consequat quis. Sed vulputate purus ex, et consectetur erat porta at. Vestibulum eleifend risus at tellus vehicula malesuada. Nunc lacus est, fermentum quis purus eget, posuere tincidunt est. Proin ac neque nec ligula cursus tincidunt in in justo. Nunc nec velit luctus, mollis justo nec, pretium orci. Duis ultrices vel nunc ut facilisis. Proin vel faucibus enim. Quisque vitae ultricies. </p>
+
+<p><A href="#top">Top</A></p>
+
+<A name="sec.specs"><H2>Specifing filter</H2></A>
+
+<p>Pellentesque vel ultricies nibh, vel consectetur purus. Vivamus ut metus massa. Cras eu mauris ultricies, blandit nulla eget, hendrerit ante. Fusce sodales ultrices bibendum. Nam sit amet eleifend mi, id facilisis eros. Suspendisse enim tellus, vestibulum in velit non, elementum facilisis tellus. Sed sed convallis felis, lacinia venenatis ante. Vivamus sed augue at purus mollis egestas. Vestibulum volutpat velit suscipit mattis semper. Suspendisse finibus est vitae dui interdum, ac congue lectus facilisis. Mauris commodo placerat hendrerit. Maecenas a pretium diam. Sed quis elit nec ipsum egestas auctor.</p>
+
+<p>Vivamus vitae gravida sapien. Nam nulla dolor, bibendum in mauris vel, condimentum congue nisl. Proin massa felis, ultricies a ex sit amet, maximus mattis magna. Mauris id lorem vitae turpis ultricies consectetur sed quis leo. Sed nec ante lorem. Suspendisse in nisl sem. Pellentesque turpis arcu, porta in mi a, tempor mattis lorem. Aliquam lacinia, nulla non semper iaculis, erat nunc vehicula urna, at pulvinar ex purus nec tortor.</p>
+
+<p>Ut posuere nibh non felis volutpat scelerisque. Duis efficitur sodales tellus, at rhoncus arcu volutpat nec. Etiam congue vulputate varius. Sed porta mollis justo a mattis. Nunc non mauris ipsum. Nam ornare lacinia augue et cursus. Integer aliquam sollicitudin tellus eu consequat. Integer aliquet. </p>
+
+<p><A href="#top">Top</A></p>
+
+<A name="sec.connect"><H2>Connecting to device</H2></A>
+
+<p>Quisque ornare egestas elit, sit amet semper felis mattis eu. Maecenas turpis turpis, placerat cursus massa non, porta dapibus felis. Ut vel gravida magna, in aliquet orci. Nunc nec nibh urna. Etiam facilisis sapien at lacus consectetur, vitae dignissim mauris vehicula. Cras sodales pulvinar molestie. Aenean sit amet gravida metus.</p>
+
+<p>Fusce sed est ac ipsum vestibulum sodales fringilla in elit. Nullam et arcu dictum, porta dui ac, lobortis turpis. Suspendisse pellentesque dapibus metus, eget vehicula nulla consequat eget. Donec volutpat orci ac ex ullamcorper, gravida posuere enim vulputate. Nulla et ipsum tincidunt, venenatis dolor et, imperdiet ligula. Ut vel quam mi. Aenean mauris risus, cursus vel massa et, consectetur blandit leo. Nullam libero eros, convallis in interdum et, convallis fringilla elit. Praesent in nisi neque. Curabitur luctus lorem ut orci tincidunt, non porta enim vestibulum. Proin faucibus sem vitae congue ornare. Nulla felis tortor, efficitur vitae eleifend pellentesque, luctus vel neque.</p>
+
+<p>Maecenas fermentum mi ut accumsan cursus. Nunc congue eros id urna pharetra euismod. Etiam vehicula, nunc efficitur tristique egestas, tortor urna placerat dolor, a pulvinar lectus neque non mauris. Praesent lacinia lacus massa, aliquam venenatis purus facilisis id. Nullam ultrices viverra iaculis. Fusce aliquam, massa quis posuere tincidunt, erat. </p>
+
+<p><A href="#top">Top</A></p>
+
+<A name="sec.plot"><H2>Understanding plots</H2></A>
+
+<p>Cras a est sed elit bibendum blandit. Donec massa purus, elementum nec massa porta, tempor ultrices dolor. Suspendisse mollis finibus tellus id posuere. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Mauris sagittis justo ac est rutrum, eu pretium sapien mattis. Curabitur hendrerit bibendum consequat. Nullam id nibh eget ex imperdiet eleifend vel quis lectus. Nulla fringilla ex nec velit rutrum imperdiet. Maecenas mattis, sapien vel dictum venenatis, risus lacus congue ex, non cursus magna dui ultrices metus. Praesent ultricies, tortor ut interdum venenatis, erat orci ullamcorper elit, nec convallis enim enim eu eros. Nunc mollis odio velit, in porttitor sapien porta tempus. Fusce porttitor sem ac quam sagittis lacinia.</p>
+
+<p>Integer sed nisi tortor. Fusce sit amet ligula commodo dui bibendum imperdiet. Ut dictum varius vestibulum. Curabitur cursus diam vel risus tristique lobortis. In et iaculis libero. Donec non leo metus. Praesent dapibus libero quis condimentum sollicitudin. Cras mollis aliquam lacus nec suscipit. Integer ultricies arcu sit amet nisl mattis posuere. Morbi vitae diam augue. Quisque porttitor purus at molestie lobortis.</p>
+
+<p>Sed dignissim nisi lacus, vel facilisis elit hendrerit non. Donec risus nunc, pharetra nec turpis nec, aliquam rutrum tortor. Praesent sodales lectus eget ligula elementum. </p>
+
+<p><A href="#top">Top</A></p>
+
+</div>
+
+<br>
+<br>
+<br>
+<br>
+
+</html>

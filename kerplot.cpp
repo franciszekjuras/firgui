@@ -30,7 +30,7 @@ KerPlot::KerPlot(QWidget* parent):
     waitSpin->setColor(QApplication::palette().highlight().color());
 
     perfModeTimer.setSingleShot(true);
-    perfModeTimeoutMS = 500;
+    perfModeTimeoutMS = 400;
     connect(&perfModeTimer, &QTimer::timeout, this, &KerPlot::exitPerfMode);
 
     connect(&spinWatch, &BoolMapOr::valueChanged, [=](bool v){if(v)this->waitSpin->start(); else this->waitSpin->stop();});

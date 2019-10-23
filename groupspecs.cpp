@@ -245,7 +245,7 @@ void GroupSpecs::calculateKernel(){
     if(!textToDoubles(freqsLineEdit->text().toStdString(),freqs) ||
         !textToDoubles(gainsLineEdit->text().toStdString(),gains)){
         qWarning() << "Incorrect filter specification.\nFreqs:" << freqsLineEdit->text() << "\nGains:" << gainsLineEdit->text();
-        int uc = QMessageBox::warning(this, tr(WINDOW_TITLE),tr("Could not parse filter specification. Try changing commas to dots. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
+        int uc = QMessageBox::warning(this, tr(WINDOW_TITLE),tr("Could not parse filter specification. Make sure that all inserted values are proper numbers and are separated by spaces only."),tr("Help"),tr("Close"),QString(),1, 1);
         if(uc == 0)showHelp();
         return;
     }
@@ -284,7 +284,7 @@ void GroupSpecs::calculateKernel(){
 
     if(!ker.setSpecification(freqs, gains)){
         qWarning() << "Incorrect filter specification.\nFreqs:" << freqsLineEdit->text() << "\nGains:" << gainsLineEdit->text();
-        int uc = QMessageBox::warning(this, tr(WINDOW_TITLE),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
+        int uc = QMessageBox::warning(this, tr(WINDOW_TITLE),tr("Incorrect filter specification. Make sure that number of gains is bigger by one from number of frequencies, that frequencies are ordered and in limits of working band, and that gains are non-negative."),tr("Help"),tr("Close"),QString(),1, 1);
         if(uc == 0)showHelp();
         return;
     }
@@ -304,7 +304,7 @@ void GroupSpecs::calculateKernelFinished(){
 
     if(!ker->isValid()){
         qWarning() << "Kernel calculation failed because of incorrect specification.";
-        int uc = QMessageBox::warning(this, tr(WINDOW_TITLE),tr("Incorrect filter specification. Example:\n\nFrequencies: 200 300 (kHz)\nGains: 0 1 0\nBand: 0 - 500 kHz"),tr("Help"),tr("Close"),QString(),1, 1);
+        int uc = QMessageBox::warning(this, tr(WINDOW_TITLE),tr("Incorrect filter specification. Make sure that number of gains is bigger by one from number of frequencies, that frequencies are ordered and in limits of working band, and that gains are non-negative."),tr("Help"),tr("Close"),QString(),1, 1);
         if(uc == 0)showHelp();
         return;
     }
