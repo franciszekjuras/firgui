@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
         palette.setColor(QPalette::ButtonText, XColor::base02);
 
         //extra foreground
-        palette.setColor(QPalette::Inactive, QPalette::WindowText, XColor::base1);
+        //palette.setColor(QPalette::Inactive, QPalette::WindowText, XColor::base1);
         palette.setColor(QPalette::Disabled,QPalette::ButtonText, XColor::base01);
     }
     else{ //light theme
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
         palette.setColor(QPalette::ButtonText, XColor::base02);
 
         //extra foreground
-        palette.setColor(QPalette::Inactive, QPalette::WindowText, XColor::base01);
+        //palette.setColor(QPalette::Inactive, QPalette::WindowText, XColor::base01);
         palette.setColor(QPalette::Disabled,QPalette::ButtonText, XColor::base1);
 
     } //light theme end
@@ -184,6 +184,7 @@ int main(int argc, char *argv[])
     dialPal.setColor(QPalette::Window, XColor::base3); //currently doesn't work, but just in case...
     dialPal.setColor(QPalette::WindowText, XColor::base02);
     qApp->setPalette(dialPal, "QDialog");
+    qApp->setPalette(palette, "TitleBar");
 
     Window window(isDarkTheme);
     window.defaultFontSize = defaultPointSize;
@@ -200,7 +201,6 @@ int main(int argc, char *argv[])
         int winTop = wRect.y();
         if(delta > winTop)
             delta = winTop;
-        qDebug() << wRect;
         wRect.adjust(0, -delta, 0, -delta);
         window.setGeometry(wRect);
     }

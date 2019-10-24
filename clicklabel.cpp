@@ -14,7 +14,6 @@ void ClickLabel::init(){
     hoverPal = this->palette();
     int h, s, l; QColor col;
     normPal.color(QPalette::Highlight).getHsl(&h,&s,&l);
-    qDebug() << "lightness" << l;
     col.setHsl(h,s,110);
     //normPal.setColor(this->foregroundRole(), col);
     normPal.setColor(this->foregroundRole(), normPal.color(QPalette::Active,QPalette::Highlight));

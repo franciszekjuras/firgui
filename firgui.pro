@@ -44,7 +44,7 @@ DEFINES += MSVISUALDLLSUFIX=\"\\\"140\\\"\"
 
 DEFINES += GITHUBREPO=\"\\\"https://github.com/franciszekjuras/firgui\\\"\"
 #Make sure to update!!!
-DEFINES += IS_DEV
+#DEFINES += IS_DEV
 DEFINES += IS_PRERELEASE
 VERSION = 1.3.3
 #End of updates
@@ -77,6 +77,7 @@ HEADERS += \
     cautoupdatergithub.h \
     clicklabel.h \
     delegate.h \
+    titlebar.h \
     window.h \
     groupssh.h \
     qcustomplot.h \
@@ -95,6 +96,7 @@ SOURCES += main.cpp \
     boxupdate.cpp \
     cautoupdatergithub.cpp \
     clicklabel.cpp \
+    titlebar.cpp \
     window.cpp \
     groupssh.cpp \
     qcustomplot.cpp \

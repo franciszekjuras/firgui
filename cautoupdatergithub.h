@@ -15,12 +15,6 @@
 #define UPDATE_FILE_EXTENSION QLatin1String("-linux.zip")
 #endif
 
-namespace UpdateInstaller {
-
-bool install(const QString& downloadedUpdateFilePath);
-
-}
-
 class CAutoUpdaterGithub : public QObject
 {
     Q_OBJECT

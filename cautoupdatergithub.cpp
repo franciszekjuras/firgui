@@ -40,7 +40,7 @@ void CAutoUpdaterGithub::checkForUpdates()
 void CAutoUpdaterGithub::downloadUpdate(const QString& updateUrl, const QString &downloadDir)
 {
 	assert(!_downloadedBinaryFile.isOpen());
-    qDebug() << downloadDir + "appupdate" + UPDATE_FILE_EXTENSION;
+    qInfo() << "Downloading update to:" << downloadDir + "appupdate" + UPDATE_FILE_EXTENSION;
     _downloadedBinaryFile.setFileName(downloadDir + "appupdate" + UPDATE_FILE_EXTENSION);
 	if (!_downloadedBinaryFile.open(QFile::WriteOnly))
 	{
@@ -172,9 +172,6 @@ void CAutoUpdaterGithub::updateDownloaded()
 	}
 
     updateDownloadFinished();
-
-    if (!UpdateInstaller::install(_downloadedBinaryFile.fileName()))
-        updateError("Failed to launch the downloaded update.");
 }
 
 void CAutoUpdaterGithub::onNewDataDownloaded()
@@ -184,13 +181,5 @@ void CAutoUpdaterGithub::onNewDataDownloaded()
 		return;
 
 	_downloadedBinaryFile.write(reply->readAll());
-}
-
-
-bool UpdateInstaller::install(const QString& downloadedUpdateFilePath)
-{
-    qDebug() << "Installing" << downloadedUpdateFilePath;
-    return true;
-    //return QProcess::startDetached('\"' + downloadedUpdateFilePath + '\"');
 }
 

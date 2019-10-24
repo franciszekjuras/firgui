@@ -14,13 +14,13 @@ div  {margin: 2em;}
 
 <br>
 <div>
-<A name="top"><H2>Table of Contents</H2></A>
+<!--<A name="top"><H2>Table of Contents</H2></A>
 <p><big><A href="#sec.intro">Getting started</A><BR>
 <A href="#sec.conf">Configuring device</A><BR>
 <A href="#sec.specs">Specifing filter</A><BR>
 <A href="#sec.connect">Connecting to device</A><BR>
 <A href="#sec.plot">Understanding plots</A></big></p>
-
+-->
 <A name="sec.intro"><H2>Getting started</H2></A>
 
 <H3>Introduction</H3>
@@ -33,19 +33,33 @@ div  {margin: 2em;}
 
 <p>An actual transmission function of filter is only an approximation of specified transmission function. How good is this approximation depends on filter performance. You can inspect an actual transmission function on the plots.</p>
 
-<p>To test different filter configurations and design transmission functions you don't have to connect to Red Pitaya. Rest of this section will quickly get you through basic steps to fully configure and specify filter and inspect the resulting transmission. More thorough explanation of particular steps is covered in next sections. You can also access appropriate section directly from application by clicking on question marks (<b><A>?</A></b>) near respective controls.
+<p>To test different filter configurations and design transmission functions you don't have to connect to Red Pitaya. Rest of this section will quickly get you through basic steps to fully configure and specify filter and inspect the resulting transmission. <!--More thorough explanation of particular steps is covered in next sections. -->You can also jump to specific parts directly from application by clicking on question marks (<b><A>?</A></b>) near relevant controls.
 
 <H3>Workflow guide</H3>
 
 <p>The application window is divide into to parts. On the left side reside all controls responsible for setting up a filter, while on the right side you can inspect created filter. The left side is further divided into three groups, corresponding to the three steps necessary to create a working filter: configuration, specification and connection. While specification must be done after configuration, connection to Red Pitaya can be established in any moment. In this example we will follow the steps in the top-down order.</p>
 
-<p>The most important setting of the configuration group is "Working band width". This setting determines the width of frequency range in which filter will operate and also its performance (the lower the better). Outside of this range transmission function (gain) will be always 0. Try setting this value to "500 kHz". You will notice, that in the specification group value of "Working band" changed to "0 - 500 kHz". You may wonder what is the difference between this settings? Forget for a moment about other controls in specification group and click on "working band" selection. You will see consequent ranges: "0 - 500 kHz", "500 - 1000 kHz", "1000 - 1500 kHz", and so on. Thanks to this option, if you are working with a high frequency signal, but with relatively narrow frequency spectrum, you can still use high performance filter configurations. To give you some numbers, if your signal frequency spectrum was in the range between 2.2 and 2.3 MHz, normally you would set "working band width" to 2.5 MHz. With possibility to choose higher band multiple you can set "Working band width" to 0.5 MHz which translates to 25 times increase in filter performance! The other control in configuration group can be left default. If you want to learn more about device configuration <a href="#sec.conf">go here.</a></p>
+<A name="sec.conf"></A>
+<p>The most important setting of the configuration group is "Working band width". This setting determines the width of frequency range in which filter will operate and also its performance (the lower the better). Outside of this range transmission function (gain) will be always 0. Try setting this value to "500 kHz". You will notice, that in the specification group value of "Working band" changed to "0 - 500 kHz". You may wonder what is the difference between this settings? Forget for a moment about other controls in specification group and click on "working band" selection. You will see consequent ranges: "0 - 500 kHz", "500 - 1000 kHz", "1000 - 1500 kHz", and so on. Thanks to this option, if you are working with a high frequency signal, but with relatively narrow frequency spectrum, you can still use high performance filter configurations. To give you some numbers, if your signal frequency spectrum was in the range between 2.2 and 2.3 MHz, normally you would set "working band width" to 2.5 MHz. With possibility to choose higher band multiple you can set "Working band width" to 0.5 MHz and set "Working band" to "2 - 2.5 MHz" which translates to 25 times increase in filter performance! <!--- The other control in configuration group can be left default. If you want to learn more about device configuration <a href="#sec.conf">go here.</a>--></p>
  
-<p>After choosing configuration, let's move on to specification group. Set "working band" to "0 - 500 kHz" for now. Leave the "window" control default and focus on "frequencies" and "gains" input fields. As mentioned before, transmission function is described by finite number of ranges with constant gain values. The simplest way to define such function is to specify (corner) frequencies at which it transitions from one gain to another and gain values for respective bands. Let's say we want a filter which blocks signal up to 200 kHz, passes it unchanged for frequencies from 200 to 210 kHz and decreases its amplitude by a factor of two from 210 to 500 kHz. In that case we need to set "frequencies" to "200 210" (kHz) and gains to "0 1 0.5". Note that you shouldn't enter band edge frequencies (0 and 500 kHz in this case), as there are set implicitly.</p>
+<A name="sec.specs"></A> 
+<p>After choosing configuration, let's move on to specification group. Set "working band" to "0 - 500 kHz" for now. Leave the "window" control default and focus on "frequencies" and "gains" input fields. As mentioned before, transmission function is described by finite number of ranges with constant gain values. The simplest way to define such function is to specify (corner) frequencies at which it transitions from one gain to another and gain values for respective bands. Let's say we want a filter which blocks signal up to 200 kHz, passes it unchanged for frequencies from 200 to 210 kHz and decreases its amplitude by a factor of two from 210 to 500 kHz. In that case we need to set "frequencies" to "200 210" (kHz) and gains to "0 1 0.5". Note that you shouldn't enter band edge frequencies (0 and 500 kHz in this case), as there are set implicitly. Enter this values but don't hit "Calculate" button yet and move your focus on the area on the right</p>
 
-<p>If you now hit "Calculate" button, you will see that orange line appeared on a plot on the right side that closely resembles specified transmission function.</p>
+<A name="sec.plot"></A> 
+<p>Over the plotting area you can see three switches that control visibility of three plots. For the beginning switch then all off except "Filter transmission" switch and make sure plot type is set to "Amplitude Plot". If you now click the "Calculate" button, an orange line will appear that closely resembles specified transmission function. This is an actual filter transmission function. It's only an approximation of ideal transmission becouse of finite number of signal that filter can "see" at one time. From a mathematical point of view it's a problem of approximating a periodic function with cosine series with limited number of coefficients. Note, that the width of transition from stopband to passband is on the order of single kHz.</p>
+
+<p>However, this is not an only limitation of this filtering setup. In order to narrow the working band width a technique called rate conversion is employed. While this greatly increases filtering performance, its downside is that additional filtering stage is required. Use scroll wheel to zoom out plot to see entire working band. If you now switch off "Filter transmission" and switch on "Rate conversion transmission" you will see the transmission of this rate conversion filter. Becouse the rate conversion has to be done twice, first for downconversion, then upconversion, the total transmition function of this filtering solution is the result of multiplication of "Filter transmission" by square of "Rate conversion transmission". You can see this result by switching on the "Total transmission" plot.</p>
+
+<p> If you are especially interested in how good is the attenuation in stopband, change plot type from "Amplitude Plot" to "Bode Plot". Now you will see the transmission functions in logharitmic scale. Be aware however, that in this plot not amplitude but power transmission is displayed which is equal to square of transmission functions. Thus amplitude gain of 1 translates to 0 dB attenuation, gain of 0.1 translates to -20 dB attenuation, gain of 0.01 translates to -40 dB attenuation, and so on.</p>
+
+<p>Now try playing around with various settings and see how they affect resulting plots, especially transition widths and attenuation levels.</p>
+
+
+<A name="sec.connect"></A> 
 
 <p><A href="#top">Top</A></p>
+
+<!--
 
 <A name="sec.conf"><H2>Configuring device</H2></A>
 
@@ -84,6 +98,7 @@ div  {margin: 2em;}
 <p>Sed dignissim nisi lacus, vel facilisis elit hendrerit non. Donec risus nunc, pharetra nec turpis nec, aliquam rutrum tortor. Praesent sodales lectus eget ligula elementum. </p>
 
 <p><A href="#top">Top</A></p>
+-->
 
 </div>
 
@@ -91,5 +106,8 @@ div  {margin: 2em;}
 <br>
 <br>
 <br>
-
+<br>
+<br>
+<br>
+<br>
 </html>

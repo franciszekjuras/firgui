@@ -84,7 +84,7 @@ this->setLayout(idHBox);
     idHBox->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding,QSizePolicy::Fixed));
 
     ClickLabel* helpClickLabel = new ClickLabel("<big>?</big>");
-    idHBox->addWidget(helpClickLabel);
+    //idHBox->addWidget(helpClickLabel);
 
 //part:function
 

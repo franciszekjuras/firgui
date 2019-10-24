@@ -257,7 +257,6 @@ void GroupSpecs::calculateKernel(){
 
     //ROI calculation
     if(freqs.size() > 0){
-        qDebug() << "t" << t << "d" << d;
         double roiConst = 800000.; int roiDiv = t*t*d;
         double roiExt = qMax((roiConst/roiDiv), (freqs.back() - freqs.front())*0.3);
             roiL = freqs.front() - roiExt;

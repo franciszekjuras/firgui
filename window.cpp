@@ -59,15 +59,6 @@ centralWidget->setLayout(mainHBox);
         QHBoxLayout* lbotHBox = new QHBoxLayout;
         lbotWid->setLayout(lbotHBox);
 
-            Switch* showTooltipSwitch = new Switch(tr("Show Tooltips"));
-            //lbotHBox->addWidget(showTooltipSwitch);
-            showTooltipSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-            showTooltipSwitch->setFocusPolicy(Qt::ClickFocus);
-
-
-            //lbotHBox->addItem(new QSpacerItem(5,0,QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
-
-
             ClickLabel* decrText = new ClickLabel();
             decrText->setText("<p><small>A<sup>―</sup></small></p>");
             lbotHBox->addWidget(decrText);
@@ -152,17 +143,17 @@ centralWidget->setLayout(mainHBox);
         plCtrlHBox->setContentsMargins(0,0,0,0);
         //plCtrlHBox --v
 
-            Switch* firTransShowSwitch = new Switch(tr("Filter transmission"),QBrush(QColor(255, 119, 0)));
+            Switch* firTransShowSwitch = new Switch(tr("Filter")+ "\n" + tr("transmission"),QBrush(QColor(255, 119, 0)));
             plCtrlHBox->addWidget(firTransShowSwitch);
             firTransShowSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
             firTransShowSwitch->setFocusPolicy(Qt::ClickFocus);
 
-            Switch* srcTransShowSwitch = new Switch(tr("Rate conversion trans."),QBrush(QColor(132,186,91)));
+            Switch* srcTransShowSwitch = new Switch(tr("Rate conversion") + "\n" + tr("transmission"),QBrush(QColor(132,186,91)));
             plCtrlHBox->addWidget(srcTransShowSwitch);
             srcTransShowSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
             srcTransShowSwitch->setFocusPolicy(Qt::ClickFocus);
 
-            Switch* totalTransShowSwitch = new Switch(tr("Total trans."),QBrush(QColor(114,147,203)));
+            Switch* totalTransShowSwitch = new Switch(tr("Total") + "\n" + tr("transmission"),QBrush(QColor(114,147,203)));
             plCtrlHBox->addWidget(totalTransShowSwitch);
             totalTransShowSwitch->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
             totalTransShowSwitch->setFocusPolicy(Qt::ClickFocus);
@@ -194,7 +185,35 @@ centralWidget->setLayout(mainHBox);
     helpBrowser->setWindowTitle(tr(WINDOW_TITLE));
     helpBrowser->setAttribute(Qt::WA_QuitOnClose, false);
 
+    /*titleBar = new TitleBar(this);
+    QHBoxLayout* toolBox = new QHBoxLayout;
+    toolBox->setContentsMargins(10,0,10,0);
+    titleBar->setLayout(toolBox);
+    QSizePolicy toolPol = QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
+    QPushButton* toolPush = new QPushButton(tr("Click me"));
+    toolPush->setAutoDefault(false);
+    toolBox->addWidget(toolPush);
+    toolPush->setSizePolicy(toolPol);
+    //toolPush->setFocusPolicy(Qt::NoFocus);
+
+    QLineEdit* toolLE = new QLineEdit;
+    toolLE->setSizePolicy(toolPol);
+    toolBox->addWidget(toolLE);
+
+    QComboBox* toolCombo = new QComboBox;
+    toolCombo->setSizePolicy(toolPol);
+#ifdef _WIN32
+    toolCombo->view()->setItemDelegate(new PopupItemDelegate(toolCombo));
+#endif
+    toolBox->addWidget(toolCombo);
+    toolCombo->addItems(QStringList() << "a" << "b" << "c" << "d" << "e");
+
+    titleBar->show();*/
+
 //part:funtion
+
+    //qApp->installEventFilter(this);
 
     //:groupSpecs
     connect(groupSpecs, &GroupSpecs::kernelChanged, kerPlot, &KerPlot::setKernel);
@@ -216,11 +235,6 @@ centralWidget->setLayout(mainHBox);
     connect(groupSsh, &GroupSsh::nfyConnected, groupSpecs, &GroupSpecs::handleConnect);
     connect(groupSsh, &GroupSsh::nfyBitstreamLoaded, groupSpecs, &GroupSpecs::bitstreamLoaded);
     connect(groupSsh, &GroupSsh::showHelp, [=](){showHelp("sec.connect");});
-
-
-    //:showTooltipSwitch
-    connect(showTooltipSwitch, &Switch::toggled, this, &Window::setTooltipsVisible);
-    showTooltipSwitch->animateClick(0);
 
 #ifdef _WIN32
     //:themeSwitch
@@ -276,7 +290,7 @@ void Window::setDarkTheme(bool darkTheme){
         palette.setColor(QPalette::Text, XColor::base02);
         palette.setColor(QPalette::ButtonText, XColor::base02);
 
-        palette.setColor(QPalette::Inactive, QPalette::WindowText, XColor::base1);
+        //palette.setColor(QPalette::Inactive, QPalette::WindowText, XColor::base1);
         palette.setColor(QPalette::Disabled,QPalette::ButtonText, XColor::base01);
 
         QSettings appSet;
@@ -291,7 +305,7 @@ void Window::setDarkTheme(bool darkTheme){
         palette.setColor(QPalette::Text, forgrColor);
         palette.setColor(QPalette::ButtonText, forgrColor);
 
-        palette.setColor(QPalette::Inactive, QPalette::WindowText, XColor::base01);
+        //palette.setColor(QPalette::Inactive, QPalette::WindowText, XColor::base01);
         palette.setColor(QPalette::Disabled,QPalette::ButtonText, XColor::base1);
 
         QSettings appSet;
@@ -300,13 +314,7 @@ void Window::setDarkTheme(bool darkTheme){
 
     qApp->setPalette(palette);
     qApp->setPalette(dialPal, "QDialog");
-}
-
-void Window::setTooltipsVisible(bool v){
-    if(v)
-        qApp->removeEventFilter(this);
-    else
-        qApp->installEventFilter(this);
+    qApp->setPalette(palette, "TitleBar");
 }
 
 void Window::showHelp(const QString& anchor){
@@ -316,8 +324,6 @@ void Window::showHelp(const QString& anchor){
 }
 
 bool Window::eventFilter(QObject* obj, QEvent* event){
-    if (event->type() == QEvent::ToolTip)
-        return true;
 
     return QMainWindow::eventFilter(obj, event);
 }

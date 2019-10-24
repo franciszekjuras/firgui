@@ -167,8 +167,15 @@ Switch::~Switch() {
 
 QSize Switch::sizeHint() const {
     auto h = style.height;
-    auto w = style.indicatorMargin.left() + style.height + style.indicatorMargin.right() + fontMetrics().width(text());
+    QStringList labelList = text().split(QRegExp("\n|\r\n|\r"));
+    int labelAdv = 0;
+    for(const auto& i : labelList){
+        int adv = fontMetrics().horizontalAdvance(i);
+        if(adv>labelAdv)
+            labelAdv = adv;
+    }
 
+    auto w = style.indicatorMargin.left() + style.height + style.indicatorMargin.right() + labelAdv;
     return QSize(w, h);
 }
 

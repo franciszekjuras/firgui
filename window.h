@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QMainWindow>
 #include <QTextBrowser>
+#include "titlebar.h"
 
 class Window : public QMainWindow
 {
@@ -19,11 +20,11 @@ public:
 
 private:
     bool isDarkTheme;
-    void setTooltipsVisible(bool v);
     void showHelp(const QString& anchor);
     void showGetStarted();
     bool eventFilter(QObject* obj, QEvent* event);
 
+    TitleBar* titleBar;
     QTextBrowser* helpBrowser;
 };
 

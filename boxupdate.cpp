@@ -153,9 +153,9 @@ void BoxUpdate::onDownloadUpdate(){
 
 
 void BoxUpdate::onUpdateAvailable(CAutoUpdaterGithub::ChangeLog changelog){
-    qDebug() << "Available updates:";
+    qInfo() << "Available updates:";
     for(auto it : changelog){
-        qDebug() << it.versionString;
+        qInfo() << it.versionString;
     }
     for(auto it : changelog){
         if(updateToPreReleases == it.versionString.contains("beta")){
@@ -180,14 +180,14 @@ void BoxUpdate::onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal){
         downloadLabel->show();
         downloadProgress->show();
     }
-    qDebug() << bytesReceived << "/" << bytesTotal;
+    qInfo() << bytesReceived << "/" << bytesTotal;
     downloadLabel->setText(QString::number(static_cast<double>(bytesReceived)/1048576.,'f',1) + "/" +
                            QString::number(static_cast<double>(bytesTotal)/1048576.,'f',1) + "MB");
     downloadProgress->setValue(static_cast<int>(bytesReceived));
 }
 
 void BoxUpdate::onUpdateDownloadFinished(){
-    qDebug() << "Download Finished";
+    qInfo() << "Download Finished";
     downloadProgress->hide();
     downloadLabel->hide();
     updateLabel->setText("Unpacking archive...");
