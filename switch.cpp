@@ -174,7 +174,9 @@ QSize Switch::sizeHint() const {
         if(adv>labelAdv)
             labelAdv = adv;
     }
-
+    int textH = fontMetrics().height() * labelList.length();
+    if(textH > h)
+        h = textH;
     auto w = style.indicatorMargin.left() + style.height + style.indicatorMargin.right() + labelAdv;
     return QSize(w, h);
 }

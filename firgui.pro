@@ -6,7 +6,6 @@ TEMPLATE = app
 TARGET = "FIR Controller"
 CONFIG += c++14
 
-DEFINES += WORKDIR_STARTUP_CHECK
 #Debugging defines
 #linux: DEFINES += COMD
 #linux: DEFINES += USERD=\"\\\"franciszek\\\"\"
@@ -32,9 +31,17 @@ win32{
 QMAKE_CXXFLAGS += /openmp
 RC_ICONS = icon.ico
 DEFINES += WIN32_LEAN_AND_MEAN
+
+#Linking right libssh version
+contains(QMAKE_TARGET.arch, x86_64){
+LIBS += -L$$PWD/win64/lib/ -lssh
+INCLUDEPATH += $$PWD/win64/include
+DEPENDPATH += $$PWD/win64/include
+} else {
 LIBS += -L$$PWD/win32/lib/ -lssh
 INCLUDEPATH += $$PWD/win32/include
 DEPENDPATH += $$PWD/win32/include
+}
 
 #As of 2019 for Microsoft Visual Studio 2015-2019 runtime libraries sufix is 140.
 #Make sure that you update this sufix appropriately if you use newer compilers
@@ -44,9 +51,9 @@ DEFINES += MSVISUALDLLSUFIX=\"\\\"140\\\"\"
 
 DEFINES += GITHUBREPO=\"\\\"https://github.com/franciszekjuras/firgui\\\"\"
 #Make sure to update!!!
-#DEFINES += IS_DEV
+DEFINES += IS_DEV
 DEFINES += IS_PRERELEASE
-VERSION = 1.3.3
+VERSION = 1.3.4
 #End of updates
 
 DEFINES += VERSIONSTRING=\"\\\"$${VERSION}\\\"\"

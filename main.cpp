@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 
     QDir startdir;
 
-#ifdef WORKDIR_STARTUP_CHECK
+#ifndef IS_DEV
 #ifdef _WIN32
     if(!startdir.exists("FIR Controller.exe")){
 #else
