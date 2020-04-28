@@ -14,11 +14,13 @@ class Window : public QMainWindow
 public:
     Window(bool darkTheme = false, QWidget *parent = nullptr);
 
+    void toogleFullscreen();
     void setDarkTheme(bool darkTheme);
 
     int defaultFontSize;
 
 private:
+    bool wasMaximized;
     bool isDarkTheme;
     void showHelp(const QString& anchor);
     void showGetStarted();

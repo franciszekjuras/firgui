@@ -76,6 +76,7 @@ centralWidget->setLayout(mainHBox);
                 QFont appFont = QApplication::font();
                 if(defaultFontSize > 0){appFont.setPointSize(defaultFontSize);}
                 QSettings fontSet; fontSet.setValue("view/fontSize",appFont.pointSize());
+                qDebug() << appFont.pointSize();
                 QApplication::setFont(appFont);});
 
             ClickLabel* incrText = new ClickLabel();
@@ -86,6 +87,7 @@ centralWidget->setLayout(mainHBox);
                 if(appFont.pointSize()>0){
                     appFont.setPointSize(appFont.pointSize()+1);}
                 QSettings fontSet; fontSet.setValue("view/fontSize",appFont.pointSize());
+                qDebug() << appFont.pointSize();
                 QApplication::setFont(appFont);});
 
 #ifdef _WIN32
@@ -215,7 +217,14 @@ centralWidget->setLayout(mainHBox);
 
     //qApp->installEventFilter(this);
 
+    wasMaximized = false;
+    //if(settings->fullscreen != isFullscreen) toogleFullscreen():
+
+    QShortcut *fullscreensc = new QShortcut(QKeySequence("F11"), this);
+    connect(fullscreensc, &QShortcut::activated, this, &Window::toogleFullscreen);
+
     //:groupSpecs
+    connect(groupSpecs, &GroupSpecs::textSpecChanged, kerPlot, &KerPlot::setSpec);
     connect(groupSpecs, &GroupSpecs::kernelChanged, kerPlot, &KerPlot::setKernel);
     connect(groupSpecs, &GroupSpecs::srcKernelChanged, kerPlot, &KerPlot::setSrcKernel);
     connect(groupSpecs, &GroupSpecs::resetPlot, kerPlot, &KerPlot::resetPlot);
@@ -276,6 +285,17 @@ centralWidget->setLayout(mainHBox);
 
     groupSpecs->setFocus();
 
+}
+
+void Window::toogleFullscreen(){
+    if(isFullScreen()){
+        ((wasMaximized) ? showMaximized() : showNormal());
+        // ui_->menu_view_toggle_fullscreen->setIcon(QIcon(":/fullscreen_enter"));
+    } else{
+        wasMaximized = isMaximized();
+        showFullScreen();
+        // ui_->menu_view_toggle_fullscreen->setIcon(QIcon(":/fullscreen_exit")));
+    }
 }
 
 void Window::setDarkTheme(bool darkTheme){

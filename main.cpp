@@ -11,6 +11,7 @@
 #include <QSettings>
 #include <QStyleFactory>
 #include <QScreen>
+#include <QFontDatabase>
 #include "window.h"
 #include <libssh/libssh.h>
 #include <fstream>
@@ -53,12 +54,15 @@ int main(int argc, char *argv[])
 
     app.setWindowIcon(QIcon(":data/icon.png"));
 #ifdef _WIN32
-    //     Font not looking good with scaling on high dpi
-    //     TODO: test with Full HD monitor
-    QFont appFont = QApplication::font();
+    QFontDatabase fontdb;
+
+//    qDebug() << "Styles:" << fontdb.styles("Calibri");
+//    qDebug() << "Smooth sizes:" << fontdb.smoothSizes("Calibri","Regular");
+
+    QFont appFont = QFont("Calibri");// QApplication::font();
     int defaultPointSize = -1;
     if(appFont.pointSize() > 0){
-        defaultPointSize = appFont.pointSize() + 1;
+        defaultPointSize = 12+1;//appFont.pointSize() + 1;
         QSettings fontSet;
         int fontPointSize = fontSet.value("view/fontSize", 0).toInt();
         if(fontPointSize <= 0)

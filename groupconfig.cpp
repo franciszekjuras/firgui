@@ -23,7 +23,7 @@ GroupConfig::GroupConfig(QWidget *parent) : QWidget(parent)
 QVBoxLayout* groupVBox = new QVBoxLayout;
 this->setLayout(groupVBox);
 
-QLabel* titleLabel = new QLabel(QString("<big>") + tr("Configuration") + "</big>");
+QLabel* titleLabel = new QLabel(QString("<b>") + tr("Configuration") + "</b>");
 titleLabel->setContentsMargins(5,0,0,5);
 groupVBox->addWidget(titleLabel);
 QPalette pal;

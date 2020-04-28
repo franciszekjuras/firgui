@@ -25,7 +25,7 @@ GroupSsh::GroupSsh(QWidget *parent) :QWidget(parent)
 QVBoxLayout* groupVBox = new QVBoxLayout;
 this->setLayout(groupVBox);
 
-QLabel* titleLabel = new QLabel(QString("<big>") + tr("Connection") + "</big>");
+QLabel* titleLabel = new QLabel(QString("<b>") + tr("Connection") + "</b>");
 titleLabel->setContentsMargins(5,0,0,5);
 groupVBox->addWidget(titleLabel);
 QPalette pal;

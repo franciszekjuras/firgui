@@ -64,6 +64,7 @@ private:
     void windowChanged(QString windowStr);
     void bandChanged(int band);
     void unitChanged(QString unit);
+    bool isSpecValid(const std::vector<double>& freqs, const std::vector<double>& gains);
     int currentBand();
 
     bool eventFilter(QObject* obj, QEvent* event);
@@ -78,6 +79,7 @@ public slots:
     void handleConnect(bool is);
 
 signals:
+    void textSpecChanged(QVector<double> freqs, QVector<double> gains);
     void kernelChanged(std::shared_ptr<const FirKer> ker, double roiL, double roiR);
 //    void kernelClear();
     void srcKernelChanged(std::shared_ptr<const FirKer> ker);

@@ -29,7 +29,7 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QWidget(parent)
 QVBoxLayout* groupVBox = new QVBoxLayout;
 this->setLayout(groupVBox);
 
-QLabel* titleLabel = new QLabel(QString("<big>") + tr("Filter specification") + "</big>");
+QLabel* titleLabel = new QLabel(QString("<b>") + tr("Filter specification") + "</b>");
 titleLabel->setContentsMargins(5,0,0,5);
 groupVBox->addWidget(titleLabel);
 QPalette pal;
@@ -253,6 +253,15 @@ void GroupSpecs::calculateKernel(){
     //unit conversion
     for(auto& v : freqs){
         v *= unitMultiplier;
+    }
+
+    if(!isSpecValid(freqs, gains)){
+        qWarning() << "Incorrect filter specification.\nFreqs:" << freqsLineEdit->text() << "\nGains:" << gainsLineEdit->text();
+        int uc = QMessageBox::warning(this, tr(WINDOW_TITLE),tr("Incorrect filter specification. Make sure that number of gains is bigger by one from number of frequencies, that frequencies are ordered and in limits of working band, and that gains are non-negative."),tr("Help"),tr("Close"),QString(),1, 1);
+        if(uc == 0)showHelp();
+        return;
+    } else{
+        emit textSpecChanged(QVector<double>::fromStdVector(freqs),QVector<double>::fromStdVector(gains));
     }
 
     //ROI calculation
@@ -501,6 +510,36 @@ int GroupSpecs::currentBand(){
     int band = bandCombo->currentIndex(); assert (band >= 0); assert (band < t);
     if(!middleBandsEn && (band == 1)) band = t - 1;
     return band;
+}
+
+bool GroupSpecs::isSpecValid(const std::vector<double> &freqs, const std::vector<double> &gains){
+    double kerNyqstFreq = fpgaSamplingFreq / static_cast<double>(2*t);
+    int band = currentBand();
+    double llim = static_cast<double>(band) * kerNyqstFreq;
+    double rlim = llim + kerNyqstFreq;
+
+    qDebug() << "llim rlim" << llim << rlim;
+
+    //check sizes
+    if(freqs.size()+1 != gains.size())
+        return false;
+
+    //check frequencies
+    double prevFreq = llim;
+    for(auto freq : freqs){
+        if(freq <= prevFreq)
+            return false;
+        prevFreq = freq;
+    }
+    if(!freqs.empty() && freqs.back() >= rlim)
+        return false;
+
+    //check gains
+    for(auto gain : gains){
+        if(gain < 0)
+            return false;
+    }
+    return true;
 }
 
 bool GroupSpecs::eventFilter(QObject* obj, QEvent* event){
