@@ -19,7 +19,12 @@ class IMLineEdit : public QLineEdit{
     Q_OBJECT
 public:
     IMLineEdit(QWidget* parent = nullptr): QLineEdit(parent) {
-        connect(this, &QLineEdit::cursorPositionChanged, [=](int oldP, int newP){if(newP > text().length()){setCursorPosition(text().length());}});
+        connect(this, &QLineEdit::cursorPositionChanged, [=](int oldP, int newP){
+            Q_UNUSED(oldP)
+            if(newP > text().length()){
+                setCursorPosition(text().length());
+            }
+        });
     }
 };
 
@@ -41,7 +46,7 @@ private:
     };
 
 public:
-    explicit GroupSsh(QWidget *parent = 0);
+    explicit GroupSsh(QWidget *parent = nullptr);
 
 private:
     bool enableAdvState;

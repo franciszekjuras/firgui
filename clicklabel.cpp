@@ -1,11 +1,14 @@
-#include "clicklabel.h"
 #include <QDebug>
+#include <QMouseEvent>
+#include "clicklabel.h"
 
 ClickLabel::ClickLabel(QWidget* parent, Qt::WindowFlags f): QLabel(parent) {
-   init();
+    Q_UNUSED(f)
+    init();
 }
 
 ClickLabel::ClickLabel(const QString& label, QWidget* parent, Qt::WindowFlags f): QLabel(label, parent) {
+    Q_UNUSED(f)
     init();
 }
 
@@ -26,13 +29,16 @@ void ClickLabel::init(){
 }
 
 void ClickLabel::mousePressEvent(QMouseEvent* event) {
-    emit clicked();
+    if(event->button() == Qt::LeftButton)
+        emit clicked();
 }
 
 void ClickLabel::enterEvent(QEvent *event) {
+    Q_UNUSED(event)
     this->setPalette(hoverPal);
 }
 
 void ClickLabel::leaveEvent(QEvent *event) {
+    Q_UNUSED(event)
     this->setPalette(normPal);
 }

@@ -17,9 +17,10 @@
 #include <fstream>
 #include "xcolor.h"
 
-std::ofstream logfile;
+static std::ofstream logfile;
 
 void logToFile(QtMsgType type, const QMessageLogContext &context, const QString &msg){
+    Q_UNUSED(context)
     QString datetime = QDateTime::currentDateTime().toString("hh:mm:ss");
     switch (type) {
     case QtDebugMsg:

@@ -202,6 +202,7 @@ void BoxUpdate::onUpdateDownloadFinished(){
 }
 
 void BoxUpdate::onArchiveUnpacked(int exitCode, QProcess::ExitStatus exitStatus){
+    Q_UNUSED(exitStatus)
     if(exitCode != 0){
         qCritical() << "Unpacking process returned" << exitCode;
         updateLabel->setText("Update failed."); return;

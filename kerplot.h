@@ -32,12 +32,19 @@ protected:
     int specFIdx;
     int specGIdx;
     bool specMouseCapt;
+    bool specDragMode;
     QPoint curPos;
-    QMouseEvent lastMoveEvent;
+    QPoint pressPos;
+    QTimer longPressTimer;
+    double specMaxGain;
+    QTimer gainAccelTimer;
+    QTimer bandAccelLTimer;
+    QTimer bandAccelRTimer;
 
     QCPRange xRange;
     double kerMaxGain;
     double srcKerMaxGain;
+    double maxGain;
     QString plotType;
     int srcPlotDiv;
     int plotDiv;
@@ -88,7 +95,16 @@ protected:
     void wheelEvent(QWheelEvent* event);
     void leaveEvent(QEvent* event);
 
-
+    void handleSpecEdit();
+    void handleBandEdit();
+    void handleGainEdit();
+    void gainAccel();
+    void bandAccelL();
+    void bandAccelR();
+    void updateGain(int gIdx, double gain);
+    void updateBand(int fIdx, double freq);
+    void setSpecTrans();
+    void finalizeSpecChange();
     bool checkFocusGrab();
     bool checkFocusLost();
     void handleFocusGrab();

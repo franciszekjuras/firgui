@@ -13,8 +13,7 @@
 
 
 KerPlot::KerPlot(QWidget* parent):
-    QCustomPlot(parent),
-    lastMoveEvent(QEvent::MouseMove, QPointF(), Qt::NoButton, Qt::NoButton, Qt::NoModifier)
+    QCustomPlot(parent)
 {
 
     waitSpin = new WaitingSpinnerWidget(this, true, true);
@@ -51,6 +50,8 @@ KerPlot::KerPlot(QWidget* parent):
 
     qDebug() << "Axis rect:" << axisRect()->rect();
 
+
+
     penWidth = 2.;
     highlightWidth = 4.;
     this->addGraph();
@@ -83,6 +84,7 @@ KerPlot::KerPlot(QWidget* parent):
     setFreqs(1., 1, 0);
     kerMaxGain = 1.;
     srcKerMaxGain = 1.;
+    maxGain = 1.;
     srcPlotDiv = 20000;
     plotDivScale = 1;
     plotDiv = srcPlotDiv*plotDivScale;
@@ -114,15 +116,26 @@ KerPlot::KerPlot(QWidget* parent):
     specFIdx = 0;
     specGIdx = 0;
     specMouseCapt = false;
+    specDragMode = false;
+
+    longPressTimer.setSingleShot(true);
+    longPressTimer.setInterval(1000);
+
+
+    gainAccelTimer.setInterval(100);
+    connect(&gainAccelTimer, &QTimer::timeout, this, &KerPlot::gainAccel);
+    bandAccelLTimer.setInterval(100);
+    connect(&bandAccelLTimer, &QTimer::timeout, this, &KerPlot::bandAccelL);
+    bandAccelRTimer.setInterval(100);
+    connect(&bandAccelRTimer, &QTimer::timeout, this, &KerPlot::bandAccelR);
+
 }
 
 void KerPlot::mouseMoveEvent(QMouseEvent *event){
-    lastMoveEvent = *event;
     mouseMoveEventHandler(event);
 }
 
 void KerPlot::mouseMoveEventHandler(QMouseEvent *event, bool insideEvent){
-    lastMoveEvent = *event;
     curPos = event->pos();
 //    qDebug()<< "move:" << event->pos().x() << event->pos().y();
 //    qDebug() << "pos:" << xAxis->pixelToCoord(curPos.x()) << yAxis->pixelToCoord(curPos.y());
@@ -134,6 +147,14 @@ void KerPlot::mouseMoveEventHandler(QMouseEvent *event, bool insideEvent){
 
     if(specMouseCapt){
         //handle specification edits
+        if(specDragMode){
+            handleSpecEdit();
+        } else{//(!specDragMode)
+            if((curPos - pressPos).manhattanLength() > 3){
+                specDragMode = true;
+                handleSpecEdit();
+            }
+        }
 
     } else{//(!specMouseCapt)
         //check cursor position
@@ -160,6 +181,108 @@ void KerPlot::mouseMoveEventHandler(QMouseEvent *event, bool insideEvent){
         }
         if(!insideEvent) QCustomPlot::mouseMoveEvent(event);
     }
+}
+
+void KerPlot::handleSpecEdit(){
+    assert(specFocusType!=SpecFocus::none);
+    if(specFocusType == SpecFocus::band){
+        qDebug() << "Band" << specFIdx << "moved from" << specFreqs[specFIdx] << "to" << xPTC(curPos.x());
+        handleBandEdit();
+    } else{//(specFocusType == SpecFocus::gain)
+        qDebug() << "Gain" << specGIdx << "moved from" << specGains[specGIdx] << "to" << yPTC(curPos.y());
+        handleGainEdit();
+    }
+}
+
+void KerPlot::handleBandEdit(){
+    double freq = xPTC(curPos.x());
+    double x = curPos.x();
+
+    //check if cursor x coord is in visible range
+    if(x < axisRect()->rect().left()){
+        if(!bandAccelLTimer.isActive()){
+            bandAccelLTimer.start();
+            if(bandAccelRTimer.isActive())
+                bandAccelRTimer.stop();
+        }
+        return;
+    }
+    if(x > axisRect()->rect().right()){
+        if(!bandAccelRTimer.isActive()){
+            bandAccelRTimer.start();
+            if(bandAccelLTimer.isActive())
+                bandAccelLTimer.stop();
+        }
+        return;
+    }
+    if(bandAccelLTimer.isActive())
+        bandAccelLTimer.stop();
+    if(bandAccelRTimer.isActive())
+        bandAccelRTimer.stop();
+
+    //check if cursor didn't go past other band
+    if(freq < specTransFreqs[2*specFIdx])
+        freq = specTransFreqs[2*specFIdx];
+    if(freq > specTransFreqs[2*specFIdx+3])
+        freq = specTransFreqs[2*specFIdx+3];
+
+    updateBand(specFIdx, freq);
+}
+
+void KerPlot::updateBand(int fIdx, double freq){
+    specFreqs[fIdx] = freq;
+    specTransFreqs[fIdx*2+1] = freq;
+    specTransFreqs[fIdx*2+2] = freq;
+
+    assert(highlightFreqs.size()==2);
+    highlightFreqs[0] = freq;
+    highlightFreqs[1] = freq;
+
+    setSpecTrans();
+    enterPerfMode();
+    replot();
+}
+
+void KerPlot::bandAccelL(){
+    qDebug() << "bandAccelL activated";
+}
+void KerPlot::bandAccelR(){
+    qDebug() << "bandAccelR activated";
+}
+
+void KerPlot::handleGainEdit(){
+    double gain = yPTC(curPos.y());
+
+    if(gain > maxGain){
+        if(!gainAccelTimer.isActive())
+            gainAccelTimer.start();
+        return;
+    }
+    if(gainAccelTimer.isActive())
+        gainAccelTimer.stop();
+
+    if(gain <= 0.)
+        gain = 0.;
+
+    updateGain(specGIdx, gain);
+}
+
+void KerPlot::updateGain(int gIdx, double gain){
+    specGains[gIdx] = gain;
+    specTransGains[gIdx*2] = gain;
+    specTransGains[gIdx*2+1] = gain;
+
+    assert(highlightGains.size()==2);
+    highlightGains[0] = gain;
+    highlightGains[1] = gain;
+
+    setSpecTrans();
+    enterPerfMode();
+    replot();
+}
+
+void KerPlot::gainAccel(){
+    qDebug() << "gainAccel activated";
 }
 
 bool KerPlot::checkFocusGrab(){
@@ -220,7 +343,7 @@ bool KerPlot::checkFocusLost(){
 double KerPlot::xCTP(double v){return xAxis->coordToPixel(v);}
 double KerPlot::yCTP(double v){return yAxis->coordToPixel(v);}
 double KerPlot::xPTC(double v){return xAxis->pixelToCoord(v);}
-double KerPlot::yPTC(double v){return xAxis->pixelToCoord(v);}
+double KerPlot::yPTC(double v){return yAxis->pixelToCoord(v);}
 
 
 void KerPlot::handleFocusGrab(){
@@ -266,13 +389,60 @@ void KerPlot::removeFocusHighlight(){
 void KerPlot::mousePressEvent(QMouseEvent *event){
     qDebug()<< "press:" << event->pos().x() << event->pos().y();
 
-    QCustomPlot::mousePressEvent(event);
+    //recheck if focused
+    QMouseEvent insideEvent(QEvent::MouseMove, event->pos(), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+    mouseMoveEventHandler(&insideEvent, true);
+
+    if(specFocusType == SpecFocus::none){
+        QCustomPlot::mousePressEvent(event);
+        return;
+    }
+    //specFocusType != SpecFocus::none
+    specMouseCapt = true;
+    pressPos = event->pos();
+    longPressTimer.start();
 }
 
 void KerPlot::mouseReleaseEvent(QMouseEvent *event){
+    curPos = event->pos();
     qDebug()<< "release:" << event->pos().x() << event->pos().y();
+    if(!specMouseCapt){
+        QCustomPlot::mouseReleaseEvent(event);
+        return;
+    }
+    //specMouseCapt == true
+    assert(specFocusType != SpecFocus::none);
+    specMouseCapt = false;
+    if(specDragMode){
+        specDragMode = false;
+        finalizeSpecChange();
+        //create mouse move event
+        QMouseEvent insideEvent(QEvent::MouseMove, event->pos(), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+        mouseMoveEventHandler(&insideEvent, true);
+    }
+    else if (longPressTimer.isActive()){
+        // short press
+        if(specFocusType==SpecFocus::band){
+            qDebug() << "Band number" << specFIdx << "clicked";
+        } else{ //SpecFocus::gain
+            qDebug() << "Gain number" << specGIdx << "clicked";
+        }
+    }
+    else{ //long press
+        if(specFocusType==SpecFocus::band){
+            qDebug() << "Band number" << specFIdx << "long pressed";
+        } else{ //SpecFocus::gain
+            qDebug() << "Gain number" << specGIdx << "long pressed";
+        }
+    }
+}
 
-    QCustomPlot::mouseReleaseEvent(event);
+void KerPlot::finalizeSpecChange(){
+    if(specFocusType == SpecFocus::band){
+        qDebug() << "Band" << specFIdx << "moved from" << specFreqs[specFIdx] << "to" << xPTC(curPos.x());
+    } else{//(specFocusType == SpecFocus::gain)
+        qDebug() << "Gain" << specGIdx << "moved from" << specGains[specGIdx] << "to" << yPTC(curPos.y());
+    }
 }
 
 void KerPlot::mouseDoubleClickEvent(QMouseEvent *event){
@@ -282,7 +452,8 @@ void KerPlot::mouseDoubleClickEvent(QMouseEvent *event){
 }
 
 void KerPlot::wheelEvent(QWheelEvent* event){
-    mouseMoveEventHandler(&lastMoveEvent, true);
+    QMouseEvent insideEvent(QEvent::MouseMove, event->posF(), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+    mouseMoveEventHandler(&insideEvent, true);
     QCustomPlot::wheelEvent(event);
 }
 
@@ -316,10 +487,13 @@ void KerPlot::calcSpecTrans(){
     }
     specTransFreqs.push_back(rBandLimit);
 
+    double max = 1.;
     for(auto gain : specGains){
         specTransGains.push_back(gain);
         specTransGains.push_back(gain);
+        if(gain > max) max = gain;
     }
+    specMaxGain = max;
 }
 
 void KerPlot::setKernel(std::shared_ptr<const FirKer> kernel, double roiL, double roiR){
@@ -403,6 +577,7 @@ void KerPlot::clearSpec(){
     specTransGains.clear();
     specFIdx = 0;
     specGIdx = 0;
+    specMaxGain = 1.;
     specFocusType = SpecFocus::none;
     specMouseCapt = false;
     setPlotType(plotType);
@@ -484,17 +659,21 @@ void KerPlot::amplitudePlot(){
     else
         clearTotalTrans();
 
+    setSpecTrans();
+
+    maxGain = qMax(qMax(srcKerMaxGain, kerMaxGain),specMaxGain);
+    this->yAxis->setRange(QCPRange(0.,(maxGain*1.02)));
+
+    this->setEnabled(true);
+    this->replot();
+}
+
+void KerPlot::setSpecTrans(){
     assert(specTransFreqs.size() == specTransGains.size());
     this->graph(3)->setData(specTransFreqs,specTransGains,true);
 
     assert(highlightFreqs.size() == highlightGains.size());
     this->graph(4)->setData(highlightFreqs,highlightGains,true);
-
-    double maxGain = std::max(srcKerMaxGain, kerMaxGain);
-    this->yAxis->setRange(QCPRange(0.,(maxGain*1.02)));
-
-    this->setEnabled(true);
-    this->replot();
 }
 
 void KerPlot::bodePlot(){
@@ -515,7 +694,7 @@ void KerPlot::bodePlot(){
 
     this->graph(4)->setData(QVector<double>(),QVector<double>(),true);
 
-    double maxGaindB = 20 * std::log10(std::max(srcKerMaxGain, kerMaxGain));
+    double maxGaindB = 20 * std::log10(qMax(srcKerMaxGain, kerMaxGain));
     this->yAxis->setRange(QCPRange(-100., maxGaindB+1));
 
     this->setEnabled(true);
