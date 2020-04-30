@@ -57,8 +57,10 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
     QFontDatabase fontdb;
 
+    qDebug() << "Calibri available" << fontdb.families().contains("Calibri");
+
 //    qDebug() << "Styles:" << fontdb.styles("Calibri");
-//    qDebug() << "Smooth sizes:" << fontdb.smoothSizes("Calibri","Regular");
+    qDebug() << "Smooth sizes:" << fontdb.smoothSizes("Calibri","Regular");
 
     QFont appFont = QFont("Calibri");// QApplication::font();
     int defaultPointSize = -1;

@@ -77,6 +77,7 @@ public slots:
     void filterReady(bool en);
     void setfpgaSamplingFreq(double freq);
     void handleConnect(bool is);
+    void setSpec(QVector<double> freqs, QVector<double> gains);
 
 signals:
     void textSpecChanged(QVector<double> freqs, QVector<double> gains);

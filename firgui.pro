@@ -19,8 +19,8 @@ RESOURCES += \
 INCLUDEPATH += . include/
 
 #if using opengl:
-#win32:LIBS += opengl32.lib
-#DEFINES += QCUSTOMPLOT_USE_OPENGL
+win32:LIBS += opengl32.lib
+DEFINES += QCUSTOMPLOT_USE_OPENGL
 
 linux{
 QMAKE_CXXFLAGS += -fopenmp

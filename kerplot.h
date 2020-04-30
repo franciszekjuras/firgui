@@ -40,6 +40,7 @@ protected:
     QTimer gainAccelTimer;
     QTimer bandAccelLTimer;
     QTimer bandAccelRTimer;
+    bool specSelected;
 
     QCPRange xRange;
     double kerMaxGain;
@@ -79,9 +80,12 @@ protected:
     WaitingSpinnerWidget* waitSpin;    
     BoolMapOr spinWatch;
     double unitMult;
+    bool perfModeEn;
     QTimer perfModeTimer;
     double penWidth;
     double highlightWidth;
+    QColor highlightColor;
+    QColor selectColor;
     int perfModeTimeoutMS;
 
     //bool eventFilter(QObject *obj, QEvent *event);
@@ -105,6 +109,7 @@ protected:
     void updateBand(int fIdx, double freq);
     void setSpecTrans();
     void finalizeSpecChange();
+    void specSelect(bool sel);
     bool checkFocusGrab();
     bool checkFocusLost();
     void handleFocusGrab();
@@ -150,6 +155,9 @@ public slots:
     void toggleFirTransPlot(bool);
     void toggleSpecTransPlot(bool toggle);
     bool isSpecEditEn();
+
+signals:
+    void nfySpecChanged(QVector<double> freqs, QVector<double> gains);
 
 };
 

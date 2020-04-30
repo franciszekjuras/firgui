@@ -416,6 +416,24 @@ void GroupSpecs::setKernels(){
     reqLoadKernel(crrKer);
 }
 
+void GroupSpecs::setSpec(QVector<double> freqs, QVector<double> gains){
+    QString newFreqs;
+    for(auto& v : freqs){
+        v /= unitMultiplier;
+        newFreqs += QString::number(v) += " ";
+    }
+    newFreqs.chop(1);
+
+    QString newGains;
+    for(auto& v : gains){
+        newGains += QString::number(v) += " ";
+    }
+    newGains.chop(1);
+
+    freqsLineEdit->setText(newFreqs);
+    gainsLineEdit->setText(newGains);
+}
+
 void GroupSpecs::bitstreamChanged(QMap<QString, int> specs){
     filterReady(false);
 
@@ -465,6 +483,9 @@ void GroupSpecs::bandChanged(int band){
     if(band < 0) return;
     qInfo() << "Band changed to " << band;
     resetPlot(fpgaSamplingFreq, t, currentBand());
+    freqsLineEdit->setText("");
+    gainsLineEdit->setText("1");
+    textSpecChanged({},{1.});
     calculateSrcKernel();
 }
 

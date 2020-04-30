@@ -231,6 +231,7 @@ centralWidget->setLayout(mainHBox);
     connect(groupSpecs, &GroupSpecs::reqLoadSrcKernel, groupSsh, &GroupSsh::loadSrcKernel);
     connect(groupSpecs, &GroupSpecs::reqLoadKernel, groupSsh, &GroupSsh::loadKernel);
     connect(groupSpecs, &GroupSpecs::showHelp, [=](){showHelp("sec.specs");});
+    connect(kerPlot, &KerPlot::nfySpecChanged, groupSpecs, &GroupSpecs::setSpec);
 
     //:groupConfig
     connect(groupConfig, &GroupConfig::bitstreamSelected, groupSpecs, &GroupSpecs::bitstreamChanged);
