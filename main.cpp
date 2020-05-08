@@ -54,27 +54,32 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     app.setWindowIcon(QIcon(":data/icon.png"));
-#ifdef _WIN32
+
+    QFontDatabase::addApplicationFont(":fonts/Roboto-Regular.ttf");
+    QFontDatabase::addApplicationFont(":fonts/Roboto-Medium.ttf");
+    QFontDatabase::addApplicationFont(":fonts/Roboto-Light.ttf");
     QFontDatabase fontdb;
+    QApplication::setFont(QFont("Roboto",12));
+//    qDebug() << fontdb.families();
+//    qDebug() << fontdb.styles("Roboto");
 
-    qDebug() << "Calibri available" << fontdb.families().contains("Calibri");
+//    qDebug() << "Calibri available" << fontdb.families().contains("Calibri");
 
-//    qDebug() << "Styles:" << fontdb.styles("Calibri");
-    qDebug() << "Smooth sizes:" << fontdb.smoothSizes("Calibri","Regular");
+////    qDebug() << "Styles:" << fontdb.styles("Calibri");
+//    qDebug() << "Smooth sizes:" << fontdb.smoothSizes("Calibri","Regular");
 
-    QFont appFont = QFont("Calibri");// QApplication::font();
-    int defaultPointSize = -1;
-    if(appFont.pointSize() > 0){
-        defaultPointSize = 12+1;//appFont.pointSize() + 1;
-        QSettings fontSet;
-        int fontPointSize = fontSet.value("view/fontSize", 0).toInt();
-        if(fontPointSize <= 0)
-            fontPointSize =  defaultPointSize;
-        appFont.setPointSize(fontPointSize);
-        fontSet.setValue("view/fontSize",appFont.pointSize());
-    }
-    QApplication::setFont(appFont);
-#endif
+//    QFont appFont = QFont("Roboto");// QApplication::font();
+//    int defaultPointSize = -1;
+//    if(appFont.pointSize() > 0){
+//        defaultPointSize = 12;//appFont.pointSize() + 1;
+//        QSettings fontSet;
+//        int fontPointSize = fontSet.value("view/fontSize", 0).toInt();
+//        if(fontPointSize <= 0)
+//            fontPointSize =  defaultPointSize;
+//        appFont.setPointSize(fontPointSize);
+//        fontSet.setValue("view/fontSize",appFont.pointSize());
+//    }
+//    QApplication::setFont(appFont);
 
     QDir startdir;
 
@@ -194,7 +199,7 @@ int main(int argc, char *argv[])
     qApp->setPalette(palette, "TitleBar");
 
     Window window(isDarkTheme);
-    window.defaultFontSize = defaultPointSize;
+    //window.defaultFontSize = defaultPointSize;
 #else //LINUX
     Window window;
 #endif

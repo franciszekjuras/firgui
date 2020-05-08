@@ -14,7 +14,8 @@ DEFINES += _USE_MATH_DEFINES
 DEFINES += SSH_TIMEOUT=3L
 QT += widgets core printsupport concurrent network
 RESOURCES += \
-    data/data.qrc
+    data/data.qrc \
+    fonts/fonts.qrc
 
 INCLUDEPATH += . include/
 

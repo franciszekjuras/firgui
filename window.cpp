@@ -31,7 +31,7 @@ centralWidget->setLayout(mainHBox);
     lWid->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
     QVBoxLayout* lVBox = new QVBoxLayout;
     lWid->setLayout(lVBox);
-    lVBox->setContentsMargins(0,0,0,0);
+    lVBox->setContentsMargins(5,5,5,5);
 
         ClickLabel* introClickLabel = new ClickLabel(tr("Get Started"));
         introClickLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -58,7 +58,7 @@ centralWidget->setLayout(mainHBox);
         lVBox->addWidget(lbotWid);
         QHBoxLayout* lbotHBox = new QHBoxLayout;
         lbotWid->setLayout(lbotHBox);
-
+/*
             ClickLabel* decrText = new ClickLabel();
             decrText->setText("<p><small>A<sup>―</sup></small></p>");
             lbotHBox->addWidget(decrText);
@@ -89,7 +89,7 @@ centralWidget->setLayout(mainHBox);
                 QSettings fontSet; fontSet.setValue("view/fontSize",appFont.pointSize());
                 qDebug() << appFont.pointSize();
                 QApplication::setFont(appFont);});
-
+*/
 #ifdef _WIN32
             Switch* themeSwitch = new Switch(tr("Dark theme"));
             lbotHBox->addWidget(themeSwitch);
@@ -107,7 +107,7 @@ centralWidget->setLayout(mainHBox);
     rWid->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     QVBoxLayout* rVBox = new QVBoxLayout;
     rWid->setLayout(rVBox);
-    rVBox->setContentsMargins(0,0,0,0);
+    rVBox->setContentsMargins(5,5,5,5);
     //rVBox --v
 
 /*

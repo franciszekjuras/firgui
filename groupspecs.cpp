@@ -29,8 +29,9 @@ GroupSpecs::GroupSpecs(QWidget *parent) :QWidget(parent)
 QVBoxLayout* groupVBox = new QVBoxLayout;
 this->setLayout(groupVBox);
 
-QLabel* titleLabel = new QLabel(QString("<b>") + tr("Filter specification") + "</b>");
+QLabel* titleLabel = new QLabel(/*QString("<b>") + */tr("Filter specification") /*+ "</b>"*/);
 titleLabel->setContentsMargins(5,0,0,5);
+titleLabel->setFont(QFont("Roboto Medium",14));
 groupVBox->addWidget(titleLabel);
 QPalette pal;
 pal.setColor(titleLabel->foregroundRole(),pal.color(QPalette::Inactive, QPalette::WindowText));

@@ -33,7 +33,8 @@ private:
     void updateRankCombo(QString mainStr);
 
     void onLoadButton();
-    bool eventFilter(QObject* obj, QEvent* event);
+    bool eventFilter(QObject* obj, QEvent* event) Q_DECL_OVERRIDE;
+    void paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE;
 
 signals:
     void bitstreamSelected(QMap<QString, int> specs);

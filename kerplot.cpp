@@ -56,10 +56,6 @@ KerPlot::KerPlot(QWidget* parent):
     connect(this->xAxis, static_cast<void (QCPAxis::*)(const QCPRange&)>(&QCPAxis::rangeChanged), this, &KerPlot::checkXBounds);
     this->setEnabled(false);
 
-    qDebug() << "Axis rect:" << axisRect()->rect();
-
-
-
     penWidth = 2.;
 
     this->addGraph();
@@ -122,10 +118,10 @@ KerPlot::KerPlot(QWidget* parent):
     this->yAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
 
     QFont labelFont = QApplication::font();
-    labelFont.setPointSize(labelFont.pointSize()+1);
+    labelFont.setPointSize(14);
     this->xAxis->setLabelColor(QColor::fromHsv(0,0,245));
     this->xAxis->setLabelFont(labelFont);
-    labelFont.setPointSize(labelFont.pointSize()+1);
+    labelFont.setPointSize(15);
     this->yAxis->setLabelColor(QColor::fromHsv(0,0,255));
     this->yAxis->setLabelFont(labelFont);
 
@@ -206,10 +202,10 @@ void KerPlot::mouseMoveEventHandler(QMouseEvent *event, bool insideEvent){
 void KerPlot::handleSpecEdit(){
     assert(specFocusType!=SpecFocus::none);
     if(specFocusType == SpecFocus::band){
-        qDebug() << "Band" << specFIdx << "moved from" << specFreqs[specFIdx] << "to" << xPTC(curPos.x());
+        //qDebug() << "Band" << specFIdx << "moved from" << specFreqs[specFIdx] << "to" << xPTC(curPos.x());
         handleBandEdit();
     } else{//(specFocusType == SpecFocus::gain)
-        qDebug() << "Gain" << specGIdx << "moved from" << specGains[specGIdx] << "to" << yPTC(curPos.y());
+        //qDebug() << "Gain" << specGIdx << "moved from" << specGains[specGIdx] << "to" << yPTC(curPos.y());
         handleGainEdit();
     }
 }
