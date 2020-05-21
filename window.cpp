@@ -1,5 +1,3 @@
-#include <QtWidgets>
-
 #include "window.h"
 #include "groupssh.h"
 #include "groupconfig.h"
@@ -13,11 +11,19 @@
 #include "clicklabel.h"
 #include "xcolor.h"
 #include "QTextBrowser"
+#include <QtWidgets>
+#include <QSettings>
+#include <material/lib/qtmaterialstyle.h>
+#include <material/lib/qtmaterialtheme.h>
 
-Window::Window(bool darkTheme, QWidget *parent)
+Window::Window(QWidget *parent)
     : QMainWindow(parent)
 {
-    isDarkTheme = darkTheme;
+    QSettings appSet;
+    bool isDarkTheme = appSet.value("view/darkTheme",false).toBool();
+    setupTheme(isDarkTheme);
+
+
 //part:layout
 
 QWidget *centralWidget = new QWidget();
@@ -218,10 +224,10 @@ centralWidget->setLayout(mainHBox);
     //qApp->installEventFilter(this);
 
     wasMaximized = false;
-    //if(settings->fullscreen != isFullscreen) toogleFullscreen():
+    //if(settings->fullscreen != isFullscreen) toggleFullscreen():
 
     QShortcut *fullscreensc = new QShortcut(QKeySequence("F11"), this);
-    connect(fullscreensc, &QShortcut::activated, this, &Window::toogleFullscreen);
+    connect(fullscreensc, &QShortcut::activated, this, &Window::toggleFullscreen);
 
     //:groupSpecs
     connect(groupSpecs, &GroupSpecs::textSpecChanged, kerPlot, &KerPlot::setSpec);
@@ -248,7 +254,7 @@ centralWidget->setLayout(mainHBox);
 
 #ifdef _WIN32
     //:themeSwitch
-    connect(themeSwitch, &Switch::toggled, this, &Window::setDarkTheme);
+    connect(themeSwitch, &Switch::toggled, this, &Window::setupTheme);
     if(isDarkTheme)
         themeSwitch->animateClick();
 #endif //_WIN32
@@ -288,7 +294,7 @@ centralWidget->setLayout(mainHBox);
 
 }
 
-void Window::toogleFullscreen(){
+void Window::toggleFullscreen(){
     if(isFullScreen()){
         ((wasMaximized) ? showMaximized() : showNormal());
         // ui_->menu_view_toggle_fullscreen->setIcon(QIcon(":/fullscreen_enter"));
@@ -299,14 +305,40 @@ void Window::toogleFullscreen(){
     }
 }
 
-void Window::setDarkTheme(bool darkTheme){
-    if(isDarkTheme == darkTheme)
-        return;
-    isDarkTheme = darkTheme;
+
+void Window::setupTheme(bool darkTheme){
+    QSettings appSet;
+    appSet.setValue("view/darkTheme", darkTheme);
+
+
     QPalette palette;
     QPalette dialPal = qApp->palette("QDialog");
+
     if(darkTheme){
-        palette.setColor(QPalette::Window, XColor::base03);
+        QtMaterialTheme* theme = new QtMaterialTheme();
+        theme->setColor("primary1", Material::cyan300);
+        theme->setColor("primary2", Material::cyan700);
+        theme->setColor("primary3", Material::grey400);
+        theme->setColor("accent1", Material::pinkA200);
+        theme->setColor("accent2", Material::grey900);
+        theme->setColor("accent3", Material::grey500);
+        theme->setColor("text", Material::grey50);
+        theme->setColor("alternateText", Material::grey900);
+        theme->setColor("canvas", Material::grey900);
+        theme->setColor("surface", Material::grey800);
+        theme->setColor("flatElevation", Material::white, 0.1);
+        theme->setColor("border", Material::grey700);
+        theme->setColor("thumb", Material::grey300);
+        theme->setColor("raisedElevation", Material::white, 0.13);
+        theme->setColor("surfaceOverlay", Material::white, 0.08);
+        theme->setColor("primaryOverlay", Material::white, 0.2);
+        theme->setColor("disabled", Material::grey600);
+        theme->setColor("disabled2", Material::grey700);
+        theme->setColor("disabled3", Material::grey800);
+
+        QtMaterialStyle::instance().setTheme(theme);
+
+//        palette.setColor(QPalette::Window, XColor::base03);
         palette.setColor(QPalette::WindowText, XColor::base2);
         palette.setColor(QPalette::Text, XColor::base02);
         palette.setColor(QPalette::ButtonText, XColor::base02);
@@ -314,13 +346,14 @@ void Window::setDarkTheme(bool darkTheme){
         //palette.setColor(QPalette::Inactive, QPalette::WindowText, XColor::base1);
         palette.setColor(QPalette::Disabled,QPalette::ButtonText, XColor::base01);
 
-        QSettings appSet;
-        appSet.setValue("view/darkTheme",true);
     }
     else{ //light theme
 
+        QtMaterialTheme* theme = new QtMaterialTheme();
+        QtMaterialStyle::instance().setTheme(theme);
+
         QColor backColor = XColor::base3;
-        palette.setColor(QPalette::Window, backColor);
+//        palette.setColor(QPalette::Window, backColor);
         QColor forgrColor = XColor::base02;
         palette.setColor(QPalette::WindowText, forgrColor);
         palette.setColor(QPalette::Text, forgrColor);
@@ -329,8 +362,6 @@ void Window::setDarkTheme(bool darkTheme){
         //palette.setColor(QPalette::Inactive, QPalette::WindowText, XColor::base01);
         palette.setColor(QPalette::Disabled,QPalette::ButtonText, XColor::base1);
 
-        QSettings appSet;
-        appSet.setValue("view/darkTheme", false);
     } //light theme end
 
     qApp->setPalette(palette);
@@ -347,4 +378,12 @@ void Window::showHelp(const QString& anchor){
 bool Window::eventFilter(QObject* obj, QEvent* event){
 
     return QMainWindow::eventFilter(obj, event);
+}
+
+void Window::paintEvent(QPaintEvent *event){
+    {
+        QPainter painter(this);
+        painter.fillRect(rect(), QtMaterialStyle::instance().themeColor("canvas"));
+    }
+    QMainWindow::paintEvent(event);
 }

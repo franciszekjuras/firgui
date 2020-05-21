@@ -13,18 +13,20 @@
 #endif
 #include "xcolor.h"
 #include "clicklabel.h"
-#include <QtWidgets/QGraphicsDropShadowEffect>
+#include <material/qtmaterialframe.h>
+#include <material/lib/qtmaterialstyle.h>
+//#include <QtWidgets/QGraphicsDropShadowEffect>
 #ifdef _WIN32
 
-GroupConfig::GroupConfig(QWidget *parent) : QWidget(parent)
+GroupConfig::GroupConfig(QWidget *parent) : QtMaterialFrame(parent)
 {
 
-    QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect;
+//    QGraphicsDropShadowEffect* effect = new QGraphicsDropShadowEffect;
 
-    effect->setBlurRadius(7);
-    effect->setOffset(QPointF(0, 2));
-    effect->setColor(QColor(0, 0, 0, 75));
-    setGraphicsEffect(effect);
+//    effect->setBlurRadius(7);
+//    effect->setOffset(QPointF(0, 2));
+//    effect->setColor(QColor(0, 0, 0, 75));
+//    setGraphicsEffect(effect);
 
 //part:layout
 QVBoxLayout* groupVBox = new QVBoxLayout;
@@ -32,7 +34,7 @@ this->setLayout(groupVBox);
 
 QLabel* titleLabel = new QLabel(/*QString("<b>") +*/ tr("Configuration") /*+ "</b>"*/);
 titleLabel->setContentsMargins(5,0,0,5);
-titleLabel->setFont(QFont("Roboto Medium",14));
+titleLabel->setFont(QtMaterialStyle::instance().themeFont("H6"));
 groupVBox->addWidget(titleLabel);
 QPalette pal;
 pal.setColor(titleLabel->foregroundRole(),pal.color(QPalette::Inactive, QPalette::WindowText));
@@ -220,26 +222,26 @@ bool GroupConfig::eventFilter(QObject* obj, QEvent* event){
     return QWidget::eventFilter(obj, event);
 }
 
-void GroupConfig::paintEvent(QPaintEvent *event)
-{
+//void GroupConfig::paintEvent(QPaintEvent *event)
+//{
 
-    QWidget::paintEvent(event);
+//    QWidget::paintEvent(event);
 
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-    QPainterPath path;
-    path.addRoundedRect(rect(), 5., 5.);
+//    QPainter painter(this);
+//    painter.setRenderHint(QPainter::Antialiasing);
+//    QPainterPath path;
+//    path.addRoundedRect(rect(), 5., 5.);
 
-    QBrush brush;
-    brush.setStyle(Qt::SolidPattern);
-    brush.setColor("#424242");
-    painter.setOpacity(1.);
-    painter.setBrush(brush);
-    painter.setPen(Qt::NoPen);
+//    QBrush brush;
+//    brush.setStyle(Qt::SolidPattern);
+//    brush.setColor("#424242");
+//    painter.setOpacity(1.);
+//    painter.setBrush(brush);
+//    painter.setPen(Qt::NoPen);
 
-    painter.fillPath(path, brush);
-    painter.drawPath(path);
+//    painter.fillPath(path, brush);
+//    painter.drawPath(path);
 
-    //painter.drawRect(rect());
+//    //painter.drawRect(rect());
 
-}
+//}

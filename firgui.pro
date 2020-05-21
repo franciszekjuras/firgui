@@ -26,6 +26,7 @@ DEFINES += QCUSTOMPLOT_USE_OPENGL
 linux{
 QMAKE_CXXFLAGS += -fopenmp
 LIBS += -fopenmp -lssh
+LIBS += libcomponents.a
 }
 
 win32{
@@ -33,7 +34,7 @@ QMAKE_CXXFLAGS += /openmp
 RC_ICONS = icon.ico
 DEFINES += WIN32_LEAN_AND_MEAN
 
-#Linking right libssh version
+#Linking right libraries versions
 contains(QMAKE_TARGET.arch, x86_64){
 LIBS += -L$$PWD/win64/lib/ -lssh
 INCLUDEPATH += $$PWD/win64/include
@@ -43,6 +44,8 @@ LIBS += -L$$PWD/win32/lib/ -lssh
 INCLUDEPATH += $$PWD/win32/include
 DEPENDPATH += $$PWD/win32/include
 }
+
+LIBS += components.lib
 
 #As of 2019 for Microsoft Visual Studio 2015-2019 runtime libraries sufix is 140.
 #Make sure that you update this sufix appropriately if you use newer compilers

@@ -12,19 +12,19 @@ class Window : public QMainWindow
     Q_OBJECT
 
 public:
-    Window(bool darkTheme = false, QWidget *parent = nullptr);
+    Window(QWidget *parent = nullptr);
 
-    void toogleFullscreen();
-    void setDarkTheme(bool darkTheme);
+    void toggleFullscreen();
+    void setupTheme(bool darkTheme);
 
     int defaultFontSize;
 
-private:
+protected:
     bool wasMaximized;
-    bool isDarkTheme;
     void showHelp(const QString& anchor);
     void showGetStarted();
-    bool eventFilter(QObject* obj, QEvent* event);
+    virtual bool eventFilter(QObject* obj, QEvent* event) override;
+    virtual void paintEvent(QPaintEvent *event) override;
 
     TitleBar* titleBar;
     QTextBrowser* helpBrowser;

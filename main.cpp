@@ -15,6 +15,8 @@
 #include "window.h"
 #include <libssh/libssh.h>
 #include <fstream>
+//#include <material/lib/qtmaterialstyle.h>
+//#include <material/lib/qtmaterialtheme.h>
 #include "xcolor.h"
 
 static std::ofstream logfile;
@@ -60,26 +62,29 @@ int main(int argc, char *argv[])
     QFontDatabase::addApplicationFont(":fonts/Roboto-Light.ttf");
     QFontDatabase fontdb;
     QApplication::setFont(QFont("Roboto",12));
-//    qDebug() << fontdb.families();
-//    qDebug() << fontdb.styles("Roboto");
 
-//    qDebug() << "Calibri available" << fontdb.families().contains("Calibri");
+//    QtMaterialTheme* theme = new QtMaterialTheme();
+//    theme->setColor("primary1", Material::cyan300);
+//    theme->setColor("primary2", Material::cyan700);
+//    theme->setColor("primary3", Material::grey400);
+//    theme->setColor("accent1", Material::pinkA200);
+//    theme->setColor("accent2", Material::grey900);
+//    theme->setColor("accent3", Material::grey500);
+//    theme->setColor("text", Material::grey50);
+//    theme->setColor("alternateText", Material::grey900);
+//    theme->setColor("canvas", Material::grey900);
+//    theme->setColor("surface", Material::grey800);
+//    theme->setColor("flatElevation", Material::white, 0.1);
+//    theme->setColor("border", Material::grey700);
+//    theme->setColor("thumb", Material::grey300);
+//    theme->setColor("raisedElevation", Material::white, 0.13);
+//    theme->setColor("surfaceOverlay", Material::white, 0.08);
+//    theme->setColor("primaryOverlay", Material::white, 0.2);
+//    theme->setColor("disabled", Material::grey600);
+//    theme->setColor("disabled2", Material::grey700);
+//    theme->setColor("disabled3", Material::grey800);
 
-////    qDebug() << "Styles:" << fontdb.styles("Calibri");
-//    qDebug() << "Smooth sizes:" << fontdb.smoothSizes("Calibri","Regular");
-
-//    QFont appFont = QFont("Roboto");// QApplication::font();
-//    int defaultPointSize = -1;
-//    if(appFont.pointSize() > 0){
-//        defaultPointSize = 12;//appFont.pointSize() + 1;
-//        QSettings fontSet;
-//        int fontPointSize = fontSet.value("view/fontSize", 0).toInt();
-//        if(fontPointSize <= 0)
-//            fontPointSize =  defaultPointSize;
-//        appFont.setPointSize(fontPointSize);
-//        fontSet.setValue("view/fontSize",appFont.pointSize());
-//    }
-//    QApplication::setFont(appFont);
+//    QtMaterialStyle::instance().setTheme(theme);
 
     QDir startdir;
 
@@ -131,7 +136,7 @@ int main(int argc, char *argv[])
         }
     }
 
-
+/*
 #ifdef _WIN32
     QPalette palette;
     QPalette dialPal;
@@ -203,6 +208,8 @@ int main(int argc, char *argv[])
 #else //LINUX
     Window window;
 #endif
+*/
+    Window window;
 
     int scrN = app.desktop()->screenNumber(&window);
     if(scrN >= 0){

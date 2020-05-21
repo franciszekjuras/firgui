@@ -4,12 +4,12 @@
 #include <QGroupBox>
 #include <QString>
 #include <QMap>
-#include "groupconfig.h"
+#include <material/qtmaterialframe.h>
 #include "bitstreamspecs.h"
 
 class QComboBox;
 #ifdef WIN32
-class GroupConfig : public QWidget
+class GroupConfig : public QtMaterialFrame
 #else
 class GroupConfig : public QGroupBox
 #endif
@@ -34,7 +34,7 @@ private:
 
     void onLoadButton();
     bool eventFilter(QObject* obj, QEvent* event) Q_DECL_OVERRIDE;
-    void paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE;
+//    void paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE;
 
 signals:
     void bitstreamSelected(QMap<QString, int> specs);

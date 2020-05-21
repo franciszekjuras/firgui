@@ -19,10 +19,10 @@
 
 #include <QtCore/qeasingcurve.h>
 
-#define cyan500 QColor("#00bcd4")
-#define gray50 QColor("#fafafa")
-#define black QColor("#000000")
-#define gray400 QColor("#bdbdbd")
+#define __cyan500__ QColor("#00bcd4")
+#define __gray50__ QColor("#fafafa")
+#define __black__ QColor("#000000")
+#define __gray400__ QColor("#bdbdbd")
 
 Q_DECL_IMPORT void qt_blurImage(QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0); // src/widgets/effects/qpixmapfilter.cpp
 
@@ -45,19 +45,19 @@ namespace Style {
             height{ 28 },
             font{ QFont("Roboto medium", 13) },
             indicatorMargin{ QMargins(6, 4, 10, 3) },
-            thumbOnBrush{ cyan500 },
+            thumbOnBrush{ __cyan500__ },
             thumbOnOpacity{ 1 },
-            trackOnBrush{ cyan500 },
+            trackOnBrush{ __cyan500__ },
             trackOnOpacity{ 0.5 },
-            thumbOffBrush{ gray50 },
+            thumbOffBrush{ __gray50__ },
             thumbOffOpacity{ 1 },
-            trackOffBrush{ gray400 }, //trackOffBrush{ black },
+            trackOffBrush{ __gray400__ }, //trackOffBrush{ __black__ },
             trackOffOpacity{ 0.5 },
-            thumbDisabled{ gray400 },
+            thumbDisabled{ __gray400__ },
             thumbDisabledOpacity{ 1 },
-            trackDisabled{ black },
+            trackDisabled{ __black__ },
             trackDisabledOpacity{ 0.12 },
-            textColor{ black },
+            textColor{ __black__ },
             disabledTextOpacity{ 0.26 },
             thumbBrushAnimation{ Animation(Type::Linear, 150) },
             trackBrushAnimation{ Animation(Type::Linear, 150) },
