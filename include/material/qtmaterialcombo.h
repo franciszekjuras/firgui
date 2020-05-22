@@ -13,7 +13,7 @@ public:
     explicit QtMaterialCombo(QWidget *parent = nullptr);
     ~QtMaterialCombo();
 
-    void setItemsTexts(const QStringList &data);
+    void setItems(const QStringList &data);
 
     virtual QSize sizeHint() const override;
 

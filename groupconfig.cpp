@@ -14,7 +14,7 @@
 #include "xcolor.h"
 #include "clicklabel.h"
 #include <material/qtmaterialframe.h>
-#include <material/lib/qtmaterialstyle.h>
+#include <material/qtmateriallabel.h>
 //#include <QtWidgets/QGraphicsDropShadowEffect>
 #ifdef _WIN32
 
@@ -32,18 +32,10 @@ GroupConfig::GroupConfig(QWidget *parent) : QtMaterialFrame(parent)
 QVBoxLayout* groupVBox = new QVBoxLayout;
 this->setLayout(groupVBox);
 
-QLabel* titleLabel = new QLabel(/*QString("<b>") +*/ tr("Configuration") /*+ "</b>"*/);
-titleLabel->setContentsMargins(5,0,0,5);
-titleLabel->setFont(QtMaterialStyle::instance().themeFont("H6"));
+QtMaterialLabel* titleLabel = new QtMaterialLabel(tr("Configuration"));
+//titleLabel->setContentsMargins(5,0,0,5);
+
 groupVBox->addWidget(titleLabel);
-QPalette pal;
-pal.setColor(titleLabel->foregroundRole(),pal.color(QPalette::Inactive, QPalette::WindowText));
-titleLabel->setPalette(pal);
-connect(this, &GroupConfig::updatePalette, [=](){QPalette pal;
-    pal.setColor(titleLabel->foregroundRole(),pal.color(QPalette::Inactive, QPalette::WindowText));
-    titleLabel->setPalette(pal);});
-qApp->installEventFilter(this);
-//neccessary to keep up with palette changes
 
 QWidget* groupContent = new QWidget;
 groupVBox->addWidget(groupContent);

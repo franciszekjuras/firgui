@@ -87,6 +87,7 @@ HEADERS += \
     boxupdate.h \
     cautoupdatergithub.h \
     clicklabel.h \
+    cproxylistpicker.h \
     delegate.h \
     titlebar.h \
     window.h \
@@ -107,6 +108,7 @@ SOURCES += main.cpp \
     boxupdate.cpp \
     cautoupdatergithub.cpp \
     clicklabel.cpp \
+    cproxylistpicker.cpp \
     titlebar.cpp \
     window.cpp \
     groupssh.cpp \
